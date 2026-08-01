@@ -143,10 +143,10 @@ export default function Hero() {
 
   return (
     <section className="w-full min-h-screen bg-brand-lime flex flex-col lg:flex-row items-stretch lg:h-screen lg:overflow-hidden select-none relative overflow-y-auto lg:overflow-y-hidden">
-      
+
       {/* LEFT COLUMN: Hero content & Search widget */}
       <div className="w-full lg:w-[58%] pt-28 lg:pt-32 pb-16 px-6 sm:px-12 md:px-16 flex flex-col justify-center bg-brand-lime relative shrink-0 lg:h-full lg:overflow-y-auto left-hero-column">
-        
+
         {/* Floating Custom Stickers (Playful elements) */}
         <div className="absolute top-28 left-6 hidden sm:block animate-bounce duration-[3500ms] pointer-events-none z-20">
           <div className="relative w-18 h-18 bg-white rounded-2xl shadow-xl border-2 border-brand-charcoal p-2 rotate-[-12deg] flex items-center justify-center">
@@ -165,7 +165,7 @@ export default function Hero() {
 
         {/* Spaced Content Wrapper to occupy height cleanly */}
         <div className="flex flex-col gap-10 lg:gap-12 w-full max-w-2xl justify-center">
-          
+
           {/* Title & Subheading Group */}
           <div className="flex flex-col gap-5">
             <h1 className="text-brand-forest font-black tracking-tight text-5xl sm:text-6xl md:text-7xl leading-[0.95] select-none relative">
@@ -196,7 +196,7 @@ export default function Hero() {
           {/* Search Widget Container */}
           <form onSubmit={handleSearch} className="w-full relative z-20">
             <div className="bg-white rounded-3xl p-4 md:rounded-full md:p-3 flex flex-col md:flex-row items-stretch md:items-center gap-3 shadow-2xl border border-brand-forest/10 hover:border-brand-forest/20 transition-all">
-              
+
               {/* Field 1: Source */}
               <div className="flex-1 px-5 py-3 flex flex-col justify-center border-b md:border-b-0 md:border-r border-zinc-100 min-w-0">
                 <label className="text-[11px] uppercase font-black text-zinc-400 tracking-wider mb-1">
@@ -308,12 +308,11 @@ export default function Hero() {
 
       {/* RIGHT COLUMN: Floating rounded cards vertical carousel (Infinite one-way scroller) */}
       <div className="w-full lg:w-[42%] relative h-[650px] lg:h-full lg:min-h-screen overflow-hidden shrink-0 bg-brand-lime flex flex-col items-center justify-start">
-        
+
         {/* Vertical Slides Scrolling Track */}
         <div
-          className={`flex flex-col gap-8 lg:gap-[4vh] w-full items-center carousel-track ${
-            isTransitioning ? "transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]" : "no-transition"
-          }`}
+          className={`flex flex-col gap-8 lg:gap-[4vh] w-full items-center carousel-track ${isTransitioning ? "transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]" : "no-transition"
+            }`}
           style={{
             ["--active-index" as any]: currentIndex,
           }}
@@ -321,33 +320,30 @@ export default function Hero() {
         >
           {doubledSlides.map((slide, sIdx) => {
             const isOriginalActive = currentIndex % slides.length === sIdx % slides.length;
-            
-            return (
-              <div 
-                key={sIdx} 
-                className="w-[90%] max-w-[380px] lg:max-w-none lg:w-[88%] h-[480px] lg:h-[72vh] rounded-[3.2rem] lg:rounded-[3.8rem] relative overflow-hidden shadow-2xl shrink-0 bg-zinc-950"
-              >
-                
-                {/* Background Image of the Card (Standard img tag to ensure visual rendering) */}
-                <img
-                  src={slide.bgImage}
-                  alt={slide.caption}
-                  className="absolute inset-0 w-full h-full object-cover opacity-85"
-                />
-                
-                {/* Dark Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-black/20" />
 
-                {/* Overlaid Linktree Phone Mockup */}
-                <div className="absolute inset-0 m-auto w-[68%] max-w-[240px] lg:max-w-[260px] aspect-[9/18] rounded-[2.5rem] border-[8px] border-zinc-900 bg-zinc-900/40 backdrop-blur-md p-4 shadow-2xl flex flex-col justify-start z-10 select-none animate-[float_4s_ease-in-out_infinite]">
-                  
-                  {/* Phone Notch/Dynamic Island */}
-                  <div className="w-20 h-4.5 bg-zinc-900 rounded-full mx-auto mb-2 flex items-center justify-center">
+            return (
+              <div className="relative w-[80vw] max-w-[360px] aspect-[9/19] rounded-[2.5rem] border-[8px] border-zinc-900 overflow-hidden bg-zinc-900 shadow-2xl animate-[float_4s_ease-in-out_infinite]">
+
+                {/* Phone Wallpaper */}
+                <img
+                  src={slide.bgImage} // your wallpaper
+                  alt="Wallpaper"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+
+                {/* Dark Overlay */}
+                <div className="absolute inset-0 bg-black/35" />
+
+                {/* Phone Content */}
+                <div className="relative z-10 h-full flex flex-col p-2">
+
+                  {/* Notch */}
+                  <div className="w-20 h-6 bg-zinc-900 rounded-full mx-auto mb-2 flex items-center justify-center">
                     <div className="w-2 h-2 rounded-full bg-zinc-800 mr-2" />
                     <div className="w-1.5 h-1.5 rounded-full bg-zinc-800" />
                   </div>
 
-                  {/* Phone Header Profile */}
+                  {/* Header */}
                   <div className="flex flex-col items-center gap-1 mt-1 text-center">
                     <div
                       className="w-10 h-10 rounded-full flex items-center justify-center text-sm shadow-md border-2 border-white"
@@ -355,49 +351,66 @@ export default function Hero() {
                     >
                       {slide.icon || "✈️"}
                     </div>
-                    <span className="text-white text-xs font-black tracking-tight mt-1.5">
+
+                    <span className="text-white text-xs font-black">
                       {slide.title}
                     </span>
+
                     <span className="text-[9px] text-zinc-300 font-bold">
                       {slide.profile}
                     </span>
                   </div>
 
-                  {/* Phone Content (Linktree Buttons as Transit Steps) */}
-                  <div className="flex flex-col gap-2 mt-4 overflow-y-auto max-h-[250px] pr-0.5 scrollbar-none">
+                  {/* Buttons */}
+                  <div className="flex flex-col gap-2 mt-4 overflow-y-auto flex-1 pr-0.5 scrollbar-none">
                     {slide.legs.map((leg, lIdx) => (
                       <div key={lIdx} className="w-full flex flex-col gap-1.5">
                         {leg.type === "layover" ? (
-                          // Layover pill
                           <div className="bg-zinc-950/80 text-white rounded-xl p-2.5 flex items-center justify-between border border-zinc-800 shadow-md">
                             <div className="flex items-center gap-1.5">
                               <span className="text-sm">{leg.icon}</span>
                               <div className="flex flex-col text-left">
-                                <span className="text-[8.5px] font-black uppercase text-zinc-400">Layover</span>
-                                <span className="text-[9.5px] font-extrabold text-zinc-200">{leg.name}</span>
+                                <span className="text-[8.5px] font-black uppercase text-zinc-400">
+                                  Layover
+                                </span>
+                                <span className="text-[9.5px] font-extrabold text-zinc-200">
+                                  {leg.name}
+                                </span>
                               </div>
                             </div>
-                            <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full ${leg.statusColor}`}>
+
+                            <span
+                              className={`text-[8px] font-black px-1.5 py-0.5 rounded-full ${leg.statusColor}`}
+                            >
                               {leg.status}
                             </span>
                           </div>
                         ) : (
-                          // Transit Leg Link Button
-                          <div className="bg-white hover:bg-zinc-50 text-brand-charcoal rounded-2xl p-2.5 flex flex-col items-start border border-white/20 shadow-md transition-transform hover:scale-[1.02] cursor-pointer">
+                          <div className="bg-white/90 backdrop-blur-md hover:bg-white rounded-2xl p-2.5 flex flex-col items-start border border-white/20 shadow-md transition-transform hover:scale-[1.02] cursor-pointer">
                             <div className="flex items-center gap-1.5 w-full justify-between">
                               <div className="flex items-center gap-1.5">
                                 <span className="text-sm">{leg.icon}</span>
+
                                 <span className="text-[10px] font-black text-brand-charcoal truncate max-w-[110px]">
-                                    {leg.name}
-                                  </span>
-                              </div>
-                              <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full ${leg.statusColor} shrink-0`}>
-                                  {leg.status}
+                                  {leg.name}
                                 </span>
+                              </div>
+
+                              <span
+                                className={`text-[8px] font-black px-1.5 py-0.5 rounded-full ${leg.statusColor} shrink-0`}
+                              >
+                                {leg.status}
+                              </span>
                             </div>
+
                             <div className="text-[8.5px] font-bold text-zinc-500 mt-1 flex items-center gap-1 w-full">
-                              <span className="font-extrabold text-zinc-400 shrink-0">ROUTE:</span>
-                              <span className="text-zinc-600 truncate">{leg.time}</span>
+                              <span className="font-extrabold text-zinc-400 shrink-0">
+                                ROUTE:
+                              </span>
+
+                              <span className="text-zinc-600 truncate">
+                                {leg.time}
+                              </span>
                             </div>
                           </div>
                         )}
@@ -405,30 +418,14 @@ export default function Hero() {
                     ))}
                   </div>
 
-                  {/* Phone Footer Brand */}
-                  <div className="mt-auto pt-2.5 text-center border-t border-white/5">
-                    <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">
+                  {/* Footer */}
+                  <div className="pt-2 text-center border-t border-white/10">
+                    <span className="text-[8px] font-black text-white/50 uppercase">
                       Powered by ConnexLink
                     </span>
                   </div>
 
                 </div>
-
-                {/* Carousel Card Bottom Caption */}
-                <div className="absolute bottom-6 left-6 right-6 lg:bottom-8 lg:left-8 lg:right-8 z-20 text-white bg-brand-charcoal/50 backdrop-blur-lg border border-white/10 p-4 lg:p-5 rounded-2xl lg:rounded-3xl flex items-center justify-between">
-                  <div className="flex flex-col text-left">
-                    <span className="text-[9.5px] font-black text-zinc-300 uppercase tracking-wider">
-                      Featured Route
-                    </span>
-                    <span className="text-xs lg:text-sm font-extrabold text-white leading-snug mt-1">
-                      {slide.caption}
-                    </span>
-                  </div>
-                  {isOriginalActive && (
-                    <div className="w-2.5 h-2.5 rounded-full animate-ping bg-emerald-400 shrink-0 ml-2" />
-                  )}
-                </div>
-
               </div>
             );
           })}
@@ -438,7 +435,7 @@ export default function Hero() {
         <div className="absolute top-1/2 right-6 -translate-y-1/2 z-30 flex flex-col gap-2.5">
           {slides.map((_, dotIdx) => {
             const isDotActive = currentIndex % slides.length === dotIdx;
-            
+
             return (
               <button
                 key={dotIdx}
@@ -446,9 +443,8 @@ export default function Hero() {
                   setIsTransitioning(true);
                   setCurrentIndex(dotIdx);
                 }}
-                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                  isDotActive ? "bg-white h-7" : "bg-white/40"
-                }`}
+                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${isDotActive ? "bg-white h-7" : "bg-white/40"
+                  }`}
                 aria-label={`Go to slide ${dotIdx + 1}`}
               />
             );
