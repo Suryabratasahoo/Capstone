@@ -95,13 +95,13 @@ export default function Navbar() {
         {/* Right: Auth Buttons */}
         <div className="hidden md:flex items-center gap-4">
           <Link
-            href="/login"
+            href="/auth/login"
             className="rounded-full bg-zinc-100 hover:bg-zinc-200 text-brand-charcoal px-6 py-3.5 font-extrabold text-base transition-colors"
           >
             Log in
           </Link>
           <Link
-            href="/signup"
+            href="/auth/register"
             className="rounded-full bg-brand-charcoal hover:bg-black text-white px-6 py-3.5 font-extrabold text-base transition-all shadow-md hover:shadow-lg"
           >
             Sign up free
