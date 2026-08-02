@@ -570,7 +570,7 @@ export default function DashboardPage() {
 
   // Large Vector icons for each tab category
   const renderTabIcon = (type: TabType, isActive: boolean) => {
-    const fillClass = isActive ? 'text-white' : 'text-[#600619] group-hover:text-[#600619]';
+    const fillClass = isActive ? 'text-[#254f1a]' : 'text-[#254f1a] group-hover:text-[#254f1a]';
     
     switch (type) {
       case 'buses':
@@ -601,7 +601,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#f3f3f1] font-sans antialiased text-zinc-900 pb-20 select-none">
+    <div className="w-full min-h-screen bg-[#f1fffa] font-sans antialiased text-zinc-900 pb-20 select-none">
       
       {/* 1. CUSTOM DASHBOARD NAVIGATION HEADER */}
       <header
@@ -617,7 +617,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-10">
             <div className="flex items-center gap-2.5 group cursor-pointer">
               {/* Custom SVG Transit Connection Logo Mark in brand red */}
-              <div className="flex items-center justify-center w-9 h-9 rounded-full bg-[#600619] text-white transition-transform group-hover:scale-105">
+              <div className="flex items-center justify-center w-9 h-9 rounded-full bg-[#254f1a] text-white transition-transform group-hover:scale-105">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -635,14 +635,14 @@ export default function DashboardPage() {
                 </svg>
               </div>
               <span className="font-extrabold text-2xl tracking-tight text-zinc-800">
-                connex<span className="text-[#600619]">link</span>
+                connex<span className="text-[#254f1a]">link</span>
               </span>
             </div>
 
             {/* Desktop Nav Links */}
             <div className="hidden md:flex items-center gap-2">
               <span className="text-zinc-900 bg-zinc-50 border border-zinc-200/40 px-4 py-2 rounded-xl text-base font-black transition-all cursor-pointer flex items-center gap-1.5">
-                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[#600619]" xmlns="http://www.w3.org/2000/svg">
+                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[#254f1a]" xmlns="http://www.w3.org/2000/svg">
                   <path d="M12.65 2.12a.98.98 0 00-1.3 0L3.7 9.07a1 1 0 00-.3.73v10.7a1.5 1.5 0 001.5 1.5h14.2a1.5 1.5 0 001.5-1.5v-10.7a1 1 0 00-.3-.73l-7.65-6.95z" />
                 </svg>
                 Dashboard
@@ -665,7 +665,7 @@ export default function DashboardPage() {
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
               Agent Portal
             </button>
-            <div className="flex items-center gap-2.5 bg-zinc-900 text-white rounded-full pl-3.5 pr-2.5 py-1.5 border border-zinc-800 shadow-md cursor-pointer hover:bg-zinc-800 transition-colors">
+            <div className="flex items-center gap-2.5 bg-zinc-900 text-white rounded-full p-3 pl-5 border border-zinc-800 shadow-md cursor-pointer hover:bg-zinc-800 transition-colors">
               <span className="text-xs font-black select-none tracking-wide">Suryabrata</span>
               <div className="w-7 h-7 rounded-full bg-[#d9c8f0] text-zinc-900 flex items-center justify-center font-black text-xs">
                 S
@@ -703,7 +703,7 @@ export default function DashboardPage() {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="text-zinc-900 hover:text-zinc-950 font-extrabold py-2 border-b border-zinc-50 cursor-pointer flex items-center gap-2"
               >
-                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[#600619]" xmlns="http://www.w3.org/2000/svg">
+                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[#254f1a]" xmlns="http://www.w3.org/2000/svg">
                   <path d="M12.65 2.12a.98.98 0 00-1.3 0L3.7 9.07a1 1 0 00-.3.73v10.7a1.5 1.5 0 001.5 1.5h14.2a1.5 1.5 0 001.5-1.5v-10.7a1 1 0 00-.3-.73l-7.65-6.95z" />
                 </svg>
                 Dashboard
@@ -775,15 +775,15 @@ export default function DashboardPage() {
 
         {/* Header content inside the Hero (Large bold typography) */}
         <div className="relative z-10 text-center max-w-4xl px-4 flex flex-col items-center gap-3.5 mb-14">
-          <span className="text-brand-lime font-black uppercase tracking-[0.3em] text-xs sm:text-sm">
+          <span className="text-[#d2e823] font-black uppercase tracking-[0.3em] text-xs sm:text-xs mt-5">
             ConnexLink Engine
           </span>
-          <h1 className="text-white font-black tracking-tight text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-[0.95] select-none">
-            India's Fastest Connection Platform
+          <h1 className="text-white font-black tracking-tight text-2xl sm:text-lg md:text-3xl lg:text-5xl leading-[0.95] select-none">
+            An Urgent Plan? Make it Efficient
           </h1>
-          <p className="text-white/80 font-medium text-sm sm:text-base md:text-lg max-w-xl leading-relaxed mt-2">
+          {/* <p className="text-white/80 font-medium text-sm sm:text-base md:text-lg max-w-xl leading-relaxed mt-2">
             Build your travel path, find instant bookings, and sync tickets on your link in bio.
-          </p>
+          </p> */}
         </div>
 
         {/* 3. FLOATING TICKET SEARCH CARD */}
@@ -803,8 +803,8 @@ export default function DashboardPage() {
                       onClick={() => setActiveTab(tab)}
                       className={`group flex items-center gap-3 px-6 py-4.5 rounded-2xl transition-all cursor-pointer select-none font-black text-lg ${
                         isActive 
-                          ? 'bg-[#600619] text-white shadow-lg scale-[1.02]' 
-                          : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-[#600619]'
+                          ? 'bg-[#d2e823] text-[#254f1a] shadow-lg scale-[1.02]' 
+                          : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-[#254f1a]'
                       }`}
                     >
                       {renderTabIcon(tab, isActive)}
@@ -815,14 +815,14 @@ export default function DashboardPage() {
               </div>
 
               {/* Platform Subheading */}
-              <div className="text-right hidden lg:block select-none">
+              {/* <div className="text-right hidden lg:block select-none">
                 <span className="text-zinc-400 font-bold text-xs uppercase tracking-widest block">
                   Official Booking Partner
                 </span>
                 <span className="text-zinc-800 font-black text-sm tracking-tight mt-0.5 block">
                   Instant ticketing, seat selections & updates
                 </span>
-              </div>
+              </div> */}
 
             </div>
 
@@ -831,7 +831,7 @@ export default function DashboardPage() {
               
               {/* FROM (Source) Input */}
               <div className="lg:col-span-3 bg-zinc-100/80 rounded-2xl px-5 py-4 border border-zinc-200/50 hover:border-zinc-300/80 transition-colors flex items-center gap-4 relative">
-                <div className="text-[#600619] shrink-0">
+                <div className="text-[#254f1a] shrink-0">
                   <svg viewBox="0 0 24 24" className="w-7 h-7 fill-current" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" />
                   </svg>
@@ -853,7 +853,7 @@ export default function DashboardPage() {
               <div className="absolute left-1/2 lg:left-[25%] top-[90px] lg:top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
                 <button
                   onClick={swapLocations}
-                  className="w-12 h-12 rounded-full bg-white border border-zinc-200 shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all text-[#600619] hover:text-zinc-900 cursor-pointer"
+                  className="w-12 h-12 rounded-full bg-white border border-zinc-200 shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all text-[#254f1a] hover:text-zinc-900 cursor-pointer"
                   title="Swap Locations"
                 >
                   <svg viewBox="0 0 24 24" className="w-6 h-6 fill-none stroke-current stroke-[2.5]" xmlns="http://www.w3.org/2000/svg" strokeLinecap="round" strokeLinejoin="round">
@@ -868,7 +868,7 @@ export default function DashboardPage() {
 
               {/* TO (Destination) Input */}
               <div className="lg:col-span-3 bg-zinc-100/80 rounded-2xl px-5 py-4 border border-zinc-200/50 hover:border-zinc-300/80 transition-colors flex items-center gap-4">
-                <div className="text-[#600619] shrink-0">
+                <div className="text-[#254f1a] shrink-0">
                   <svg viewBox="0 0 24 24" className="w-7 h-7 fill-current" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" />
                   </svg>
@@ -888,7 +888,7 @@ export default function DashboardPage() {
 
               {/* DATE Picker Input */}
               <div className="lg:col-span-2 bg-zinc-100/80 rounded-2xl px-5 py-4 border border-zinc-200/50 hover:border-zinc-300/80 transition-colors flex items-center gap-3 relative cursor-pointer">
-                <div className="text-[#600619] shrink-0">
+                <div className="text-[#254f1a] shrink-0">
                   <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current" xmlns="http://www.w3.org/2000/svg">
                     <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 002 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm-7-7H7v2h5v-2z" />
                   </svg>
@@ -928,7 +928,7 @@ export default function DashboardPage() {
               {/* Big Search button */}
               <div className="lg:col-span-2 flex items-stretch">
                 <button
-                  className="w-full bg-[#600619] hover:bg-[#4a0310] text-white rounded-2xl py-4 lg:py-0 flex items-center justify-center gap-2 font-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg cursor-pointer"
+                  className="w-full bg-[#254f1a] hover:bg-[#214116] text-white rounded-2xl py-4 lg:py-0 flex items-center justify-center gap-2 font-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg cursor-pointer"
                 >
                   <span>Search</span>
                   <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-current stroke-[3]" xmlns="http://www.w3.org/2000/svg" strokeLinecap="round" strokeLinejoin="round">
@@ -953,7 +953,7 @@ export default function DashboardPage() {
           
           <div className="flex items-center justify-between">
             <h2 className="text-zinc-900 font-black text-3xl sm:text-4xl md:text-5xl tracking-tight flex items-center gap-3">
-              <span className="w-3 h-8 sm:h-9 md:h-10 rounded-full bg-[#600619] shrink-0"></span>
+              <span className="w-3 h-8 sm:h-9 md:h-10 rounded-full bg-[#254f1a] shrink-0"></span>
               Recent Searches
             </h2>
             <button className="text-zinc-400 hover:text-zinc-900 font-bold text-xs uppercase tracking-widest transition-colors cursor-pointer">
@@ -974,7 +974,7 @@ export default function DashboardPage() {
                   
                   {/* Transit Icon Badge */}
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-[#600619]">
+                    <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-[#254f1a]">
                       {search.type === 'buses' && (
                         <span className="text-lg">🚌</span>
                       )}
@@ -1000,7 +1000,7 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex flex-col">
                     <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider">Origin</span>
-                    <span className="text-zinc-800 font-black text-lg group-hover:text-[#600619] transition-colors truncate max-w-[120px]">
+                    <span className="text-zinc-800 font-black text-lg group-hover:text-[#254f1a] transition-colors truncate max-w-[120px]">
                       {search.from}
                     </span>
                   </div>
@@ -1008,14 +1008,14 @@ export default function DashboardPage() {
                   {/* Flow Arrow */}
                   <div className="flex-1 flex items-center justify-center px-2">
                     <div className="w-full h-[2px] bg-zinc-200 relative flex items-center justify-end">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#600619] absolute left-0" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#600619]" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#254f1a] absolute left-0" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#254f1a]" />
                     </div>
                   </div>
 
                   <div className="flex flex-col text-right">
                     <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider">Destination</span>
-                    <span className="text-zinc-800 font-black text-lg group-hover:text-[#600619] transition-colors truncate max-w-[120px]">
+                    <span className="text-zinc-800 font-black text-lg group-hover:text-[#254f1a] transition-colors truncate max-w-[120px]">
                       {search.to}
                     </span>
                   </div>
@@ -1035,7 +1035,7 @@ export default function DashboardPage() {
         {/* Title and Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-zinc-900 font-black text-3xl sm:text-4xl md:text-5xl tracking-tight flex items-center gap-3">
-            <span className="w-3 h-8 sm:h-9 md:h-10 rounded-full bg-[#600619] shrink-0"></span>
+            <span className="w-3 h-8 sm:h-9 md:h-10 rounded-full bg-[#254f1a] shrink-0"></span>
             Top Private Travels
           </h2>
           
@@ -1043,7 +1043,7 @@ export default function DashboardPage() {
           <div className="hidden sm:flex items-center gap-2">
             <button
               onClick={() => scrollCarousel('left')}
-              className="w-10 h-10 rounded-full bg-white border border-zinc-200/80 shadow-sm flex items-center justify-center text-[#600619] hover:text-zinc-950 hover:bg-zinc-50 active:scale-95 transition-all cursor-pointer"
+              className="w-10 h-10 rounded-full bg-white border border-zinc-200/80 shadow-sm flex items-center justify-center text-[#254f1a] hover:text-zinc-950 hover:bg-zinc-50 active:scale-95 transition-all cursor-pointer"
             >
               <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-current stroke-[2.5]" xmlns="http://www.w3.org/2000/svg" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M15 19l-7-7 7-7" />
@@ -1051,7 +1051,7 @@ export default function DashboardPage() {
             </button>
             <button
               onClick={() => scrollCarousel('right')}
-              className="w-10 h-10 rounded-full bg-white border border-zinc-200/80 shadow-sm flex items-center justify-center text-[#600619] hover:text-zinc-950 hover:bg-zinc-50 active:scale-95 transition-all cursor-pointer"
+              className="w-10 h-10 rounded-full bg-white border border-zinc-200/80 shadow-sm flex items-center justify-center text-[#254f1a] hover:text-zinc-950 hover:bg-zinc-50 active:scale-95 transition-all cursor-pointer"
             >
               <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-current stroke-[2.5]" xmlns="http://www.w3.org/2000/svg" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 5l7 7-7 7" />
@@ -1066,7 +1066,7 @@ export default function DashboardPage() {
           {/* Floating Right Arrow Button (Overlay right side of list) */}
           <button
             onClick={() => scrollCarousel('right')}
-            className="absolute -right-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-white border border-zinc-200 shadow-lg flex items-center justify-center text-[#600619] hover:text-zinc-950 hover:scale-110 active:scale-95 transition-all cursor-pointer"
+            className="absolute -right-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-white border border-zinc-200 shadow-lg flex items-center justify-center text-[#254f1a] hover:text-zinc-950 hover:scale-110 active:scale-95 transition-all cursor-pointer"
             title="Next"
           >
             <svg viewBox="0 0 24 24" className="w-6 h-6 fill-none stroke-current stroke-[3]" xmlns="http://www.w3.org/2000/svg" strokeLinecap="round" strokeLinejoin="round">
@@ -1077,7 +1077,7 @@ export default function DashboardPage() {
           {/* Floating Left Arrow Button */}
           <button
             onClick={() => scrollCarousel('left')}
-            className="absolute -left-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-white border border-zinc-200 shadow-lg flex items-center justify-center text-[#600619] hover:text-zinc-950 hover:scale-110 active:scale-95 transition-all cursor-pointer"
+            className="absolute -left-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-white border border-zinc-200 shadow-lg flex items-center justify-center text-[#254f1a] hover:text-zinc-950 hover:scale-110 active:scale-95 transition-all cursor-pointer"
             title="Previous"
           >
             <svg viewBox="0 0 24 24" className="w-6 h-6 fill-none stroke-current stroke-[3]" xmlns="http://www.w3.org/2000/svg" strokeLinecap="round" strokeLinejoin="round">
@@ -1112,7 +1112,7 @@ export default function DashboardPage() {
 
                 {/* Card Bottom: Metadata and details */}
                 <div className="flex flex-col gap-3 p-5 bg-zinc-50 border-t border-zinc-200/40 rounded-b-3xl flex-1 justify-between">
-                  <span className="text-zinc-900 font-black text-lg group-hover/card:text-[#600619] transition-colors truncate">
+                  <span className="text-zinc-900 font-black text-lg group-hover/card:text-[#254f1a] transition-colors truncate">
                     {operator.name}
                   </span>
                   
@@ -1142,7 +1142,7 @@ export default function DashboardPage() {
         ref={statsRef}
         className="w-full max-w-7xl mx-auto px-6 mt-20 select-none relative"
       >
-        <div className="w-full bg-[#600619] rounded-[3rem] p-10 sm:p-14 relative overflow-hidden shadow-2xl flex items-center justify-center border border-white/10">
+        <div className="w-full bg-[#254f1a] rounded-[3rem] p-10 sm:p-14 relative overflow-hidden shadow-2xl flex items-center justify-center border border-white/10">
           
           {/* Overlapping corner design circles */}
           {/* Top-Left */}
@@ -1207,7 +1207,7 @@ export default function DashboardPage() {
         {/* Section Title */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-zinc-900 font-black text-3xl sm:text-4xl md:text-5xl tracking-tight flex items-center gap-3">
-            <span className="w-3 h-8 sm:h-9 md:h-10 rounded-full bg-[#600619] shrink-0"></span>
+            <span className="w-3 h-8 sm:h-9 md:h-10 rounded-full bg-[#254f1a] shrink-0"></span>
             Popular Bus Routes
           </h2>
         </div>
@@ -1244,7 +1244,7 @@ export default function DashboardPage() {
         <div className="w-full flex items-center justify-center mt-10">
           <button
             onClick={() => setShowAllBuses(!showAllBuses)}
-            className="border border-[#600619]/40 hover:border-[#600619] text-[#600619] hover:bg-[#600619] hover:text-white rounded-full px-8 py-3 font-black text-xs uppercase tracking-widest transition-all duration-300 active:scale-95 cursor-pointer shadow-sm"
+            className="border border-[#254f1a]/40 hover:border-[#254f1a] text-[#254f1a] hover:bg-[#254f1a] hover:text-white rounded-full px-8 py-3 font-black text-xs uppercase tracking-widest transition-all duration-300 active:scale-95 cursor-pointer shadow-sm"
           >
             {showAllBuses ? 'View Less' : 'View More'}
           </button>
@@ -1258,7 +1258,7 @@ export default function DashboardPage() {
         {/* Section Title */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-zinc-900 font-black text-3xl sm:text-4xl md:text-5xl tracking-tight flex items-center gap-3">
-            <span className="w-3 h-8 sm:h-9 md:h-10 rounded-full bg-[#600619] shrink-0"></span>
+            <span className="w-3 h-8 sm:h-9 md:h-10 rounded-full bg-[#254f1a] shrink-0"></span>
             Famous Train Routes
           </h2>
         </div>
@@ -1295,7 +1295,7 @@ export default function DashboardPage() {
         <div className="w-full flex items-center justify-center mt-10">
           <button
             onClick={() => setShowAllTrains(!showAllTrains)}
-            className="border border-[#600619]/40 hover:border-[#600619] text-[#600619] hover:bg-[#600619] hover:text-white rounded-full px-8 py-3 font-black text-xs uppercase tracking-widest transition-all duration-300 active:scale-95 cursor-pointer shadow-sm"
+            className="border border-[#254f1a]/40 hover:border-[#254f1a] text-[#254f1a] hover:bg-[#254f1a] hover:text-white rounded-full px-8 py-3 font-black text-xs uppercase tracking-widest transition-all duration-300 active:scale-95 cursor-pointer shadow-sm"
           >
             {showAllTrains ? 'View Less' : 'View More'}
           </button>
@@ -1309,7 +1309,7 @@ export default function DashboardPage() {
         {/* Section Title */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-zinc-900 font-black text-3xl sm:text-4xl md:text-5xl tracking-tight flex items-center gap-3">
-            <span className="w-3 h-8 sm:h-9 md:h-10 rounded-full bg-[#600619] shrink-0"></span>
+            <span className="w-3 h-8 sm:h-9 md:h-10 rounded-full bg-[#254f1a] shrink-0"></span>
             Famous Flight Routes
           </h2>
         </div>
@@ -1346,7 +1346,7 @@ export default function DashboardPage() {
         <div className="w-full flex items-center justify-center mt-10">
           <button
             onClick={() => setShowAllFlights(!showAllFlights)}
-            className="border border-[#600619]/40 hover:border-[#600619] text-[#600619] hover:bg-[#600619] hover:text-white rounded-full px-8 py-3 font-black text-xs uppercase tracking-widest transition-all duration-300 active:scale-95 cursor-pointer shadow-sm"
+            className="border border-[#254f1a]/40 hover:border-[#254f1a] text-[#254f1a] hover:bg-[#254f1a] hover:text-white rounded-full px-8 py-3 font-black text-xs uppercase tracking-widest transition-all duration-300 active:scale-95 cursor-pointer shadow-sm"
           >
             {showAllFlights ? 'View Less' : 'View More'}
           </button>
