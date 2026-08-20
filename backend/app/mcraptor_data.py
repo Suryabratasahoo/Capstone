@@ -1,14 +1,11 @@
-# app/raptor/raptor_data.py
+# /app/mcraptor/mcraptor_data.py
 
-from fileinput import filename
 import sqlite3
 import os
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
-# Save file path comment as requested
-# /app/raptor/raptor_data.py
 
-class RaptorTimetable:
+class McRaptorTimetable:
     def __init__(self):
         # Station code -> list of route IDs passing through it
         self.stop_routes: Dict[str, List[int]] = {}
@@ -16,19 +13,24 @@ class RaptorTimetable:
         # Route ID -> list of station codes in order
         self.routes: Dict[int, List[str]] = {}
         
-        # Route ID -> list of trips. Each trip is a dict with train_number, train_name, running_days, and stop timetables
+        # Route ID -> list of trips
         self.route_trips: Dict[int, List[dict]] = {}
         
         # Station code -> station name mapping
         self.stations: Dict[str, str] = {}
+        
+        # Segment-Aware Seat Availability lookup:
+        # Primary key: (train_number, travel_date, from_station_code, to_station_code, class_code)
+        # Fallback key: (train_number, travel_date, class_code)
+        self.seat_map: Dict[Tuple, dict] = {}
 
 
-def build_raptor_timetable(db_path: str = "railway_data.db") -> RaptorTimetable:
-    """Pre-processes SQLite railway database into high-performance RAPTOR arrays."""
+def build_mcraptor_timetable(db_path: str = "app/mcraptor_railway_database.db") -> McRaptorTimetable:
+    """Pre-processes SQLite railway DB & Seat Availability into RAM for McRAPTOR."""
     if not os.path.exists(db_path):
         raise FileNotFoundError(f"Database file '{db_path}' not found.")
 
-    timetable = RaptorTimetable()
+    timetable = McRaptorTimetable()
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
@@ -54,16 +56,14 @@ def build_raptor_timetable(db_path: str = "railway_data.db") -> RaptorTimetable:
             }
         }
 
-    # 3. Group Stops into Route Patterns
+    # 3. Load All Stops & Group into Route Patterns
     cursor.execute("""
         SELECT train_number, stop_sequence, station_code, arrival_time, departure_time, distance_km, journey_day 
         FROM train_stops 
         ORDER BY train_number, stop_sequence
     """)
     all_stops = cursor.fetchall()
-    conn.close()
 
-    # Group train stops by train_number
     train_stops_map = {}
     for row in all_stops:
         t_num, seq, stn_code, arr, dep, dist, day = row
@@ -78,7 +78,6 @@ def build_raptor_timetable(db_path: str = "railway_data.db") -> RaptorTimetable:
             "journey_day": day
         })
 
-    # Pattern Matching: Group trains with identical station sequences into RAPTOR Route IDs
     pattern_to_route_id = {}
     route_counter = 0
 
@@ -91,7 +90,6 @@ def build_raptor_timetable(db_path: str = "railway_data.db") -> RaptorTimetable:
             timetable.routes[route_id] = list(pattern_key)
             timetable.route_trips[route_id] = []
 
-            # Link stations to this route
             for stn in pattern_key:
                 if stn in timetable.stop_routes:
                     if route_id not in timetable.stop_routes[stn]:
@@ -101,7 +99,6 @@ def build_raptor_timetable(db_path: str = "railway_data.db") -> RaptorTimetable:
         else:
             route_id = pattern_to_route_id[pattern_key]
 
-        # Add this train trip to its corresponding route pattern
         t_info = trains_info.get(t_num, {})
         timetable.route_trips[route_id].append({
             "train_number": t_num,
@@ -110,4 +107,32 @@ def build_raptor_timetable(db_path: str = "railway_data.db") -> RaptorTimetable:
             "stops": stops
         })
 
+    # 4. Load Seat Availability Table into RAM using Segment-Aware Keys
+    cursor.execute("""
+        SELECT train_number, travel_date, from_station_code, to_station_code, class_code, availability_status, available_seats, wl_number, price_inr 
+        FROM seat_availability
+    """)
+    for row in cursor.fetchall():
+        t_num, date_str, from_stn, to_stn, cls, status, seats, wl, price = row
+
+        # Primary Segment-Aware Key: (train, date, from_station, to_station, class)
+        segment_key = (t_num, date_str, from_stn, to_stn, cls)
+        timetable.seat_map[segment_key] = {
+            "status": status,
+            "available_seats": seats,
+            "wl_number": wl,
+            "price_inr": price
+        }
+
+        # Backup Fallback Key: (train, date, class)
+        fallback_key = (t_num, date_str, cls)
+        if fallback_key not in timetable.seat_map:
+            timetable.seat_map[fallback_key] = {
+                "status": status,
+                "available_seats": seats,
+                "wl_number": wl,
+                "price_inr": price
+            }
+
+    conn.close()
     return timetable

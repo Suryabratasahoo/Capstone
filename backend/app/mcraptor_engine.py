@@ -3,7 +3,7 @@
 
 from datetime import datetime, timedelta
 from typing import List, Dict
-from app.mcraptor.mcraptor_data import McRaptorTimetable
+from app.mcraptor_data import McRaptorTimetable
 
 MIN_LAYOVER_MINS = 45
 MAX_LAYOVER_MINS = 360
