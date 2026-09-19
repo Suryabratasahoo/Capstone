@@ -3,65 +3,33 @@
 
 const API_BASE_URL = "http://127.0.0.1:8000";
 
-// Detailed Station Coordinates Map
 const STATION_COORDS = {
-  BZA: [16.5193, 80.6305], // Vijayawada Junction
-  EE: [16.7107, 81.0952], // Eluru
-  TDD: [16.8118, 81.5303], // Tadepalligudem
-  RJY: [16.9891, 81.7832], // Rajahmundry
-  SLO: [16.9818, 82.2355], // Samalkot
-  TUNI: [17.3551, 82.5482], // Tuni
-  AKP: [17.6896, 83.0034], // Anakapalle
-  DVD: [17.6976, 83.1537], // Duvvada
-  VSKP: [17.7231, 83.2906], // Visakhapatnam
-  VZM: [18.1133, 83.3977], // Vizianagaram Junction
-  CHE: [18.2949, 83.8938], // Srikakulam Road
-  PSA: [18.7708, 84.4211], // Palasa
-  BAM: [19.3149, 84.7941], // Berhampur
-  BALU: [19.7423, 85.1873], // Balugaon
-  KUR: [20.1834, 85.6173], // Khurda Road Junction
-  HPGM: [20.18, 85.65], // Haripurgram PH
-  BBS: [20.2961, 85.8245], // Bhubaneswar
-  BBSN: [20.35, 85.82], // Bhubaneshwar New
-  CTC: [20.4625, 85.8828], // Cuttack
-  JJKR: [20.9507, 86.1362], // Jajpur Keonjhar Road
-  BHC: [21.05, 86.5], // Bhadrak
-  BLS: [21.4934, 86.9135], // Balasore
-  KGP: [22.3302, 87.3237], // Kharagpur Junction
-  SRC: [22.5601, 88.2907], // Santragachi Junction
-  HWH: [22.583, 88.3426], // Howrah Junction
-  MAS: [13.0827, 80.2707], // Chennai Central
+  BZA: [16.5193, 80.6305],
+  EE: [16.7107, 81.0952],
+  TDD: [16.8118, 81.5303],
+  RJY: [16.9891, 81.7832],
+  SLO: [16.9818, 82.2355],
+  TUNI: [17.3551, 82.5482],
+  AKP: [17.6896, 83.0034],
+  DVD: [17.6976, 83.1537],
+  VSKP: [17.7231, 83.2906],
+  VZM: [18.1133, 83.3977],
+  CHE: [18.2949, 83.8938],
+  PSA: [18.7708, 84.4211],
+  BAM: [19.3149, 84.7941],
+  BALU: [19.7423, 85.1873],
+  KUR: [20.1834, 85.6173],
+  BBS: [20.2961, 85.8245],
+  CTC: [20.4625, 85.8828],
+  JJKR: [20.9507, 86.1362],
+  BHC: [21.05, 86.5],
+  BLS: [21.4934, 86.9135],
+  KGP: [22.3302, 87.3237],
+  SRC: [22.5601, 88.2907],
+  HWH: [22.583, 88.3426],
+  MAS: [13.0827, 80.2707],
+  AP001: [17.6936, 83.2923],
 };
-
-// Main trunk sequence along Howrah-Chennai corridor to interpolate intermediate stops
-const CORRIDOR_SEQUENCE = [
-  "MAS",
-  "BZA",
-  "EE",
-  "TDD",
-  "RJY",
-  "SLO",
-  "TUNI",
-  "AKP",
-  "DVD",
-  "VSKP",
-  "VZM",
-  "CHE",
-  "PSA",
-  "BAM",
-  "BALU",
-  "HPGM",
-  "KUR",
-  "BBS",
-  "BBSN",
-  "CTC",
-  "JJKR",
-  "BHC",
-  "BLS",
-  "KGP",
-  "SRC",
-  "HWH",
-];
 
 let map;
 let activePolylineGroup;
@@ -71,7 +39,8 @@ document.addEventListener("DOMContentLoaded", () => {
   initMap();
   checkBackendHealth();
 
-  document.getElementById("dateInput").value = "2026-08-05";
+  document.getElementById("dateInput").value = "2026-08-01";
+  document.getElementById("timeInput").value = "08:00";
   document
     .getElementById("searchForm")
     .addEventListener("submit", handleSearch);
@@ -96,14 +65,14 @@ async function checkBackendHealth() {
 
     if (data.status === "online") {
       statusDiv.innerHTML = `
-            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span class="text-emerald-300 font-semibold">McRAPTOR Active (${data.mcraptor_seat_records} Seats)</span>
-        `;
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span class="text-emerald-300 font-semibold">McRAPTOR Active (${data.total_stops} Stops)</span>
+      `;
     }
   } catch (err) {
     statusDiv.innerHTML = `
-        <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-        <span class="text-rose-400 font-semibold">Engine Offline</span>
+      <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+      <span class="text-rose-400 font-semibold">Engine Offline</span>
     `;
   }
 }
@@ -113,6 +82,7 @@ async function handleSearch(e) {
 
   const src = document.getElementById("sourceInput").value.trim().toUpperCase();
   const dst = document.getElementById("destInput").value.trim().toUpperCase();
+  const time = document.getElementById("timeInput").value;
   const date = document.getElementById("dateInput").value;
   const travelClass = document.getElementById("classSelect").value;
 
@@ -121,7 +91,7 @@ async function handleSearch(e) {
   btn.innerText = "Evaluating Pareto Frontier...";
 
   try {
-    const url = `${API_BASE_URL}/api/v3/mcraptor/search?source=${src}&destination=${dst}&date=${date}&class_code=${travelClass}&top_k=25`;
+    const url = `${API_BASE_URL}/api/v3/mcraptor/search?source=${src}&destination=${dst}&departure_time=${time}&date=${date}&class_code=${travelClass}&top_k=25`;
     const res = await fetch(url);
 
     if (!res.ok) {
@@ -141,7 +111,7 @@ async function handleSearch(e) {
     alert(`Error: ${err.message}`);
   } finally {
     btn.disabled = false;
-    btn.innerText = "⚡ Run McRAPTOR Search";
+    btn.innerText = "⚡ Run Multi-Modal Search";
   }
 }
 
@@ -182,17 +152,13 @@ function applyFiltersAndSort() {
 
 function getStatusBadge(status, seats, wl) {
   if (status === "AVAILABLE") {
-    return `<span class="bg-emerald-950 text-emerald-300 border border-emerald-700 px-2 py-0.5 rounded font-mono font-bold text-xs">
-              AVAILABLE (${seats})
-            </span>`;
+    return `<span class="bg-emerald-950 text-emerald-300 border border-emerald-700 px-2 py-0.5 rounded font-mono font-bold text-xs">AVAILABLE (${seats})</span>`;
   } else if (status === "RAC") {
-    return `<span class="bg-amber-950 text-amber-300 border border-amber-700 px-2 py-0.5 rounded font-mono font-bold text-xs">
-              RAC (${wl})
-            </span>`;
+    return `<span class="bg-amber-950 text-amber-300 border border-amber-700 px-2 py-0.5 rounded font-mono font-bold text-xs">RAC (${wl})</span>`;
+  } else if (status === "N/A") {
+    return `<span class="bg-slate-900 text-slate-400 border border-slate-700 px-2 py-0.5 rounded font-mono font-bold text-xs">WALK</span>`;
   } else {
-    return `<span class="bg-rose-950 text-rose-300 border border-rose-700 px-2 py-0.5 rounded font-mono font-bold text-xs">
-              WL ${wl}
-            </span>`;
+    return `<span class="bg-rose-950 text-rose-300 border border-rose-700 px-2 py-0.5 rounded font-mono font-bold text-xs">WL ${wl}</span>`;
   }
 }
 
@@ -209,7 +175,6 @@ function renderResultsList(options) {
     const isDirect = option.journey_type === "DIRECT";
     const card = document.createElement("div");
 
-    // Distinct visual styling per card with strong left border indicator
     card.className = `p-3.5 rounded-xl border-2 transition-all cursor-pointer space-y-2.5 shadow-lg ${
       isDirect
         ? "bg-slate-900 border-l-4 border-l-purple-500 border-slate-800 hover:border-purple-400 hover:bg-slate-800/80"
@@ -218,40 +183,43 @@ function renderResultsList(options) {
 
     card.onclick = () => highlightRouteOnMap(option);
 
-    // Detailed Leg Render
     let legsHtml = option.legs
-      .map(
-        (leg) => `
+      .map((leg) => {
+        let modeIcon = "🚆";
+        if (leg.mode === "BUS") modeIcon = "🚌";
+        if (leg.mode === "AUTO_CAB" || leg.service_number === "TRANSFER")
+          modeIcon = "🚶";
+
+        return `
             <div class="text-xs border-t border-slate-800/80 pt-2 text-slate-300">
                 <div class="flex items-center justify-between mb-1">
-                    <span class="font-bold text-purple-300 text-xs">🚆 Train #${leg.train_number}</span>
-                    <span class="text-slate-300 font-mono text-[11px] font-semibold">${leg.train_name}</span>
+                    <span class="font-bold text-purple-300 text-xs">${modeIcon} ${leg.mode} #${leg.service_number}</span>
+                    <span class="text-slate-300 font-mono text-[11px] font-semibold">${leg.from_stop.name} ➔ ${leg.to_stop.name}</span>
                 </div>
                 <div class="grid grid-cols-2 gap-2 bg-slate-950/80 p-2 rounded-md border border-slate-800/90 font-mono text-xs">
                     <div>
-                        <span class="text-slate-500">From:</span> <b class="text-slate-200">${leg.from_station.code}</b><br>
+                        <span class="text-slate-500">From:</span> <b class="text-slate-200">${leg.from_stop.id}</b><br>
                         <span class="text-slate-500">Dep:</span> <b class="text-emerald-400">${leg.departure_time}</b>
                     </div>
                     <div>
-                        <span class="text-slate-500">To:</span> <b class="text-slate-200">${leg.to_station.code}</b><br>
+                        <span class="text-slate-500">To:</span> <b class="text-slate-200">${leg.to_stop.id}</b><br>
                         <span class="text-slate-500">Arr:</span> <b class="text-amber-400">${leg.arrival_time}</b>
                     </div>
                 </div>
                 <div class="flex justify-between items-center text-[11px] text-slate-400 mt-1 px-1">
                     <span>Distance: <b class="text-slate-200">${leg.distance_km} km</b></span>
-                    <span>Leg Fare: <b class="text-emerald-400 font-bold">₹${leg.price_inr}</b></span>
+                    <span>Fare: <b class="text-emerald-400 font-bold">₹${leg.price_inr}</b></span>
                 </div>
             </div>
-        `,
-      )
+        `;
+      })
       .join("");
 
-    // Render Interchange Junction Details
     let interchangeHtml = option.interchange_station
       ? `
             <div class="bg-rose-950/40 text-rose-200 p-2 rounded-md border border-rose-800/60 text-xs">
                 <div class="flex items-center justify-between font-bold">
-                    <span>🔄 Transfer at: ${option.interchange_station.name} (${option.interchange_station.code})</span>
+                    <span>🔄 Transfer at: ${option.interchange_station.name}</span>
                     <span class="text-rose-300 font-mono">${option.interchange_station.layover_time}</span>
                 </div>
             </div>
@@ -281,22 +249,8 @@ function renderResultsList(options) {
   highlightRouteOnMap(options[0]);
 }
 
-/**
- * Traces exact station-by-station path along the railway corridor
- */
-function getIntermediateStops(fromCode, toCode) {
-  const fromIdx = CORRIDOR_SEQUENCE.indexOf(fromCode);
-  const toIdx = CORRIDOR_SEQUENCE.indexOf(toCode);
-
-  if (fromIdx !== -1 && toIdx !== -1) {
-    if (fromIdx <= toIdx) {
-      return CORRIDOR_SEQUENCE.slice(fromIdx, toIdx + 1);
-    } else {
-      return CORRIDOR_SEQUENCE.slice(toIdx, fromIdx + 1).reverse();
-    }
-  }
-
-  return [fromCode, toCode];
+function cleanCode(stopId) {
+  return stopId.includes(":") ? stopId.split(":")[1] : stopId;
 }
 
 function highlightRouteOnMap(route) {
@@ -307,92 +261,42 @@ function highlightRouteOnMap(route) {
   const lineColor = isDirect ? "#a855f7" : "#818cf8";
   const fullBounds = [];
 
-  const transferStationCode = route.interchange_station
-    ? route.interchange_station.code
-    : null;
-
   route.legs.forEach((leg, legIdx) => {
-    const fromCode = leg.from_station.code;
-    const toCode = leg.to_station.code;
+    const rawFrom = cleanCode(leg.from_stop.id);
+    const rawTo = cleanCode(leg.to_stop.id);
 
-    // Get sequential station codes between leg source and destination
-    const stopCodes = getIntermediateStops(fromCode, toCode);
-    const legCoords = [];
+    const fromCoord = STATION_COORDS[rawFrom];
+    const toCoord = STATION_COORDS[rawTo];
 
-    stopCodes.forEach((code) => {
-      const coord = STATION_COORDS[code];
-      if (!coord) return;
+    if (fromCoord && toCoord) {
+      fullBounds.push(fromCoord, toCoord);
 
-      legCoords.push(coord);
-      fullBounds.push(coord);
-
-      const isSource = code === route.legs[0].from_station.code;
-      const isDestination =
-        code === route.legs[route.legs.length - 1].to_station.code;
-      const isTransfer = code === transferStationCode;
-
-      // 1. RED PULSING TRANSFER MARKER
-      if (isTransfer) {
-        L.circleMarker(coord, {
-          radius: 9,
-          color: "#ef4444",
-          fillColor: "#dc2626",
-          fillOpacity: 1,
-          weight: 3,
-          className: "transfer-pulse",
-        })
-          .addTo(activePolylineGroup)
-          .bindPopup(
-            `
-            <div style="color: #0f172a; font-family: sans-serif; font-size: 12px;">
-                <b style="color: #dc2626;">🔄 TRANSFER JUNCTION</b><br>
-                <b>${route.interchange_station.name} (${code})</b><br>
-                Layover: <b>${route.interchange_station.layover_time}</b>
-            </div>
-        `,
-          )
-          .openPopup();
-      }
-      // 2. SOURCE / DESTINATION MARKERS
-      else if (isSource || isDestination) {
-        L.circleMarker(coord, {
-          radius: 8,
-          color: lineColor,
-          fillColor: "#0f172a",
-          fillOpacity: 1,
-          weight: 3,
-        }).addTo(activePolylineGroup).bindPopup(`
-            <div style="color: #0f172a; font-family: sans-serif; font-size: 12px;">
-                <b>${isSource ? "🚀 Departure:" : "🏁 Destination:"} ${code}</b><br>
-                Train: #${leg.train_number} - ${leg.train_name}
-            </div>
-        `);
-      }
-      // 3. INTERMEDIATE STOPPAGES (Small nodes)
-      else {
-        L.circleMarker(coord, {
-          radius: 4,
-          color: lineColor,
-          fillColor: "#334155",
-          fillOpacity: 0.9,
-          weight: 1.5,
-        }).addTo(activePolylineGroup).bindPopup(`
-            <div style="color: #0f172a; font-family: sans-serif; font-size: 11px;">
-                📍 Stoppage: <b>${code}</b><br>
-                Leg Train: #${leg.train_number}
-            </div>
-        `);
-      }
-    });
-
-    // Draw station-by-station line segments for this leg
-    if (legCoords.length > 0) {
-      L.polyline(legCoords, {
-        color: lineColor,
+      L.polyline([fromCoord, toCoord], {
+        color: leg.mode === "BUS" ? "#f59e0b" : lineColor,
         weight: 4.5,
         opacity: 0.85,
-        dashArray: legIdx === 1 ? "6, 8" : null,
+        dashArray: leg.service_number === "TRANSFER" ? "6, 8" : null,
       }).addTo(activePolylineGroup);
+
+      L.circleMarker(fromCoord, {
+        radius: 6,
+        color: lineColor,
+        fillColor: "#0f172a",
+        fillOpacity: 1,
+        weight: 2,
+      })
+        .addTo(activePolylineGroup)
+        .bindPopup(`<b>${leg.from_stop.name}</b> (${rawFrom})`);
+
+      L.circleMarker(toCoord, {
+        radius: 6,
+        color: lineColor,
+        fillColor: "#0f172a",
+        fillOpacity: 1,
+        weight: 2,
+      })
+        .addTo(activePolylineGroup)
+        .bindPopup(`<b>${leg.to_stop.name}</b> (${rawTo})`);
     }
   });
 

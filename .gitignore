@@ -60,5 +60,6 @@ desktop.ini
 # ==========================
 
 struct.txt
+struct.py
 backend/struct.txt
 backend/commands.txt
