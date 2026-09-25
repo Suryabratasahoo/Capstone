@@ -8,6 +8,7 @@ import os
 
 from app.mcraptor_data import build_mcraptor_timetable, McRaptorTimetable
 from app.mcraptor_engine import run_mcraptor_search
+from app.mcraptor_city_engine import run_mcraptor_city_search
 
 mcraptor_timetable: McRaptorTimetable = None
 
@@ -107,6 +108,7 @@ def search_mcraptor_routes(
         travel_class=cls_code,
         top_k=top_k
     )
+    print(routes)
     elapsed_ms = round((time.time() - start_t) * 1000, 2)
 
     return {
@@ -121,6 +123,42 @@ def search_mcraptor_routes(
         "departure_time": departure_time,
         "travel_date": date,
         "travel_class": cls_code,
+        "total_options_found": len(routes),
+        "search_time_ms": elapsed_ms,
+        "options": routes
+    }
+
+@app.get("/api/v4/mcraptor/city-search", summary="McRAPTOR City-to-City Routing API")
+def search_mcraptor_city_routes(
+    source_city: str = Query(..., description="Source city name (e.g. Vijayawada)"),
+    dest_city: str = Query(..., description="Destination city name (e.g. Bengaluru)"),
+    departure_time: str = Query("08:00", description="Departure time in HH:MM format"),
+    date: str = Query("2026-08-01", description="Travel date in YYYY-MM-DD format"),
+    class_code: str = Query("3A", description="Travel class (3A, 2A, SL)"),
+    top_k: int = Query(15, ge=1, le=50, description="Max Pareto routes to return")
+):
+    if not mcraptor_timetable:
+        raise HTTPException(status_code=503, detail="Timetable index not initialized.")
+
+    start_t = time.time()
+    routes = run_mcraptor_city_search(
+        timetable=mcraptor_timetable,
+        source_city=source_city,
+        dest_city=dest_city,
+        departure_time_str=departure_time,
+        travel_date_str=date,
+        travel_class=class_code.strip().upper(),
+        top_k=top_k
+    )
+    
+    elapsed_ms = round((time.time() - start_t) * 1000, 2)
+
+    return {
+        "source_city": source_city.strip().capitalize(),
+        "destination_city": dest_city.strip().capitalize(),
+        "departure_time": departure_time,
+        "travel_date": date,
+        "travel_class": class_code,
         "total_options_found": len(routes),
         "search_time_ms": elapsed_ms,
         "options": routes

@@ -80,8 +80,8 @@ async function checkBackendHealth() {
 async function handleSearch(e) {
   e.preventDefault();
 
-  const src = document.getElementById("sourceInput").value.trim().toUpperCase();
-  const dst = document.getElementById("destInput").value.trim().toUpperCase();
+  const src = document.getElementById("sourceInput").value.trim();
+  const dst = document.getElementById("destInput").value.trim();
   const time = document.getElementById("timeInput").value;
   const date = document.getElementById("dateInput").value;
   const travelClass = document.getElementById("classSelect").value;
@@ -91,7 +91,7 @@ async function handleSearch(e) {
   btn.innerText = "Evaluating Pareto Frontier...";
 
   try {
-    const url = `${API_BASE_URL}/api/v3/mcraptor/search?source=${src}&destination=${dst}&departure_time=${time}&date=${date}&class_code=${travelClass}&top_k=25`;
+    const url = `${API_BASE_URL}/api/v4/mcraptor/city-search?source_city=${src}&dest_city=${dst}&departure_time=${time}&date=${date}&class_code=${travelClass}&top_k=25`;
     const res = await fetch(url);
 
     if (!res.ok) {

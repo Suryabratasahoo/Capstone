@@ -25,6 +25,9 @@ class McRaptorTimetable:
         # stop_id -> stop metadata dict (name, lat, lon, mode, city)
         self.stops: Dict[str, dict] = {}
         
+        # city (lowercase) -> list of stop_ids
+        self.city_stops: Dict[str, List[str]] = {}
+        
         # from_stop_id -> list of transfer dicts (to_stop_id, transfer_time_sec, walk_distance_km, transfer_mode)
         self.transfers: Dict[str, List[dict]] = {}
 
@@ -60,6 +63,12 @@ def build_mcraptor_timetable(db_path: str = "app/final.db") -> McRaptorTimetable
             "mode": mode
         }
         timetable.stop_routes[stop_id] = []
+        
+        if city:
+            city_lower = city.lower().strip()
+            if city_lower not in timetable.city_stops:
+                timetable.city_stops[city_lower] = []
+            timetable.city_stops[city_lower].append(stop_id)
 
     # 2. Load Unified Trips and Routes
     cursor.execute("SELECT trip_id, route_id, mode, service_number FROM trips")

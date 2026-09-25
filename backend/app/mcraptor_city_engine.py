@@ -126,10 +126,10 @@ def get_leg_fare_and_status(
     return {"status": "AVAILABLE", "available_seats": 99, "wl_number": 0, "price_inr": 0}
 
 
-def run_mcraptor_search(
+def run_mcraptor_city_search(
     timetable: McRaptorTimetable,
-    source_stop_id: str,
-    dest_stop_id: str,
+    source_city: str,
+    dest_city: str,
     departure_time_str: str = "08:00",
     travel_date_str: str = "2026-08-01",
     travel_class: str = "3A",
@@ -139,10 +139,10 @@ def run_mcraptor_search(
     Unified Multi-Modal McRAPTOR Search Algorithm.
     Supports Train, Bus, and Modal Transfer Footpaths.
     """
-    source_stop_id = source_stop_id.strip()
-    dest_stop_id = dest_stop_id.strip()
+    source_city = source_city.strip().lower()
+    dest_city = dest_city.strip().lower()
 
-    if source_stop_id not in timetable.stops or dest_stop_id not in timetable.stops:
+    if source_city not in timetable.city_stops or dest_city not in timetable.city_stops:
         return []
 
     # Convert HH:MM departure time to seconds from midnight
@@ -150,87 +150,96 @@ def run_mcraptor_search(
     start_dep_sec = (dep_h * 3600) + (dep_m * 60)
 
     pareto_results: List[dict] = []
-    source_route_ids = timetable.stop_routes.get(source_stop_id, [])
-
+    source_stops = timetable.city_stops[source_city]
+    dest_stops = set(timetable.city_stops[dest_city])
     # Keep track of reachable intermediate stops after Round 1: stop_id -> list of arrival dicts
     reachable_intermediates: Dict[str, List[dict]] = {}
 
+    for source_stop_id in source_stops:
+        source_route_ids = timetable.stop_routes.get(source_stop_id, [])
+
     # ==================== ROUND 1: DIRECT ROUTES ====================
-    for route_id in source_route_ids:
-        route_stops = timetable.routes[route_id]
-        if source_stop_id not in route_stops:
-            continue
-
-        src_idx = route_stops.index(source_stop_id)
-        trip_ids = timetable.route_trips[route_id]
-
-        for trip_id in trip_ids:
-            stops = timetable.trip_stop_times[trip_id]
-            src_stop_data = stops[src_idx]
-
-            # Ensure trip departs AFTER the requested start time
-            if src_stop_data["departure_sec"] < start_dep_sec:
+        for route_id in source_route_ids:
+            route_stops = timetable.routes[route_id]
+            if source_stop_id not in route_stops:
                 continue
 
-            trip_meta = timetable.trips[trip_id]
-            mode = trip_meta["mode"]
-            service_number = trip_meta["service_number"]
+            src_idx = route_stops.index(source_stop_id)
+            trip_ids = timetable.route_trips[route_id]
 
-            for down_idx in range(src_idx + 1, len(route_stops)):
-                down_stop_id = route_stops[down_idx]
-                down_stop_data = stops[down_idx]
+            for trip_id in trip_ids:
+                stops = timetable.trip_stop_times[trip_id]
+                src_stop_data = stops[src_idx]
 
-                duration_mins = int((down_stop_data["arrival_sec"] - src_stop_data["departure_sec"]) // 60)
-                dist_km = round(down_stop_data["distance_km"] - src_stop_data["distance_km"], 1)
+            # Ensure trip departs AFTER the requested start time
+                if src_stop_data["departure_sec"] < start_dep_sec:
+                    continue
 
-                fare_info = get_leg_fare_and_status(
-                    timetable, mode, service_number, travel_date_str, source_stop_id, down_stop_id, travel_class
-                )
+                trip_meta = timetable.trips[trip_id]
+                mode = trip_meta["mode"]
+                service_number = trip_meta["service_number"]
 
-                route_payload = {
-                    "journey_type": "DIRECT",
-                    "transfers": 0,
-                    "travel_class": travel_class,
-                    "overall_status": fare_info["status"],
-                    "available_seats": fare_info["available_seats"],
-                    "wl_number": fare_info["wl_number"],
-                    "total_price_inr": fare_info["price_inr"],
-                    "total_duration_mins": duration_mins,
-                    "total_duration": f"{duration_mins // 60}h {duration_mins % 60}m",
-                    "total_distance_km": dist_km,
-                    "legs": [
-                        {
-                            "leg_number": 1,
+                for down_idx in range(src_idx + 1, len(route_stops)):
+                    down_stop_id = route_stops[down_idx]
+                    down_stop_data = stops[down_idx]
+
+                    duration_mins = int((down_stop_data["arrival_sec"] - src_stop_data["departure_sec"]) // 60)
+                    dist_km = round(down_stop_data["distance_km"] - src_stop_data["distance_km"], 1)
+
+                    fare_info = get_leg_fare_and_status(
+                        timetable, mode, service_number, travel_date_str, source_stop_id, down_stop_id, travel_class
+                    )
+
+                    route_payload = {
+                        "journey_type": "DIRECT",
+                        "transfers": 0,
+                        "travel_class": travel_class,
+                        "overall_status": fare_info["status"],
+                        "available_seats": fare_info["available_seats"],
+                        "wl_number": fare_info["wl_number"],
+                        "total_price_inr": fare_info["price_inr"],
+                        "total_duration_mins": duration_mins,
+                        "total_duration": f"{duration_mins // 60}h {duration_mins % 60}m",
+                        "total_distance_km": dist_km,
+                        "legs": [
+                            {
+                                "leg_number": 1,
+                                "mode": mode,
+                                "service_number": service_number,
+                                "from_stop": {"id": source_stop_id, "name": timetable.stops[source_stop_id]["name"]},
+                                "to_stop": {"id": down_stop_id, "name": timetable.stops[down_stop_id]["name"]},
+                                "departure_time": sec_to_time_str(src_stop_data["departure_sec"]),
+                                "arrival_time": sec_to_time_str(down_stop_data["arrival_sec"]),
+                                "distance_km": dist_km,
+                                "seat_status": fare_info["status"],
+                                "price_inr": fare_info["price_inr"],
+                                "path": get_path_coordinates(timetable, route_stops, src_idx, down_idx)
+                            }
+                        ]
+                    }
+
+                    if down_stop_id in dest_stops:
+                        merge_into_pareto_set(pareto_results, route_payload)
+                    else:
+                        if down_stop_id not in reachable_intermediates:
+                            reachable_intermediates[down_stop_id] = []
+
+                        try:
+                            path_coords = get_path_coordinates(timetable, route_stops, src_idx, down_idx)
+                        except IndexError as e:
+                            print(f"IndexError in get_path_coordinates! len(route_stops)={len(route_stops)}, src_idx={src_idx}, down_idx={down_idx}")
+                            raise e
+
+                        reachable_intermediates[down_stop_id].append({
                             "mode": mode,
                             "service_number": service_number,
-                            "from_stop": {"id": source_stop_id, "name": timetable.stops[source_stop_id]["name"]},
-                            "to_stop": {"id": down_stop_id, "name": timetable.stops[down_stop_id]["name"]},
-                            "departure_time": sec_to_time_str(src_stop_data["departure_sec"]),
-                            "arrival_time": sec_to_time_str(down_stop_data["arrival_sec"]),
+                            "arr_sec": down_stop_data["arrival_sec"],
+                            "dep_sec": src_stop_data["departure_sec"],
+                            "duration_mins": duration_mins,
                             "distance_km": dist_km,
-                            "seat_status": fare_info["status"],
-                            "price_inr": fare_info["price_inr"],
-                            "path": get_path_coordinates(timetable, route_stops, src_idx, down_idx)
-                        }
-                    ]
-                }
-
-                if down_stop_id == dest_stop_id:
-                    merge_into_pareto_set(pareto_results, route_payload)
-                else:
-                    if down_stop_id not in reachable_intermediates:
-                        reachable_intermediates[down_stop_id] = []
-
-                    reachable_intermediates[down_stop_id].append({
-                        "mode": mode,
-                        "service_number": service_number,
-                        "arr_sec": down_stop_data["arrival_sec"],
-                        "dep_sec": src_stop_data["departure_sec"],
-                        "duration_mins": duration_mins,
-                        "distance_km": dist_km,
-                        "fare_info": fare_info,
-                        "path": get_path_coordinates(timetable, route_stops, src_idx, down_idx)
-                    })
+                            "fare_info": fare_info,
+                            "path": path_coords
+                        })
 
     # ==================== FOOTPATH / TRANSFER STEP ====================
     # Expand reachable intermediate stops with transfers
@@ -246,7 +255,7 @@ def run_mcraptor_search(
                     expanded_intermediates[target_stop_id] = []
 
                 for arr in arrivals:
-                    if target_stop_id == dest_stop_id:
+                    if target_stop_id in dest_stops:
                         walk_mins = xfer_sec // 60
                         total_mins = arr["duration_mins"] + walk_mins
                         
