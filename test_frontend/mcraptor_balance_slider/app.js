@@ -91,7 +91,7 @@ async function handleSearch(e) {
   btn.innerText = "Evaluating Pareto Frontier...";
 
   try {
-    const url = `${API_BASE_URL}/api/v4/mcraptor/city-search?source_city=${src}&dest_city=${dst}&departure_time=${time}&date=${date}&class_code=${travelClass}&top_k=25`;
+    const url = `${API_BASE_URL}/api/v4/mcraptor/city-search?source_city=${src}&dest_city=${dst}&departure_time=${time}&date=${date}&class_code=${travelClass}&top_k=100`;
     const res = await fetch(url);
 
     if (!res.ok) {
@@ -132,21 +132,47 @@ function applyFiltersAndSort() {
 
   const STATUS_RANK = { AVAILABLE: 3, RAC: 2, WL: 1 };
 
-  if (sortCriterion === "DURATION") {
-    processed.sort((a, b) => a.total_duration_mins - b.total_duration_mins);
-  } else if (sortCriterion === "PRICE") {
-    processed.sort((a, b) => a.total_price_inr - b.total_price_inr);
-  } else if (sortCriterion === "DISTANCE") {
-    processed.sort((a, b) => a.total_distance_km - b.total_distance_km);
-  } else if (sortCriterion === "SEAT_STATUS") {
-    processed.sort((a, b) => {
+  const sortFn = (a, b) => {
+    if (sortCriterion === "DURATION") return a.total_duration_mins - b.total_duration_mins;
+    if (sortCriterion === "PRICE") return a.total_price_inr - b.total_price_inr;
+    if (sortCriterion === "DISTANCE") return a.total_distance_km - b.total_distance_km;
+    if (sortCriterion === "SEAT_STATUS") {
       const rankA = STATUS_RANK[a.overall_status] || 0;
       const rankB = STATUS_RANK[b.overall_status] || 0;
       if (rankB !== rankA) return rankB - rankA;
       return a.total_duration_mins - b.total_duration_mins;
-    });
-  }
+    }
+    return 0;
+  };
 
+  processed.sort(sortFn);
+
+  // --- Modal Balance Logic ---
+  const balanceVal = parseInt(document.getElementById("modeBalance").value, 10);
+  const busRatio = balanceVal / 100.0;
+  const trainRatio = 1.0 - busRatio;
+  
+  const busRoutes = processed.filter(opt => opt.legs && opt.legs[0].mode === "BUS");
+  const trainRoutes = processed.filter(opt => opt.legs && opt.legs[0].mode === "RAIL");
+  
+  const totalCount = processed.length;
+  let targetBus = Math.round(totalCount * busRatio);
+  let targetTrain = Math.round(totalCount * trainRatio);
+  
+  // Adjust if one list doesn't have enough options
+  if (busRoutes.length < targetBus) {
+      targetTrain += (targetBus - busRoutes.length);
+      targetBus = busRoutes.length;
+  } else if (trainRoutes.length < targetTrain) {
+      targetBus += (targetTrain - trainRoutes.length);
+      targetTrain = trainRoutes.length;
+  }
+  
+  processed = [
+      ...trainRoutes.slice(0, targetTrain),
+      ...busRoutes.slice(0, targetBus)
+  ];
+  
   // The user selected their top options based on sortCriterion (duration/price/etc).
   // Now, we present these selected options in strict chronological order by departure time.
   const parseDepTime = (str) => {

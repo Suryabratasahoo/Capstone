@@ -174,6 +174,8 @@ def run_mcraptor_city_search(
 
     source_stops_list = resolve_city_stops(source_city)
     dest_stops_list = resolve_city_stops(dest_city)
+    
+    source_stops_set = set(source_stops_list)
 
     if not source_stops_list or not dest_stops_list:
         return []
@@ -424,6 +426,11 @@ def run_mcraptor_city_search(
                     layover_mins = layover_sec // 60
 
                     if not (MIN_LAYOVER_MINS <= layover_mins <= MAX_LAYOVER_MINS):
+                        continue
+
+                    # Strict Anti-Backtracking: If Leg 2's train/bus visits ANY stop in the source city
+                    # after we board it, then we could have just boarded it in the source city!
+                    if any(route_stops[idx] in source_stops_set for idx in range(inter_idx, dest_idx + 1)):
                         continue
 
                     # Anti-Backtracking Check using Haversine Triangle Inequality
