@@ -35,6 +35,12 @@ class McRaptorTimetable:
         # Bus Fares: (route_number, from_stop_id, to_stop_id, bus_class) -> dict
         self.seat_map: Dict[Tuple, dict] = {}
         self.bus_fare_map: Dict[Tuple, dict] = {}
+        
+        # service_number -> string (train name or bus provider name)
+        self.service_names: Dict[str, str] = {}
+        
+        # service_number -> string (Local, Intercity, Train, etc)
+        self.service_types: Dict[str, str] = {}
 
 
 def build_mcraptor_timetable(db_path: str = "app/final.db") -> McRaptorTimetable:
@@ -180,6 +186,20 @@ def build_mcraptor_timetable(db_path: str = "app/final.db") -> McRaptorTimetable
             "wl_number": 0,
             "price_inr": price
         }
+
+    # 7. Load Train Names and Types
+    cursor.execute("SELECT train_number, train_name, train_type FROM trains")
+    for row in cursor.fetchall():
+        t_num, t_name, t_type = row
+        timetable.service_names[str(t_num)] = t_name
+        timetable.service_types[str(t_num)] = t_type if t_type else "Train"
+
+    # 8. Load Bus Names (Provider/Route Name) and Types
+    cursor.execute("SELECT route_number, bus_provider, route_type FROM buses")
+    for row in cursor.fetchall():
+        b_num, b_prov, b_type = row
+        timetable.service_names[str(b_num)] = b_prov
+        timetable.service_types[str(b_num)] = b_type if b_type else "Bus"
 
     conn.close()
     return timetable

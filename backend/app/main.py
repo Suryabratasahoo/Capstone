@@ -135,7 +135,7 @@ def search_mcraptor_city_routes(
     departure_time: str = Query("08:00", description="Departure time in HH:MM format"),
     date: str = Query("2026-08-01", description="Travel date in YYYY-MM-DD format"),
     class_code: str = Query("3A", description="Travel class (3A, 2A, SL)"),
-    top_k: int = Query(15, ge=1, le=50, description="Max Pareto routes to return")
+    top_k: int = Query(15, ge=1, le=150, description="Max Pareto routes to return")
 ):
     if not mcraptor_timetable:
         raise HTTPException(status_code=503, detail="Timetable index not initialized.")

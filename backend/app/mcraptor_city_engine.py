@@ -4,6 +4,10 @@ from datetime import datetime
 from typing import List, Dict, Tuple
 import math
 from app.mcraptor_data import McRaptorTimetable
+try:
+    from app.city_aliases import CITY_ALIASES
+except ImportError:
+    CITY_ALIASES = {}
 
 def haversine_distance_km(lat1, lon1, lat2, lon2):
     R = 6371
@@ -54,6 +58,14 @@ def get_path_coordinates(timetable: McRaptorTimetable, route_stops: List[str], s
 
 
 def is_dominated(candidate: dict, existing: dict) -> bool:
+    # --- Modality check for balanced routing ---
+    cand_modes = tuple(leg["mode"] for leg in candidate.get("legs", []))
+    ex_modes = tuple(leg["mode"] for leg in existing.get("legs", []))
+    
+    # Do not allow cross-modal domination (e.g. a Train cannot dominate a Bus out of existence)
+    if cand_modes != ex_modes:
+        return False
+
     cand_dur = candidate["total_duration_mins"]
     cand_dist = candidate["total_distance_km"]
     cand_price = candidate["total_price_inr"]
@@ -142,7 +154,28 @@ def run_mcraptor_city_search(
     source_city = source_city.strip().lower()
     dest_city = dest_city.strip().lower()
 
-    if source_city not in timetable.city_stops or dest_city not in timetable.city_stops:
+    def resolve_city_stops(query: str) -> List[str]:
+        """Collect all stop_ids for any city key that contains the query keyword."""
+        # First check for exact match or partial match in city_stops
+        all_stops = list(timetable.city_stops.get(query, []))
+        for city_key, stops in timetable.city_stops.items():
+            if city_key != query and query in city_key:
+                all_stops.extend(stops)
+                
+        # Also include alias mapping if it exists (additive)
+        if query in CITY_ALIASES:
+            aliased = CITY_ALIASES[query]
+            all_stops.extend(timetable.city_stops.get(aliased, []))
+            for city_key, stops in timetable.city_stops.items():
+                if city_key != aliased and aliased in city_key:
+                    all_stops.extend(stops)
+                    
+        return list(set(all_stops))
+
+    source_stops_list = resolve_city_stops(source_city)
+    dest_stops_list = resolve_city_stops(dest_city)
+
+    if not source_stops_list or not dest_stops_list:
         return []
 
     # Convert HH:MM departure time to seconds from midnight
@@ -150,8 +183,8 @@ def run_mcraptor_city_search(
     start_dep_sec = (dep_h * 3600) + (dep_m * 60)
 
     pareto_results: List[dict] = []
-    source_stops = timetable.city_stops[source_city]
-    dest_stops = set(timetable.city_stops[dest_city])
+    source_stops = source_stops_list
+    dest_stops = set(dest_stops_list)
     # Keep track of reachable intermediate stops after Round 1: stop_id -> list of arrival dicts
     reachable_intermediates: Dict[str, List[dict]] = {}
 
@@ -178,6 +211,10 @@ def run_mcraptor_city_search(
                 trip_meta = timetable.trips[trip_id]
                 mode = trip_meta["mode"]
                 service_number = trip_meta["service_number"]
+                
+                # Exclude Local buses for intercity searches
+                if source_city != dest_city and timetable.service_types.get(service_number) == "Local":
+                    continue
 
                 for down_idx in range(src_idx + 1, len(route_stops)):
                     down_stop_id = route_stops[down_idx]
@@ -206,6 +243,7 @@ def run_mcraptor_city_search(
                                 "leg_number": 1,
                                 "mode": mode,
                                 "service_number": service_number,
+                                "service_name": timetable.service_names.get(service_number, ""),
                                 "from_stop": {"id": source_stop_id, "name": timetable.stops[source_stop_id]["name"]},
                                 "to_stop": {"id": down_stop_id, "name": timetable.stops[down_stop_id]["name"]},
                                 "departure_time": sec_to_time_str(src_stop_data["departure_sec"]),
@@ -233,6 +271,7 @@ def run_mcraptor_city_search(
                         reachable_intermediates[down_stop_id].append({
                             "mode": mode,
                             "service_number": service_number,
+                            "service_name": timetable.service_names.get(service_number, ""),
                             "arr_sec": down_stop_data["arrival_sec"],
                             "dep_sec": src_stop_data["departure_sec"],
                             "duration_mins": duration_mins,
@@ -243,7 +282,9 @@ def run_mcraptor_city_search(
 
     # ==================== FOOTPATH / TRANSFER STEP ====================
     # Expand reachable intermediate stops with transfers
-    expanded_intermediates: Dict[str, List[dict]] = dict(reachable_intermediates)
+    expanded_intermediates: Dict[str, List[dict]] = {}
+    for k, v in reachable_intermediates.items():
+        expanded_intermediates[k] = list(v)
 
     for inter_stop_id, arrivals in reachable_intermediates.items():
         if inter_stop_id in timetable.transfers:
@@ -275,7 +316,8 @@ def run_mcraptor_city_search(
                                     "leg_number": 1,
                                     "mode": arr["mode"],
                                     "service_number": arr["service_number"],
-                                    "from_stop": {"id": source_stop_id, "name": timetable.stops[source_stop_id]["name"]},
+                                    "service_name": arr.get("service_name", ""),
+                                    "from_stop": {"id": arr["path"][0]["id"], "name": arr["path"][0]["name"]} if arr.get("path") else {"id": inter_stop_id, "name": timetable.stops[inter_stop_id]["name"]},
                                     "to_stop": {"id": inter_stop_id, "name": timetable.stops[inter_stop_id]["name"]},
                                     "departure_time": sec_to_time_str(arr["dep_sec"]),
                                     "arrival_time": sec_to_time_str(arr["arr_sec"]),
@@ -288,8 +330,9 @@ def run_mcraptor_city_search(
                                     "leg_number": 2,
                                     "mode": xfer["transfer_mode"],
                                     "service_number": "TRANSFER",
+                                    "service_name": "Walk",
                                     "from_stop": {"id": inter_stop_id, "name": timetable.stops[inter_stop_id]["name"]},
-                                    "to_stop": {"id": dest_stop_id, "name": timetable.stops[dest_stop_id]["name"]},
+                                    "to_stop": {"id": target_stop_id, "name": timetable.stops[target_stop_id]["name"]},
                                     "departure_time": sec_to_time_str(arr["arr_sec"]),
                                     "arrival_time": sec_to_time_str(arr["arr_sec"] + xfer_sec),
                                     "distance_km": xfer["walk_distance_km"],
@@ -303,10 +346,10 @@ def run_mcraptor_city_search(
                                             "longitude": timetable.stops[inter_stop_id].get("longitude", 0.0)
                                         },
                                         {
-                                            "id": dest_stop_id, 
-                                            "name": timetable.stops[dest_stop_id]["name"],
-                                            "latitude": timetable.stops[dest_stop_id].get("latitude", 0.0),
-                                            "longitude": timetable.stops[dest_stop_id].get("longitude", 0.0)
+                                            "id": target_stop_id, 
+                                            "name": timetable.stops[target_stop_id]["name"],
+                                            "latitude": timetable.stops[target_stop_id].get("latitude", 0.0),
+                                            "longitude": timetable.stops[target_stop_id].get("longitude", 0.0)
                                         }
                                     ]
                                 }
@@ -317,6 +360,7 @@ def run_mcraptor_city_search(
                     expanded_intermediates[target_stop_id].append({
                         "mode": arr["mode"],
                         "service_number": arr["service_number"],
+                        "service_name": arr.get("service_name", ""),
                         "arr_sec": arr["arr_sec"] + xfer_sec,  # Ready after transfer time
                         "dep_sec": arr["dep_sec"],
                         "duration_mins": arr["duration_mins"] + (xfer_sec // 60),
@@ -339,13 +383,23 @@ def run_mcraptor_city_search(
         for leg1 in arrivals:
             for route_id in inter_route_ids:
                 route_stops = timetable.routes[route_id]
-                if inter_stop_id not in route_stops or dest_stop_id not in route_stops:
+                if inter_stop_id not in route_stops:
                     continue
 
                 inter_idx = route_stops.index(inter_stop_id)
-                dest_idx = route_stops.index(dest_stop_id)
-
-                if dest_idx <= inter_idx:
+                
+                # Check if this route eventually hits ANY destination stop
+                found_dest = False
+                dest_idx = -1
+                dest_stop_id = None
+                for d_idx in range(inter_idx + 1, len(route_stops)):
+                    if route_stops[d_idx] in dest_stops:
+                        dest_idx = d_idx
+                        dest_stop_id = route_stops[d_idx]
+                        found_dest = True
+                        break
+                
+                if not found_dest:
                     continue
 
                 trip_ids = timetable.route_trips[route_id]
@@ -358,6 +412,10 @@ def run_mcraptor_city_search(
                     t2_service = trip_meta["service_number"]
                     t2_mode = trip_meta["mode"]
 
+                    # Exclude Local buses for intercity searches
+                    if source_city != dest_city and timetable.service_types.get(t2_service) == "Local":
+                        continue
+
                     if t2_service == leg1["service_number"]:
                         continue
 
@@ -369,8 +427,9 @@ def run_mcraptor_city_search(
                         continue
 
                     # Anti-Backtracking Check using Haversine Triangle Inequality
-                    source_lat = timetable.stops[source_stop_id].get("latitude", 0)
-                    source_lon = timetable.stops[source_stop_id].get("longitude", 0)
+                    actual_source_id = leg1["path"][0]["id"]
+                    source_lat = timetable.stops[actual_source_id].get("latitude", 0)
+                    source_lon = timetable.stops[actual_source_id].get("longitude", 0)
                     dest_lat = timetable.stops[dest_stop_id].get("latitude", 0)
                     dest_lon = timetable.stops[dest_stop_id].get("longitude", 0)
                     inter_lat = timetable.stops[inter_stop_id].get("latitude", 0)
@@ -405,8 +464,10 @@ def run_mcraptor_city_search(
                             "leg_number": 1,
                             "mode": leg1["mode"],
                             "service_number": leg1["service_number"],
-                            "from_stop": {"id": source_stop_id, "name": timetable.stops[source_stop_id]["name"]},
-                            "to_stop": {"id": inter_stop_id, "name": timetable.stops[inter_stop_id]["name"]},
+                            "service_name": leg1.get("service_name", ""),
+                            "from_stop": {"id": actual_source_id, "name": timetable.stops[actual_source_id]["name"]},
+                            "to_stop": {"id": leg1.get("transfer_info", {}).get("from_stop", inter_stop_id), 
+                                        "name": timetable.stops[leg1.get("transfer_info", {}).get("from_stop", inter_stop_id)]["name"]},
                             "departure_time": sec_to_time_str(leg1["dep_sec"]),
                             "arrival_time": sec_to_time_str(leg1["arr_sec"]),
                             "distance_km": leg1["distance_km"],
@@ -423,6 +484,7 @@ def run_mcraptor_city_search(
                             "leg_number": 2,
                             "mode": xfer["transfer_mode"],
                             "service_number": "TRANSFER",
+                            "service_name": "Walk",
                             "from_stop": {"id": xfer["from_stop"], "name": timetable.stops[xfer["from_stop"]]["name"]},
                             "to_stop": {"id": xfer["to_stop"], "name": timetable.stops[xfer["to_stop"]]["name"]},
                             "departure_time": sec_to_time_str(leg1["arr_sec"] - (xfer["transfer_time_mins"] * 60)),
@@ -450,6 +512,7 @@ def run_mcraptor_city_search(
                         "leg_number": len(legs) + 1,
                         "mode": t2_mode,
                         "service_number": t2_service,
+                        "service_name": timetable.service_names.get(t2_service, ""),
                         "from_stop": {"id": inter_stop_id, "name": timetable.stops[inter_stop_id]["name"]},
                         "to_stop": {"id": dest_stop_id, "name": timetable.stops[dest_stop_id]["name"]},
                         "departure_time": sec_to_time_str(inter_stop_data["departure_sec"]),
@@ -483,4 +546,20 @@ def run_mcraptor_city_search(
                     merge_into_pareto_set(pareto_results, route_payload)
 
     pareto_results.sort(key=lambda x: (x["total_duration_mins"], -STATUS_RANK.get(x["overall_status"], 0)))
-    return pareto_results[:top_k]
+    
+    # Guarantee at least 5 bus routes in top_k if they exist
+    buses = [r for r in pareto_results if r["legs"][0]["mode"] == "BUS"]
+    trains = [r for r in pareto_results if r["legs"][0]["mode"] != "BUS"]
+    
+    if not buses:
+        return pareto_results[:top_k]
+        
+    guaranteed = min(5, top_k)
+    buses_to_include = buses[:guaranteed]
+    remaining = trains + buses[guaranteed:]
+    remaining.sort(key=lambda x: (x["total_duration_mins"], -STATUS_RANK.get(x["overall_status"], 0)))
+    
+    final_results = buses_to_include + remaining[:(top_k - len(buses_to_include))]
+    final_results.sort(key=lambda x: (x["total_duration_mins"], -STATUS_RANK.get(x["overall_status"], 0)))
+    
+    return final_results
