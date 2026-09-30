@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import CityAutocomplete from "./CityAutocomplete";
 
 const slides = [
   {
@@ -145,17 +147,17 @@ export default function Hero() {
     <section className="w-full min-h-screen bg-brand-lime flex flex-col lg:flex-row items-stretch lg:h-screen lg:overflow-hidden select-none relative overflow-y-auto lg:overflow-y-hidden">
 
       {/* LEFT COLUMN: Hero content & Search widget */}
-      <div className="w-full lg:w-[58%] pt-28 lg:pt-32 pb-16 px-6 sm:px-12 md:px-16 flex flex-col justify-center bg-brand-lime relative shrink-0 lg:h-full lg:overflow-y-auto left-hero-column">
+      <div className="mt-10 w-full lg:w-[58%] pt-28 lg:pt-32 pb-16 px-6 sm:px-12 md:px-16 flex flex-col justify-center bg-brand-lime relative shrink-0 lg:h-full lg:overflow-y-hidden left-hero-column ">
 
         {/* Floating Custom Stickers (Playful elements) */}
-        <div className="absolute top-28 left-6 hidden sm:block animate-bounce duration-[3500ms] pointer-events-none z-20">
-          <div className="relative w-18 h-18 bg-white rounded-2xl shadow-xl border-2 border-brand-charcoal p-2 rotate-[-12deg] flex items-center justify-center">
+        {/* <div className="absolute top-28 left-6 hidden sm:block animate-bounce duration-[3500ms] pointer-events-none z-20">
+          <div className="relative w-18 h-18 bg-white rounded-2xl shadow-xl border-2 border-brand-charcoal p-2 -rotate-12 flex items-center justify-center">
             <span className="text-4xl">🚆</span>
             <div className="absolute -bottom-2.5 -right-2.5 bg-rose-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full border border-brand-charcoal">
               LIVE
             </div>
           </div>
-        </div>
+        </div> */}
 
         <div className="absolute top-1/4 right-8 hidden xl:block pointer-events-none rotate-12 z-20">
           <svg className="w-12 h-12 text-brand-forest fill-current" viewBox="0 0 24 24">
@@ -168,7 +170,7 @@ export default function Hero() {
 
           {/* Title & Subheading Group */}
           <div className="flex flex-col gap-5">
-            <h1 className="text-brand-forest font-black tracking-tight text-5xl sm:text-6xl md:text-7xl leading-[0.95] select-none relative">
+            <h1 className="text-brand-forest font-black tracking-tight text-5xl sm:text-4xl md:text-5xl leading-[0.95] select-none relative mt-30">
               Every connection, <br />
               <span className="relative inline-block text-brand-charcoal">
                 mapped for you.
@@ -188,42 +190,34 @@ export default function Hero() {
                 </svg>
               </span>
             </h1>
-            <p className="text-brand-forest font-bold text-base md:text-lg xl:text-xl leading-relaxed max-w-xl">
+            <p className="text-brand-forest font-bold text-base md:text-md xl:text-lg leading-relaxed max-w-xl">
               Search, combine, and book flights, trains, and buses to find seamless connecting routes. No direct tickets available? Let us map out the perfect break-journey solution.
             </p>
           </div>
 
           {/* Search Widget Container */}
-          <form onSubmit={handleSearch} className="w-full relative z-20">
-            <div className="bg-white rounded-3xl p-4 md:rounded-full md:p-3 flex flex-col md:flex-row items-stretch md:items-center gap-3 shadow-2xl border border-brand-forest/10 hover:border-brand-forest/20 transition-all">
+          <form onSubmit={handleSearch} className="w-full relative z-20 mb-40">
+            <div className="bg-white rounded-3xl p-1 md:rounded-full md:p-1 flex flex-col md:flex-row items-stretch md:items-center gap-1 shadow-xl border border-brand-forest/10 hover:border-brand-forest/20 transition-all">
 
               {/* Field 1: Source */}
               <div className="flex-1 px-5 py-3 flex flex-col justify-center border-b md:border-b-0 md:border-r border-zinc-100 min-w-0">
-                <label className="text-[11px] uppercase font-black text-zinc-400 tracking-wider mb-1">
-                  From
-                </label>
-                <input
-                  type="text"
-                  value={source}
-                  onChange={(e) => setSource(e.target.value)}
+                <CityAutocomplete
+                  label="From"
                   placeholder="e.g. Vijayawada"
-                  className="bg-transparent text-base font-black text-brand-charcoal focus:outline-none border-none placeholder-zinc-300 w-full"
-                  required
+                  value={source}
+                  onChange={setSource}
+                  inputClassName="bg-transparent text-base font-black text-brand-charcoal focus:outline-none border-none placeholder-zinc-300 w-full"
                 />
               </div>
 
               {/* Field 2: Destination */}
               <div className="flex-1 px-5 py-3 flex flex-col justify-center border-b md:border-b-0 md:border-r border-zinc-100 min-w-0">
-                <label className="text-[11px] uppercase font-black text-zinc-400 tracking-wider mb-1">
-                  To
-                </label>
-                <input
-                  type="text"
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
+                <CityAutocomplete
+                  label="To"
                   placeholder="e.g. Bhubaneswar"
-                  className="bg-transparent text-base font-black text-brand-charcoal focus:outline-none border-none placeholder-zinc-300 w-full"
-                  required
+                  value={destination}
+                  onChange={setDestination}
+                  inputClassName="bg-transparent text-base font-black text-brand-charcoal focus:outline-none border-none placeholder-zinc-300 w-full"
                 />
               </div>
 
@@ -248,14 +242,14 @@ export default function Hero() {
               {/* CTA Button */}
               <button
                 type="submit"
-                className="bg-brand-forest hover:bg-black text-white px-8 py-4 rounded-2xl md:rounded-full font-black text-base transition-colors shrink-0 text-center cursor-pointer shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+                className="bg-brand-forest hover:bg-black text-white px-4 py-6 rounded-2xl md:rounded-full font-black text-base transition-colors shrink-0 text-center cursor-pointer shadow-lg hover:scale-[1.02] active:scale-[0.98] ease-in duration-100"
               >
                 Find Connections
               </button>
             </div>
 
             {/* Yellow Hand-drawn Swirly Cartoon Arrow */}
-            <div className="absolute -bottom-20 right-20 hidden sm:block pointer-events-none">
+            <div className="absolute -bottom-20 right-20 hidden sm:block pointer-events-none ">
               <div className="relative">
                 <svg
                   width="110"

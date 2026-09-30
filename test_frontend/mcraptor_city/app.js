@@ -328,7 +328,7 @@ function cleanCode(stopId) {
   return stopId.includes(":") ? stopId.split(":")[1] : stopId;
 }
 
-function highlightRouteOnMap(route) {
+async function highlightRouteOnMap(route) {
   if (!route) return;
   activePolylineGroup.clearLayers();
 
@@ -336,7 +336,7 @@ function highlightRouteOnMap(route) {
   const lineColor = isDirect ? "#a855f7" : "#818cf8";
   const fullBounds = [];
 
-  route.legs.forEach((leg, legIdx) => {
+  for (const leg of route.legs) {
     let latlngs = [];
     
     // Check if the backend provided path data
@@ -356,12 +356,52 @@ function highlightRouteOnMap(route) {
     if (latlngs.length > 0) {
       latlngs.forEach(coord => fullBounds.push(coord));
 
-      L.polyline(latlngs, {
-        color: leg.mode === "BUS" ? "#f59e0b" : (leg.mode === "AUTO_CAB" || leg.mode === "WALK" ? "#ef4444" : lineColor),
-        weight: 4.5,
-        opacity: 0.85,
-        dashArray: leg.service_number === "TRANSFER" ? "6, 8" : null,
-      }).addTo(activePolylineGroup);
+      const legColor = leg.mode === "BUS" ? "#f59e0b" : (leg.mode === "AUTO_CAB" || leg.mode === "WALK" ? "#ef4444" : lineColor);
+
+      if (leg.mode === "BUS" && latlngs.length >= 2) {
+        try {
+          // OSRM expects lon,lat;lon,lat. We limit to max 90 waypoints to be safe with OSRM limits
+          let waypointsArray = latlngs.map(c => `${c[1]},${c[0]}`);
+          if (waypointsArray.length > 90) {
+            waypointsArray = [waypointsArray[0], waypointsArray[Math.floor(waypointsArray.length/2)], waypointsArray[waypointsArray.length-1]];
+          }
+          const waypoints = waypointsArray.join(';');
+          
+          const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${waypoints}?overview=full&geometries=geojson`;
+          const res = await fetch(osrmUrl);
+          const data = await res.json();
+          
+          if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+            const geojsonCoords = data.routes[0].geometry.coordinates;
+            // OSRM returns [lon, lat], Leaflet needs [lat, lon]
+            const osrmLatLngs = geojsonCoords.map(c => [c[1], c[0]]);
+            osrmLatLngs.forEach(coord => fullBounds.push(coord));
+
+            L.polyline(osrmLatLngs, {
+              color: legColor,
+              weight: 5,
+              opacity: 0.85,
+            }).addTo(activePolylineGroup);
+          } else {
+            throw new Error("OSRM failed");
+          }
+        } catch (e) {
+          // Fallback to straight lines
+          L.polyline(latlngs, {
+            color: legColor,
+            weight: 4.5,
+            opacity: 0.85,
+          }).addTo(activePolylineGroup);
+        }
+      } else {
+        // Rail or other: straight lines
+        L.polyline(latlngs, {
+          color: legColor,
+          weight: 4.5,
+          opacity: 0.85,
+          dashArray: leg.service_number === "TRANSFER" ? "6, 8" : null,
+        }).addTo(activePolylineGroup);
+      }
 
       // Draw markers for all intermediate stops if we have path data
       if (leg.path && leg.path.length > 0) {
@@ -401,7 +441,7 @@ function highlightRouteOnMap(route) {
           .bindPopup(`<b>${leg.to_stop.name}</b> (${cleanCode(leg.to_stop.id)})`);
       }
     }
-  });
+  }
 
   if (fullBounds.length > 0) {
     map.fitBounds(L.polyline(fullBounds).getBounds(), { padding: [40, 40] });

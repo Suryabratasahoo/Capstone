@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import FooterSection from '../../components/FooterSection';
+import CityAutocomplete from '../../components/CityAutocomplete';
 
 type TabType = 'buses' | 'flights' | 'trains' | 'hotels';
 
@@ -65,6 +67,18 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<TabType>('buses');
   const [fromLocation, setFromLocation] = useState<string>('Vijayawada');
   const [toLocation, setToLocation] = useState<string>('Bhubaneswar');
+  const router = useRouter();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fromLocation.trim() || !toLocation.trim()) {
+      alert("Please enter both source and destination cities.");
+      return;
+    }
+    router.push(`/planner?from=${encodeURIComponent(fromLocation)}&to=${encodeURIComponent(toLocation)}&date=${departureDate}`);
+  };
+
+
   
   // Set default departure date to tomorrow (YYYY-MM-DD format)
   const [departureDate, setDepartureDate] = useState<string>('');
@@ -791,43 +805,14 @@ export default function DashboardPage() {
           <div className="w-full bg-white/95 backdrop-blur-md rounded-[3rem] shadow-2xl p-6 sm:p-8 flex flex-col gap-6 border border-white/20 select-none">
             
             {/* Card Tab Bar */}
-            <div className="w-full flex flex-col md:flex-row md:items-center justify-between border-b border-zinc-200/60 pb-5 gap-4">
-              
-              {/* Travel Mode Selectors */}
-              <div className="flex flex-row flex-wrap items-center gap-3">
-                {(['buses', 'flights', 'trains', 'hotels'] as TabType[]).map((tab) => {
-                  const isActive = activeTab === tab;
-                  return (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`group flex items-center gap-3 px-6 py-4.5 rounded-2xl transition-all cursor-pointer select-none font-black text-lg ${
-                        isActive 
-                          ? 'bg-[#d2e823] text-[#254f1a] shadow-lg scale-[1.02]' 
-                          : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-[#254f1a]'
-                      }`}
-                    >
-                      {renderTabIcon(tab, isActive)}
-                      <span className="capitalize">{tab}</span>
-                    </button>
-                  );
-                })}
+            <div className="w-full flex flex-col md:flex-row md:items-center justify-between border-b border-zinc-200/60 pb-2 gap-4">
+              <div className='text-2xl font-bold'>
+                Find Your Routes Suited For You.
               </div>
-
-              {/* Platform Subheading */}
-              {/* <div className="text-right hidden lg:block select-none">
-                <span className="text-zinc-400 font-bold text-xs uppercase tracking-widest block">
-                  Official Booking Partner
-                </span>
-                <span className="text-zinc-800 font-black text-sm tracking-tight mt-0.5 block">
-                  Instant ticketing, seat selections & updates
-                </span>
-              </div> */}
-
             </div>
 
             {/* Travel Form Fields Inputs */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch relative">
+            <form onSubmit={handleSearch} className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch relative">
               
               {/* FROM (Source) Input */}
               <div className="lg:col-span-3 bg-zinc-100/80 rounded-2xl px-5 py-4 border border-zinc-200/50 hover:border-zinc-300/80 transition-colors flex items-center gap-4 relative">
@@ -836,22 +821,19 @@ export default function DashboardPage() {
                     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" />
                   </svg>
                 </div>
-                <div className="flex flex-col flex-1">
-                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
-                    From City
-                  </label>
-                  <input
-                    type="text"
-                    value={fromLocation}
-                    onChange={(e) => setFromLocation(e.target.value)}
-                    className="bg-transparent outline-none border-none text-zinc-900 font-black text-xl placeholder-zinc-400 w-full mt-0.5"
-                  />
-                </div>
+                <CityAutocomplete
+                  value={fromLocation}
+                  onChange={setFromLocation}
+                  label="From City"
+                  inputClassName="bg-transparent outline-none border-none text-zinc-900 font-black text-xl placeholder-zinc-400 w-full mt-0.5"
+                  labelClassName="text-[10px] font-black text-zinc-400 uppercase tracking-widest"
+                />
               </div>
 
               {/* Swap Button (Absolute/Relative floating arrow capsule) */}
               <div className="absolute left-1/2 lg:left-[25%] top-[90px] lg:top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
                 <button
+                  type="button"
                   onClick={swapLocations}
                   className="w-12 h-12 rounded-full bg-white border border-zinc-200 shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all text-[#254f1a] hover:text-zinc-900 cursor-pointer"
                   title="Swap Locations"
@@ -873,17 +855,13 @@ export default function DashboardPage() {
                     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" />
                   </svg>
                 </div>
-                <div className="flex flex-col flex-1">
-                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
-                    To City
-                  </label>
-                  <input
-                    type="text"
-                    value={toLocation}
-                    onChange={(e) => setToLocation(e.target.value)}
-                    className="bg-transparent outline-none border-none text-zinc-900 font-black text-xl placeholder-zinc-400 w-full mt-0.5"
-                  />
-                </div>
+                <CityAutocomplete
+                  value={toLocation}
+                  onChange={setToLocation}
+                  label="To City"
+                  inputClassName="bg-transparent outline-none border-none text-zinc-900 font-black text-xl placeholder-zinc-400 w-full mt-0.5"
+                  labelClassName="text-[10px] font-black text-zinc-400 uppercase tracking-widest"
+                />
               </div>
 
               {/* DATE Picker Input */}
@@ -912,12 +890,14 @@ export default function DashboardPage() {
               {/* QUICK Date Selectors */}
               <div className="lg:col-span-2 flex flex-row lg:flex-col gap-2 justify-center">
                 <button
+                  type="button"
                   onClick={setTodayDate}
                   className="flex-1 bg-zinc-100 hover:bg-zinc-200 active:scale-95 transition-all py-3.5 rounded-2xl text-center text-xs font-black text-zinc-700 cursor-pointer"
                 >
                   Today
                 </button>
                 <button
+                  type="button"
                   onClick={setTomorrowDate}
                   className="flex-1 bg-zinc-100 hover:bg-zinc-200 active:scale-95 transition-all py-3.5 rounded-2xl text-center text-xs font-black text-zinc-700 cursor-pointer"
                 >
@@ -927,7 +907,8 @@ export default function DashboardPage() {
 
               {/* Big Search button */}
               <div className="lg:col-span-2 flex items-stretch">
-                <button
+                <button 
+                  type="submit"
                   className="w-full bg-[#254f1a] hover:bg-[#214116] text-white rounded-2xl py-4 lg:py-0 flex items-center justify-center gap-2 font-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg cursor-pointer"
                 >
                   <span>Search</span>
@@ -938,7 +919,7 @@ export default function DashboardPage() {
                 </button>
               </div>
 
-            </div>
+            </form>
 
           </div>
         </div>

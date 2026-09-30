@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import List, Dict, Tuple
 import math
 from app.mcraptor_data import McRaptorTimetable
+import re
 try:
     from app.city_aliases import CITY_ALIASES
 except ImportError:
@@ -130,6 +131,35 @@ def get_leg_fare_and_status(
 
     return {"status": "AVAILABLE", "available_seats": 99, "wl_number": 0, "price_inr": 0}
 
+def _map_to_supported_date(target_date_str: str) -> str:
+    try:
+        target_dt = datetime.strptime(target_date_str, "%Y-%m-%d")
+    except ValueError:
+        return target_date_str
+        
+    # If it's already in Aug or Sep 2026, leave it as is
+    if target_dt.year == 2026 and target_dt.month in [8, 9]:
+        return target_date_str
+
+    target_weekday = target_dt.weekday()
+    target_day = target_dt.day
+
+    best_candidate = None
+    min_diff = 999
+    
+    # Map to the closest day of the month in August 2026 with the exact same weekday
+    for day in range(1, 32):
+        dt = datetime(2026, 8, day)
+        if dt.weekday() == target_weekday:
+            diff = abs(dt.day - target_day)
+            if diff < min_diff:
+                min_diff = diff
+                best_candidate = dt
+                
+    if best_candidate:
+        return best_candidate.strftime("%Y-%m-%d")
+    return target_date_str
+
 
 def run_mcraptor_city_search(
     timetable: McRaptorTimetable,
@@ -144,25 +174,24 @@ def run_mcraptor_city_search(
     Unified Multi-Modal McRAPTOR Search Algorithm.
     Supports Train, Bus, and Modal Transfer Footpaths.
     """
+    # Map future/past dates to August 2026 ensuring identical day-of-week for accurate schedule logic
+    travel_date_str = _map_to_supported_date(travel_date_str)
+
     source_city = source_city.strip().lower()
     dest_city = dest_city.strip().lower()
 
     def resolve_city_stops(query: str) -> List[str]:
-        """Collect all stop_ids for any city key that contains the query keyword."""
-        # First check for exact match or partial match in city_stops
-        all_stops = list(timetable.city_stops.get(query, []))
-        for city_key, stops in timetable.city_stops.items():
-            if city_key != query and query in city_key:
-                all_stops.extend(stops)
-                
-        # Also include alias mapping if it exists (additive)
-        if query in CITY_ALIASES:
-            aliased = CITY_ALIASES[query]
-            all_stops.extend(timetable.city_stops.get(aliased, []))
-            for city_key, stops in timetable.city_stops.items():
-                if city_key != aliased and aliased in city_key:
-                    all_stops.extend(stops)
-                    
+        """Collect all stop_ids for any city key using strict EXACT matching."""
+        all_stops = []
+        
+        # 1. Exact match first
+        if query in timetable.city_stops:
+            all_stops.extend(timetable.city_stops[query])
+            
+        # 2. Try alias exact match
+        if query in CITY_ALIASES and CITY_ALIASES[query] in timetable.city_stops:
+            all_stops.extend(timetable.city_stops[CITY_ALIASES[query]])
+
         return list(set(all_stops))
 
     source_stops_list = resolve_city_stops(source_city)
