@@ -40,11 +40,66 @@ document.addEventListener("DOMContentLoaded", () => {
   checkBackendHealth();
 
   document.getElementById("dateInput").value = "2026-08-01";
-  document.getElementById("timeInput").value = "08:00";
+  document.getElementById("dateInput").value = "2026-08-01";
   document
     .getElementById("searchForm")
     .addEventListener("submit", handleSearch);
+
+  setupAutocomplete("sourceInput", "sourceDropdown");
+  setupAutocomplete("destInput", "destDropdown");
 });
+
+function setupAutocomplete(inputId, dropdownId) {
+  const input = document.getElementById(inputId);
+  const dropdown = document.getElementById(dropdownId);
+  let timeout = null;
+
+  input.addEventListener("input", (e) => {
+    clearTimeout(timeout);
+    const q = e.target.value.trim();
+    
+    if (q.length < 2) {
+      dropdown.classList.add("hidden");
+      return;
+    }
+
+    timeout = setTimeout(async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/v4/cities/autocomplete?q=${encodeURIComponent(q)}`);
+        const cities = await res.json();
+        
+        dropdown.innerHTML = "";
+        if (cities.length === 0) {
+          dropdown.classList.add("hidden");
+          return;
+        }
+
+        cities.forEach(city => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-purple-900/50 hover:text-white transition-colors focus:bg-purple-900 focus:outline-none";
+          btn.textContent = city;
+          btn.onclick = () => {
+            input.value = city;
+            dropdown.classList.add("hidden");
+          };
+          dropdown.appendChild(btn);
+        });
+        
+        dropdown.classList.remove("hidden");
+      } catch (err) {
+        console.error("Autocomplete error:", err);
+      }
+    }, 300);
+  });
+
+  // Close dropdown on click outside
+  document.addEventListener("click", (e) => {
+    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.add("hidden");
+    }
+  });
+}
 
 function initMap() {
   map = L.map("map").setView([18.5, 83.0], 6);
@@ -82,16 +137,16 @@ async function handleSearch(e) {
 
   const src = document.getElementById("sourceInput").value.trim();
   const dst = document.getElementById("destInput").value.trim();
-  const time = document.getElementById("timeInput").value;
   const date = document.getElementById("dateInput").value;
   const travelClass = document.getElementById("classSelect").value;
+  const requireBus = document.getElementById("requireBus").checked;
 
   const btn = document.getElementById("searchBtn");
   btn.disabled = true;
   btn.innerText = "Evaluating Pareto Frontier...";
 
   try {
-    const url = `${API_BASE_URL}/api/v4/mcraptor/city-search?source_city=${src}&dest_city=${dst}&departure_time=${time}&date=${date}&class_code=${travelClass}&top_k=25`;
+    const url = `${API_BASE_URL}/api/v4/mcraptor/city-search?source_city=${src}&dest_city=${dst}&date=${date}&class_code=${travelClass}&top_k=25&require_bus=${requireBus}`;
     const res = await fetch(url);
 
     if (!res.ok) {

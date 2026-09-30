@@ -47,20 +47,23 @@
             
             <form id="searchForm" class="bg-slate-950 p-3.5 rounded-xl border border-purple-900/50 space-y-2.5 shadow-md">
                 <div class="grid grid-cols-5 gap-2">
-                    <div>
+                    <div class="relative">
                         <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">From City</label>
-                        <input type="text" id="sourceInput" value="Vijayawada" placeholder="e.g. Vijayawada" required
-                            class="w-full bg-slate-900 border border-slate-700 rounded-md px-2 py-1.5 text-xs text-purple-300 font-bold focus:outline-none focus:border-purple-400 font-mono tracking-wide text-center">
+                        <input type="text" id="sourceInput" value="Vijayawada" placeholder="e.g. Vijayawada" required autocomplete="off"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-md px-2 py-1.5 text-xs text-purple-300 font-bold focus:outline-none focus:border-purple-400 font-mono tracking-wide text-center relative z-10">
+                        <div id="sourceDropdown" class="absolute left-0 right-0 mt-1 bg-slate-800 border border-purple-800/60 rounded-md shadow-2xl z-50 max-h-40 overflow-y-auto hidden"></div>
                     </div>
-                    <div>
+                    <div class="relative">
                         <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">To City</label>
-                        <input type="text" id="destInput" value="Bengaluru" placeholder="e.g. Bengaluru" required
-                            class="w-full bg-slate-900 border border-slate-700 rounded-md px-2 py-1.5 text-xs text-purple-300 font-bold focus:outline-none focus:border-purple-400 font-mono tracking-wide text-center">
+                        <input type="text" id="destInput" value="Bengaluru" placeholder="e.g. Bengaluru" required autocomplete="off"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-md px-2 py-1.5 text-xs text-purple-300 font-bold focus:outline-none focus:border-purple-400 font-mono tracking-wide text-center relative z-10">
+                        <div id="destDropdown" class="absolute left-0 right-0 mt-1 bg-slate-800 border border-purple-800/60 rounded-md shadow-2xl z-50 max-h-40 overflow-y-auto hidden"></div>
                     </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Time</label>
-                        <input type="time" id="timeInput" value="08:00" required
-                            class="w-full bg-slate-900 border border-slate-700 rounded-md px-1 py-1.5 text-xs text-slate-200 font-semibold focus:outline-none focus:border-purple-400">
+                    <div class="flex items-center justify-center pt-5">
+                        <label class="flex items-center space-x-2 cursor-pointer group">
+                            <input type="checkbox" id="requireBus" class="form-checkbox h-4 w-4 text-purple-600 rounded border-slate-700 bg-slate-900 focus:ring-purple-500 focus:ring-offset-slate-950">
+                            <span class="text-[10px] font-bold text-slate-300 uppercase tracking-wider group-hover:text-white transition-colors">Bus Required</span>
+                        </label>
                     </div>
                     <div>
                         <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Date</label>

@@ -58,13 +58,6 @@ def get_path_coordinates(timetable: McRaptorTimetable, route_stops: List[str], s
 
 
 def is_dominated(candidate: dict, existing: dict) -> bool:
-    # --- Modality check for balanced routing ---
-    cand_modes = tuple(leg["mode"] for leg in candidate.get("legs", []))
-    ex_modes = tuple(leg["mode"] for leg in existing.get("legs", []))
-    
-    # Do not allow cross-modal domination (e.g. a Train cannot dominate a Bus out of existence)
-    if cand_modes != ex_modes:
-        return False
 
     cand_dur = candidate["total_duration_mins"]
     cand_dist = candidate["total_distance_km"]
@@ -142,10 +135,10 @@ def run_mcraptor_city_search(
     timetable: McRaptorTimetable,
     source_city: str,
     dest_city: str,
-    departure_time_str: str = "08:00",
     travel_date_str: str = "2026-08-01",
     travel_class: str = "3A",
-    top_k: int = 15
+    top_k: int = 15,
+    require_bus: bool = False
 ) -> List[dict]:
     """
     Unified Multi-Modal McRAPTOR Search Algorithm.
@@ -180,9 +173,8 @@ def run_mcraptor_city_search(
     if not source_stops_list or not dest_stops_list:
         return []
 
-    # Convert HH:MM departure time to seconds from midnight
-    dep_h, dep_m = map(int, departure_time_str.split(":"))
-    start_dep_sec = (dep_h * 3600) + (dep_m * 60)
+    # We evaluate all possible routes across the 24-hour day to find the absolute best options
+    start_dep_sec = 0
 
     pareto_results: List[dict] = []
     source_stops = source_stops_list
@@ -257,6 +249,11 @@ def run_mcraptor_city_search(
                             }
                         ]
                     }
+
+                    if require_bus:
+                        has_bus = any(leg["mode"] == "BUS" for leg in route_payload["legs"])
+                        if not has_bus:
+                            continue
 
                     if down_stop_id in dest_stops:
                         merge_into_pareto_set(pareto_results, route_payload)
@@ -549,6 +546,11 @@ def run_mcraptor_city_search(
                         "total_distance_km": total_dist,
                         "legs": legs
                     }
+
+                    if require_bus:
+                        has_bus = any(leg["mode"] == "BUS" for leg in route_payload["legs"])
+                        if not has_bus:
+                            continue
 
                     merge_into_pareto_set(pareto_results, route_payload)
 

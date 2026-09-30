@@ -127,15 +127,35 @@ def search_mcraptor_routes(
         "search_time_ms": elapsed_ms,
         "options": routes
     }
+@app.get("/api/v4/cities/autocomplete", summary="City Name Autocomplete")
+def autocomplete_cities(q: str = Query("", description="Search query")):
+    if not mcraptor_timetable:
+        return []
+    
+    q = q.lower().strip()
+    if len(q) < 2:
+        return []
+        
+    matches = set()
+    for city in mcraptor_timetable.city_stops.keys():
+        if q in city:
+            matches.add(city.title())
+            
+    from app.city_aliases import CITY_ALIASES
+    for alias in CITY_ALIASES.keys():
+        if q in alias:
+            matches.add(alias.title())
+            
+    return sorted(list(matches))[:10]
 
 @app.get("/api/v4/mcraptor/city-search", summary="McRAPTOR City-to-City Routing API")
 def search_mcraptor_city_routes(
     source_city: str = Query(..., description="Source city name (e.g. Vijayawada)"),
     dest_city: str = Query(..., description="Destination city name (e.g. Bengaluru)"),
-    departure_time: str = Query("08:00", description="Departure time in HH:MM format"),
     date: str = Query("2026-08-01", description="Travel date in YYYY-MM-DD format"),
     class_code: str = Query("3A", description="Travel class (3A, 2A, SL)"),
-    top_k: int = Query(15, ge=1, le=150, description="Max Pareto routes to return")
+    top_k: int = Query(15, ge=1, le=150, description="Max Pareto routes to return"),
+    require_bus: bool = Query(False, description="If true, only returns routes that contain at least one bus leg")
 ):
     if not mcraptor_timetable:
         raise HTTPException(status_code=503, detail="Timetable index not initialized.")
@@ -145,10 +165,10 @@ def search_mcraptor_city_routes(
         timetable=mcraptor_timetable,
         source_city=source_city,
         dest_city=dest_city,
-        departure_time_str=departure_time,
         travel_date_str=date,
         travel_class=class_code.strip().upper(),
-        top_k=top_k
+        top_k=top_k,
+        require_bus=require_bus
     )
     
     elapsed_ms = round((time.time() - start_t) * 1000, 2)
@@ -156,7 +176,6 @@ def search_mcraptor_city_routes(
     return {
         "source_city": source_city.strip().capitalize(),
         "destination_city": dest_city.strip().capitalize(),
-        "departure_time": departure_time,
         "travel_date": date,
         "travel_class": class_code,
         "total_options_found": len(routes),
