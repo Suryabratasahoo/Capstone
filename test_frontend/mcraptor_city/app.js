@@ -200,24 +200,22 @@ function applyFiltersAndSort() {
       if (rankB !== rankA) return rankB - rankA;
       return a.total_duration_mins - b.total_duration_mins;
     });
+  } else if (sortCriterion === "DEPARTURE_TIME") {
+    const parseDepTime = (str) => {
+      const match = str.match(/(\d{2}):(\d{2})(?:\s*\(Day\s*(\d+)\))?/);
+      if (!match) return 0;
+      const h = parseInt(match[1], 10);
+      const m = parseInt(match[2], 10);
+      const d = match[3] ? parseInt(match[3], 10) : 1;
+      return (d - 1) * 24 * 60 + h * 60 + m;
+    };
+
+    processed.sort((a, b) => {
+      const timeA = parseDepTime(a.legs[0].departure_time);
+      const timeB = parseDepTime(b.legs[0].departure_time);
+      return timeA - timeB;
+    });
   }
-
-  // The user selected their top options based on sortCriterion (duration/price/etc).
-  // Now, we present these selected options in strict chronological order by departure time.
-  const parseDepTime = (str) => {
-    const match = str.match(/(\d{2}):(\d{2})(?:\s*\(Day\s*(\d+)\))?/);
-    if (!match) return 0;
-    const h = parseInt(match[1], 10);
-    const m = parseInt(match[2], 10);
-    const d = match[3] ? parseInt(match[3], 10) : 1;
-    return (d - 1) * 24 * 60 + h * 60 + m;
-  };
-
-  processed.sort((a, b) => {
-    const timeA = parseDepTime(a.legs[0].departure_time);
-    const timeB = parseDepTime(b.legs[0].departure_time);
-    return timeA - timeB;
-  });
 
   renderResultsList(processed);
 }
