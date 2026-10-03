@@ -1,0 +1,175 @@
+Week Number: 1
+Period From: 05-08-2026
+To: 11-08-2026
+Date of Meeting: 12-08-2026  
+Members Attended
+(Mention the registration number)
+→ Member 1 (Reg No: _______)
+→ Member 2 (Reg No: _______)
+Tasks Completed:
+→ Finalized the problem statement: Building a Multi-modal Transit Routing Engine.
+→ Conducted literature review on routing algorithms (Dijkstra vs. RAPTOR).
+→ Collected and parsed raw datasets for IRCTC train schedules and State RTC bus routes.
+Tasks Planned Next Week:
+→ Design the system architecture and database schema.
+→ Begin implementation of the McRAPTOR algorithm in Python.
+→ Clean and normalize the transit data into SQLite.
+Comments / Suggestion by the Guide:
+→ Ensure the dataset is scalable. Focus on South/East Indian routes for the initial prototype to limit complexity.
+→ Start drafting the architecture diagram for the first review.
+Signature of the Guide: _____________________
+
+=======================================================
+
+Week Number: 2
+Period From: 12-08-2026
+To: 18-08-2026
+Date of Meeting: 19-08-2026  
+Members Attended
+(Mention the registration number)
+→ Member 1 (Reg No: _______)
+→ Member 2 (Reg No: _______)
+Tasks Completed:
+→ Created the ER diagram and set up the SQLite final.db for the backend.
+→ Implemented data preprocessing scripts to map station codes to geographical coordinates.
+→ Designed the core structures for the McRAPTOR (Multi-criteria RAPTOR) algorithm.
+Tasks Planned Next Week:
+→ Develop the FastAPI backend.
+→ Implement the base RAPTOR logic for train-only routing.
+→ Build geographic distance functions (Haversine formula).
+Comments / Suggestion by the Guide:
+→ Good progress on database mapping. Make sure your geographic distance calculations are highly optimized to reduce algorithm latency.
+Signature of the Guide: _____________________
+
+=======================================================
+
+Week Number: 3
+Period From: 19-08-2026
+To: 25-08-2026
+Date of Meeting: 26-08-2026  
+Members Attended
+(Mention the registration number)
+→ Member 1 (Reg No: _______)
+→ Member 2 (Reg No: _______)
+Tasks Completed:
+→ Set up the FastAPI backend environment and created API endpoints.
+→ Successfully implemented the base RAPTOR algorithm for point-to-point train routing.
+→ Integrated Pareto-optimization to balance "Time" vs "Cost" vs "Transfers".
+Tasks Planned Next Week:
+→ Integrate Bus networks into the routing engine (Multi-modal).
+→ Handle dynamic date availability and weekly train schedules.
+→ Add Waitlist/RAC status filtering logic.
+Comments / Suggestion by the Guide:
+→ The Pareto-optimization is a strong unique selling point (USP). Ensure the algorithm prunes heavily dominated routes early to keep response times under 1 second.
+Signature of the Guide: _____________________
+
+=======================================================
+
+Week Number: 4
+Period From: 26-08-2026
+To: 01-09-2026
+Date of Meeting: 02-09-2026  
+Members Attended
+(Mention the registration number)
+→ Member 1 (Reg No: _______)
+→ Member 2 (Reg No: _______)
+Tasks Completed:
+→ Expanded McRAPTOR to support multi-modal paths (Train + Bus + Walking transfers).
+→ Implemented dynamic date mapping logic to support queries for any future date.
+→ Finalized the backend routing engine; achieving sub-second response times for complex queries.
+Tasks Planned Next Week:
+→ Shift focus to the Machine Learning component (Route Recommender System).
+→ Aggregate train reviews and extract text for sentiment analysis.
+→ Train the NLP model for semantic search.
+Comments / Suggestion by the Guide:
+→ The routing engine works exceptionally well. Start preparing the ML dataset carefully; raw reviews contain a lot of noise that needs to be cleaned.
+Signature of the Guide: _____________________
+
+=======================================================
+
+Week Number: 5
+Period From: 02-09-2026
+To: 08-09-2026
+Date of Meeting: 09-09-2026  
+Members Attended
+(Mention the registration number)
+→ Member 1 (Reg No: _______)
+→ Member 2 (Reg No: _______)
+Tasks Completed:
+→ Built a standalone NLP recommender microservice using FastAPI.
+→ Utilized SentenceTransformers and TextBlob for semantic similarity and sentiment analysis on train reviews.
+→ Implemented a Min-Max scaling algorithm to generate realistic 1 to 5 star ratings based on user feedback.
+Tasks Planned Next Week:
+→ Begin frontend development using Next.js and TailwindCSS.
+→ Build the Landing Page (Hero) and Dashboard UI.
+→ Create the City Autocomplete component.
+Comments / Suggestion by the Guide:
+→ The microservice architecture (separating ML from the Routing Engine) is highly professional. Proceed with the frontend integration.
+Signature of the Guide: _____________________
+
+=======================================================
+
+Week Number: 6
+Period From: 09-09-2026
+To: 15-09-2026
+Date of Meeting: 16-09-2026  
+Members Attended
+(Mention the registration number)
+→ Member 1 (Reg No: _______)
+→ Member 2 (Reg No: _______)
+Tasks Completed:
+→ Bootstrapped the Next.js frontend with TailwindCSS.
+→ Designed and implemented a modern, dynamic Landing Page and User Dashboard.
+→ Built a reusable City Autocomplete component that fetches locations efficiently.
+Tasks Planned Next Week:
+→ Build the main Planner page to display the routes.
+→ Integrate Leaflet / React-Leaflet to visualize multi-modal paths on a map.
+→ Connect frontend UI to the FastAPI routing backend.
+Comments / Suggestion by the Guide:
+→ The UI design is very premium. Ensure that the map integration does not slow down the page rendering. Lazy-load the map if necessary.
+Signature of the Guide: _____________________
+
+=======================================================
+
+Week Number: 7
+Period From: 16-09-2026
+To: 22-09-2026
+Date of Meeting: 23-09-2026  
+Members Attended
+(Mention the registration number)
+→ Member 1 (Reg No: _______)
+→ Member 2 (Reg No: _______)
+Tasks Completed:
+→ Completed the Planner page with expandable route cards.
+→ Successfully integrated Leaflet map; implemented logic to draw physical polylines (Rail in blue, Bus in yellow).
+→ Connected the ML Recommender API to inject star ratings and highlights dynamically into the route cards.
+Tasks Planned Next Week:
+→ Address edge cases (e.g., missing bus reviews).
+→ Conduct rigorous end-to-end testing of the entire architecture.
+→ Finalize the project report and prepare the presentation.
+Comments / Suggestion by the Guide:
+→ The integration of algorithmic routing, machine learning, and a map-based UI is complete. Focus on testing edge case cities to ensure it doesn't break during the live demo.
+Signature of the Guide: _____________________
+
+=======================================================
+
+Week Number: 8
+Period From: 23-09-2026
+To: 29-09-2026
+Date of Meeting: 30-09-2026  
+Members Attended
+(Mention the registration number)
+→ Member 1 (Reg No: _______)
+→ Member 2 (Reg No: _______)
+Tasks Completed:
+→ Handled ML data sparsity by implementing a deterministic heuristic fallback for Bus ratings.
+→ Fixed frontend timezone bugs in the date picker.
+→ Compiled the final Capstone Project Report and polished the live demonstration flow.
+Tasks Planned Next Week:
+More updates to be done on the testing for better routing experience.
+
+
+Comments / Suggestion by the Guide:
+
+
+Signature of the Guide: _____________________

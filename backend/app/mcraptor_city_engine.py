@@ -273,6 +273,8 @@ def run_mcraptor_city_search(
                                 "arrival_time": sec_to_time_str(down_stop_data["arrival_sec"]),
                                 "distance_km": dist_km,
                                 "seat_status": fare_info["status"],
+                                "available_seats": fare_info["available_seats"],
+                                "wl_number": fare_info["wl_number"],
                                 "price_inr": fare_info["price_inr"],
                                 "path": get_path_coordinates(timetable, route_stops, src_idx, down_idx)
                             }
@@ -351,6 +353,8 @@ def run_mcraptor_city_search(
                                     "arrival_time": sec_to_time_str(arr["arr_sec"]),
                                     "distance_km": arr["distance_km"],
                                     "seat_status": arr["fare_info"]["status"],
+                                    "available_seats": arr["fare_info"]["available_seats"],
+                                    "wl_number": arr["fare_info"]["wl_number"],
                                     "price_inr": arr["fare_info"]["price_inr"],
                                     "path": arr.get("path", [])
                                 },
@@ -505,6 +509,8 @@ def run_mcraptor_city_search(
                             "arrival_time": sec_to_time_str(leg1["arr_sec"]),
                             "distance_km": leg1["distance_km"],
                             "seat_status": leg1["fare_info"]["status"],
+                            "available_seats": leg1["fare_info"]["available_seats"],
+                            "wl_number": leg1["fare_info"]["wl_number"],
                             "price_inr": leg1["fare_info"]["price_inr"],
                             "path": leg1["path"]
                         }
@@ -552,6 +558,8 @@ def run_mcraptor_city_search(
                         "arrival_time": sec_to_time_str(dest_stop_data["arrival_sec"]),
                         "distance_km": leg2_dist,
                         "seat_status": leg2_fare_info["status"],
+                        "available_seats": leg2_fare_info["available_seats"],
+                        "wl_number": leg2_fare_info["wl_number"],
                         "price_inr": leg2_fare_info["price_inr"],
                         "path": get_path_coordinates(timetable, route_stops, inter_idx, dest_idx)
                     })

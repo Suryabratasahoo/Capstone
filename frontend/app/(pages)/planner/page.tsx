@@ -22,6 +22,56 @@ const createIcon = (color: string) => {
   });
 };
 
+function ServiceRatingBadge({ serviceNumber, mode }: { serviceNumber: string, mode: string }) {
+  const [ratingData, setRatingData] = useState<{ rating: number, highlights: string[] } | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!serviceNumber) return;
+    
+    // Determine the correct endpoint
+    let endpoint = "";
+    if (mode === 'RAIL' && !isNaN(Number(serviceNumber))) {
+      endpoint = `http://127.0.0.1:8001/train/${serviceNumber}`;
+    } else if (mode === 'BUS') {
+      endpoint = `http://127.0.0.1:8001/bus/${encodeURIComponent(serviceNumber)}`;
+    } else {
+      return; // No ratings for flights or walks yet
+    }
+    
+    setLoading(true);
+    fetch(endpoint)
+      .then(res => {
+        if (!res.ok) throw new Error("Not found");
+        return res.json();
+      })
+      .then(data => {
+        if (data && data.rating) {
+          setRatingData({ rating: data.rating, highlights: data.highlights || [] });
+        }
+      })
+      .catch(() => setRatingData(null))
+      .finally(() => setLoading(false));
+  }, [serviceNumber, mode]);
+
+  if (loading) return <span className="ml-2 text-[9px] text-zinc-400 font-bold animate-pulse inline-block">Loading Rating...</span>;
+  if (!ratingData) return null;
+
+  return (
+    <div className="inline-flex items-center gap-1.5 ml-2 group relative">
+      <span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-md text-[10px] font-black border border-amber-200 shadow-sm flex items-center">
+        <span className="mr-0.5 text-amber-500">★</span> {ratingData.rating.toFixed(1)}/5
+      </span>
+      {/* Tooltip for highlights */}
+      {ratingData.highlights.length > 0 && (
+        <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-800 text-white text-[10px] py-1 px-2 rounded w-max whitespace-nowrap z-50 pointer-events-none">
+          Highlights: {ratingData.highlights.slice(0, 3).join(', ')}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PlannerContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -332,6 +382,10 @@ function PlannerContent() {
                     <div>
                       <span className="text-lg font-black text-brand-forest">{opt.total_duration}</span>
                       <span className="text-[10px] text-zinc-400 font-bold ml-2 uppercase tracking-wider">{opt.transfers} Transfers</span>
+                      {/* Show rating for the primary leg if it's a train or bus */}
+                      {(opt.legs[0]?.mode === 'RAIL' || opt.legs[0]?.mode === 'BUS') && (
+                        <ServiceRatingBadge serviceNumber={opt.legs[0].service_number} mode={opt.legs[0].mode} />
+                      )}
                     </div>
                     <div className="text-right">
                       <span className="text-lg font-black text-zinc-800">₹{opt.total_price_inr}</span>
@@ -366,7 +420,25 @@ function PlannerContent() {
                           <div className="flex items-start gap-2">
                             <span className="text-base leading-none">{getModeIcon(leg.mode)}</span>
                             <div className="flex-1">
-                              <p className="text-[11px] font-black text-zinc-800 tracking-wide">{leg.service_name}</p>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="text-[11px] font-black text-zinc-800 tracking-wide">{leg.service_name}</p>
+                                {(leg.mode === 'RAIL' || leg.mode === 'BUS') && <ServiceRatingBadge serviceNumber={leg.service_number} mode={leg.mode} />}
+                                {leg.mode !== 'WALK' && leg.seat_status === 'AVAILABLE' && leg.available_seats !== undefined && (
+                                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-700 shadow-sm">
+                                    {leg.available_seats} Seats Available
+                                  </span>
+                                )}
+                                {leg.mode !== 'WALK' && leg.seat_status === 'RAC' && leg.wl_number !== undefined && (
+                                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-700 shadow-sm">
+                                    RAC {leg.wl_number}
+                                  </span>
+                                )}
+                                {leg.mode !== 'WALK' && leg.seat_status === 'WAITLIST' && leg.wl_number !== undefined && (
+                                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-rose-50 border border-rose-200 text-rose-700 shadow-sm">
+                                    WL {leg.wl_number}
+                                  </span>
+                                )}
+                              </div>
                               <div className="flex justify-between text-[10px] text-zinc-500 font-medium mt-0.5">
                                 <span>{leg.from_stop.name} <strong className="text-zinc-700">{leg.departure_time}</strong></span>
                                 <span>→</span>

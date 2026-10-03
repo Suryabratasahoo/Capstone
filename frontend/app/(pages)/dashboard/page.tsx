@@ -95,8 +95,12 @@ export default function DashboardPage() {
   useEffect(() => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    setDepartureDate(tomorrow.toISOString().split('T')[0]);
+    const year = tomorrow.getFullYear();
+    const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const day = String(tomorrow.getDate()).padStart(2, '0');
+    setDepartureDate(`${year}-${month}-${day}`);
   }, []);
+
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNavbarVisible, setIsNavbarVisible] = useState(true);
@@ -573,13 +577,19 @@ export default function DashboardPage() {
   // Helper date pills selectors
   const setTodayDate = () => {
     const today = new Date();
-    setDepartureDate(today.toISOString().split('T')[0]);
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    setDepartureDate(`${year}-${month}-${day}`);
   };
 
   const setTomorrowDate = () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    setDepartureDate(tomorrow.toISOString().split('T')[0]);
+    const year = tomorrow.getFullYear();
+    const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const day = String(tomorrow.getDate()).padStart(2, '0');
+    setDepartureDate(`${year}-${month}-${day}`);
   };
 
   // Large Vector icons for each tab category
@@ -865,26 +875,25 @@ export default function DashboardPage() {
               </div>
 
               {/* DATE Picker Input */}
-              <div className="lg:col-span-2 bg-zinc-100/80 rounded-2xl px-5 py-4 border border-zinc-200/50 hover:border-zinc-300/80 transition-colors flex items-center gap-3 relative cursor-pointer">
+              <div 
+                className="lg:col-span-2 bg-zinc-100/80 rounded-2xl px-5 py-4 border border-zinc-200/50 hover:border-zinc-300/80 transition-colors flex items-center gap-3 relative cursor-pointer focus-within:ring-2 focus-within:ring-brand-forest/50"
+              >
                 <div className="text-[#254f1a] shrink-0">
                   <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current" xmlns="http://www.w3.org/2000/svg">
                     <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 002 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm-7-7H7v2h5v-2z" />
                   </svg>
                 </div>
-                <div className="flex flex-col flex-1">
+                <div className="flex flex-col flex-1 min-w-0">
                   <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">
                     Departure Date
                   </span>
-                  <span className="text-zinc-900 font-black text-lg mt-0.5 block">
-                    {departureDate ? formatDateDisplay(departureDate) : 'Select Date'}
-                  </span>
+                  <input
+                    type="date"
+                    value={departureDate}
+                    onChange={(e) => setDepartureDate(e.target.value)}
+                    className="bg-transparent text-lg font-black text-zinc-900 focus:outline-none border-none p-0 mt-0.5 cursor-pointer w-full"
+                  />
                 </div>
-                <input
-                  type="date"
-                  value={departureDate}
-                  onChange={(e) => setDepartureDate(e.target.value)}
-                  className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
-                />
               </div>
 
               {/* QUICK Date Selectors */}

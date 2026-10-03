@@ -1,0 +1,8 @@
+pandas
+scikit-learn
+nltk
+textblob
+fastapi
+uvicorn
+sentence-transformers
+joblib

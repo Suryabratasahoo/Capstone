@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import CityAutocomplete from "./CityAutocomplete";
+import Link from "next/link";
 
 const slides = [
   {
@@ -239,6 +240,7 @@ export default function Hero() {
                 />
               </div>
 
+              {/* CTA Button */}
               {/* CTA Button */}
               <button
                 type="submit"
