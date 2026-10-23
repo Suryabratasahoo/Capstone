@@ -29,7 +29,7 @@ function TermsAndConditions() {
             <section className="mb-10">
               <h2 className="text-2xl font-bold mb-4">1. Introduction</h2>
               <p className="text-zinc-600 mb-4 leading-relaxed">
-                Welcome to ConnexLink. These Terms and Conditions govern your use of our website and services. By accessing or using ConnexLink, you agree to be bound by these terms. If you disagree with any part of these terms, you may not access our service.
+                Welcome to OptiTransit. These Terms and Conditions govern your use of our website and services. By accessing or using OptiTransit, you agree to be bound by these terms. If you disagree with any part of these terms, you may not access our service.
               </p>
             </section>
 
@@ -46,21 +46,21 @@ function TermsAndConditions() {
             <section className="mb-10">
               <h2 className="text-2xl font-bold mb-4">3. Intellectual Property</h2>
               <p className="text-zinc-600 mb-4 leading-relaxed">
-                The Service and its original content, features, and functionality are and will remain the exclusive property of ConnexLink and its licensors. The Service is protected by copyright, trademark, and other laws of both the United States and foreign countries.
+                The Service and its original content, features, and functionality are and will remain the exclusive property of OptiTransit and its licensors. The Service is protected by copyright, trademark, and other laws of both the United States and foreign countries.
               </p>
             </section>
 
             <section className="mb-10">
               <h2 className="text-2xl font-bold mb-4">4. Links to Other Web Sites</h2>
               <p className="text-zinc-600 mb-4 leading-relaxed">
-                Our Service may contain links to third-party web sites or services that are not owned or controlled by ConnexLink. We have no control over, and assume no responsibility for, the content, privacy policies, or practices of any third-party web sites or services.
+                Our Service may contain links to third-party web sites or services that are not owned or controlled by OptiTransit. We have no control over, and assume no responsibility for, the content, privacy policies, or practices of any third-party web sites or services.
               </p>
             </section>
 
             <section className="mb-10">
               <h2 className="text-2xl font-bold mb-4">5. Limitation of Liability</h2>
               <p className="text-zinc-600 mb-4 leading-relaxed">
-                In no event shall ConnexLink, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the Service.
+                In no event shall OptiTransit, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the Service.
               </p>
             </section>
             
@@ -74,14 +74,14 @@ function TermsAndConditions() {
             <section className="mb-10">
               <h2 className="text-2xl font-bold mb-4">7. Contact Us</h2>
               <p className="text-zinc-600 leading-relaxed">
-                If you have any questions about these Terms, please contact us at <a href="mailto:support@connexlink.com" className="text-brand-forest hover:underline font-semibold">support@connexlink.com</a>.
+                If you have any questions about these Terms, please contact us at <a href="mailto:support@optitransit.com" className="text-brand-forest hover:underline font-semibold">support@optitransit.com</a>.
               </p>
             </section>
           </div>
           
           <div className="mt-16 pt-8 border-t border-zinc-200 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-zinc-500 text-sm">
-              &copy; {new Date().getFullYear()} ConnexLink. All rights reserved.
+              &copy; {new Date().getFullYear()} OptiTransit. All rights reserved.
             </p>
             <Button 
               className="bg-brand-forest hover:bg-brand-forest/90 text-white rounded-full px-8 py-6 text-base font-bold transition-all shadow-md"

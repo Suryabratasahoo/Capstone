@@ -21,42 +21,42 @@ export default function FAQSection() {
   const faqItems: FAQItem[] = [
     {
       id: "q1",
-      question: "Is ConnexLink the original transit link in bio tool?",
+      question: "Is OptiTransit the original transit route optimization tool?",
       answer: (
         <>
           <p className="font-medium text-lg sm:text-xl text-[#f9f2f5] mb-6">
             The short answer? Yes!
           </p>
           <p className="font-normal text-base sm:text-lg text-[#e9e0f2] leading-relaxed">
-            Back in 2026, we created ConnexLink as an easy way to link out to all socials and unify digital ecosystems, pioneering the transit link-in-bio category. ConnexLink remains the leading, biggest and most popular transit link-in-bio solution — but that’s just the beginning. You can use your ConnexLink URL or QR code <em className="italic">anywhere</em> your audience is, including on your business cards, in your email signature, on paper-based posters and brochures, and even on your resumé. If you don’t have a website, that’s fine. If you have a ConnexLink, you don’t need one!
+            Back in 2026, we created OptiTransit as an easy way to optimize transit journeys and unify multi-modal travel ecosystems, pioneering intelligent break-journey routing. OptiTransit remains the leading transit optimization solution.
           </p>
         </>
       )
     },
     {
       id: "q2",
-      question: "Can you compare fares and book tickets from a ConnexLink?",
+      question: "Can you compare fares and book tickets from OptiTransit?",
       answer: (
         <>
           <p className="font-medium text-lg sm:text-xl text-[#f9f2f5] mb-6">
             Comparing fares is built right in!
           </p>
           <p className="font-normal text-base sm:text-lg text-[#e9e0f2] leading-relaxed">
-            Travelers can compare live pricing for buses, trains, and flights directly within your link. Integration with major booking engines allows them to complete ticket purchases in seconds without ever leaving your custom transit hub.
+            Travelers can compare live pricing for buses, trains, and flights directly within your route. Integration with major booking engines allows them to complete ticket purchases in seconds without ever leaving your custom transit hub.
           </p>
         </>
       )
     },
     {
       id: "q3",
-      question: "Is ConnexLink safe to use on all of my social media profiles?",
+      question: "Is OptiTransit safe to use on all of my social media profiles?",
       answer: (
         <>
           <p className="font-medium text-lg sm:text-xl text-[#f9f2f5] mb-6">
             100% safe and verified across all platforms.
           </p>
           <p className="font-normal text-base sm:text-lg text-[#e9e0f2] leading-relaxed">
-            ConnexLink is fully optimized and approved for use across all major social networks including Instagram, TikTok, YouTube, and LinkedIn, keeping your audience's connections secure and spam-free.
+            OptiTransit is fully optimized and approved for use across all major networks, keeping your travel connections secure and transparent.
           </p>
         </>
       )
@@ -91,7 +91,7 @@ export default function FAQSection() {
     },
     {
       id: "q6",
-      question: "Is there a free plan available for ConnexLink?",
+      question: "Is there a free plan available for OptiTransit?",
       answer: (
         <>
           <p className="font-medium text-lg sm:text-xl text-[#f9f2f5] mb-6">

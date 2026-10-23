@@ -7,14 +7,14 @@ export default function FooterSection() {
 
   const handleClaim = (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Claiming ConnexLink handle: ${claimValue}`);
+    alert(`Claiming OptiTransit handle: ${claimValue}`);
   };
 
   const footerLinks = [
     {
       title: "Company",
       links: [
-        { label: "The ConnexLink Blog", href: "#" },
+        { label: "The OptiTransit Blog", href: "#" },
         { label: "Engineering Blog", href: "#" },
         { label: "Marketplace", href: "#" },
         { label: "What's New", href: "#" },
@@ -29,7 +29,7 @@ export default function FooterSection() {
     {
       title: "Community",
       links: [
-        { label: "ConnexLink for Enterprise", href: "#" },
+        { label: "OptiTransit for Enterprise", href: "#" },
         { label: "2026 Creator Report", href: "#" },
         { label: "2025 Creator Report", href: "#" },
         { label: "Charities", href: "#" },
@@ -42,7 +42,7 @@ export default function FooterSection() {
       links: [
         { label: "Help Topics", href: "#" },
         { label: "Getting Started", href: "#" },
-        { label: "ConnexLink Pro", href: "#" },
+        { label: "OptiTransit Pro", href: "#" },
         { label: "Features & How-Tos", href: "#" },
         { label: "FAQs", href: "#" },
         { label: "Report a Violation", href: "#" }
@@ -98,7 +98,7 @@ export default function FooterSection() {
         <form onSubmit={handleClaim} className="flex flex-col sm:flex-row gap-4 items-center w-full max-w-2xl px-4 mt-6">
           {/* Prefilled input field */}
           <div className="flex items-center bg-white rounded-2xl py-5 px-6 w-full shadow-lg">
-            <span className="text-zinc-500 font-bold text-lg select-none pr-0.5">connexlink.com/</span>
+            <span className="text-zinc-500 font-bold text-lg select-none pr-0.5">optitransit.com/</span>
             <input
               type="text"
               placeholder="yourname"
@@ -112,7 +112,7 @@ export default function FooterSection() {
             type="submit"
             className="bg-[#d2e823] text-zinc-900 hover:scale-[1.02] active:scale-[0.98] transition-transform rounded-full px-8 py-5.5 font-black text-lg w-full sm:w-auto whitespace-nowrap shadow-lg cursor-pointer select-none"
           >
-            Claim your ConnexLink
+            Claim your OptiTransit
           </button>
         </form>
 

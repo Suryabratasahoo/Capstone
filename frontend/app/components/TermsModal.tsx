@@ -39,7 +39,7 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
             <section className="mb-8">
               <h3 className="text-lg font-bold mb-2">1. Introduction</h3>
               <p className="mb-4">
-                Welcome to ConnexLink. These Terms and Conditions govern your use of our website and services. By accessing or using ConnexLink, you agree to be bound by these terms. If you disagree with any part of these terms, you may not access our service.
+                Welcome to OptiTransit. These Terms and Conditions govern your use of our website and services. By accessing or using OptiTransit, you agree to be bound by these terms. If you disagree with any part of these terms, you may not access our service.
               </p>
             </section>
 
@@ -56,14 +56,14 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
             <section className="mb-8">
               <h3 className="text-lg font-bold mb-2">3. Intellectual Property</h3>
               <p className="mb-4">
-                The Service and its original content, features, and functionality are and will remain the exclusive property of ConnexLink and its licensors. The Service is protected by copyright, trademark, and other laws.
+                The Service and its original content, features, and functionality are and will remain the exclusive property of OptiTransit and its licensors. The Service is protected by copyright, trademark, and other laws.
               </p>
             </section>
 
             <section className="mb-8">
               <h3 className="text-lg font-bold mb-2">4. Limitation of Liability</h3>
               <p className="mb-4">
-                In no event shall ConnexLink, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages resulting from your access to or use of or inability to access or use the Service.
+                In no event shall OptiTransit, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages resulting from your access to or use of or inability to access or use the Service.
               </p>
             </section>
             

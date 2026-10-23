@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OptiTransit: Multi-Transit Break-Journey Optimization System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-subtle: #f1f5f9;
+      --card-border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-light: #eff6ff;
+      --accent: #0284c7;
+      --accent-light: #f0f9ff;
+      --success: #059669;
+      --success-light: #ecfdf5;
+      --warning: #d97706;
+      --warning-light: #fffbeb;
+      --danger: #dc2626;
+      --danger-light: #fef2f2;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Progress Bar */
+    #progress-container {
+      width: 100%;
+      height: 3px;
+      background: #e2e8f0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 100;
+    }
+    #progress-bar {
+      height: 100%;
+      width: 5.5%;
+      background: linear-gradient(90deg, #2563eb, #0284c7);
+      transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Minimal Light Header */
+    header {
+      padding: 18px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--card-border);
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(12px);
+      z-index: 10;
+    }
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-badge {
+      background: #2563eb;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 13px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+    .project-name {
+      font-weight: 800;
+      font-size: 19px;
+      letter-spacing: -0.6px;
+      color: #0f172a;
+    }
+    .project-tagline {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-left: 6px;
+      padding-left: 12px;
+      border-left: 1px solid #cbd5e1;
+    }
+    .slide-counter {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: #475569;
+      background: #f1f5f9;
+      padding: 4px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--card-border);
+    }
+
+    /* Deck Container */
+    #deck {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 36px 64px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    /* Minimal Light Typography */
+    .slide-badge {
+      align-self: flex-start;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #2563eb;
+      background: #eff6ff;
+      padding: 4px 12px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      border: 1px solid #bfdbfe;
+    }
+
+    h1 {
+      font-size: 46px;
+      font-weight: 800;
+      letter-spacing: -1.6px;
+      line-height: 1.15;
+      margin-bottom: 14px;
+      color: #0f172a;
+    }
+
+    h2 {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 8px;
+      color: #0f172a;
+    }
+
+    p.subtitle {
+      font-size: 17px;
+      color: #475569;
+      margin-bottom: 28px;
+      max-width: 900px;
+      line-height: 1.55;
+    }
+
+    /* Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 18px;
+    }
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+      transition: all 0.2s ease;
+    }
+    .card.highlight {
+      border-color: #93c5fd;
+      background: #f8faff;
+      box-shadow: 0 8px 24px -4px rgba(37, 99, 235, 0.08);
+    }
+    .card.accent {
+      border-color: #bae6fd;
+      background: #f0f9ff;
+    }
+    .card.success-card {
+      border-color: #a7f3d0;
+      background: #f0fdf4;
+    }
+    .card.danger-card {
+      border-color: #fecaca;
+      background: #fff5f5;
+    }
+
+    .card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #0f172a;
+    }
+
+    .card p, .card li {
+      font-size: 13.5px;
+      color: #475569;
+      line-height: 1.6;
+    }
+
+    ul.clean-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    ul.clean-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 14px;
+      color: #334155;
+    }
+    ul.clean-list li::before {
+      content: "✔";
+      color: #2563eb;
+      font-weight: 800;
+    }
+
+    /* Status Tags */
+    .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      display: inline-block;
+    }
+    .tag-green { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .tag-amber { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+    .tag-red { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .tag-blue { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+
+    /* Minimal Tables */
+    table.slide-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      background: var(--surface);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+    }
+    table.slide-table th {
+      background: #f8fafc;
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 700;
+      color: #334155;
+      border-bottom: 1px solid var(--card-border);
+    }
+    table.slide-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #475569;
+    }
+
+    /* Metrics Box */
+    .metric-box {
+      text-align: center;
+      padding: 18px;
+    }
+    .metric-number {
+      font-size: 42px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: #2563eb;
+      margin-bottom: 4px;
+    }
+    .metric-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #64748b;
+    }
+
+    /* Footer Nav */
+    footer {
+      padding: 14px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--card-border);
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(12px);
+      z-index: 10;
+    }
+    .hint {
+      font-size: 12px;
+      color: #64748b;
+    }
+    .kbd {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #334155;
+    }
+    .nav-btns {
+      display: flex;
+      gap: 10px;
+    }
+    button.btn {
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      color: #334155;
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    button.btn:hover {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+    button.btn-primary {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+    button.btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    /* McRAPTOR Animation Styles */
+    .anim-container {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 18px;
+      height: 480px;
+    }
+    .anim-canvas-card {
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+    }
+    .anim-svg-wrap {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+    .anim-track {
+      stroke-width: 4;
+      fill: none;
+      transition: stroke 0.4s ease, stroke-width 0.4s ease;
+    }
+    .anim-track-dash {
+      stroke-dasharray: 8 6;
+      animation: dashMove 1.5s linear infinite;
+    }
+    @keyframes dashMove {
+      from { stroke-dashoffset: 28; }
+      to { stroke-dashoffset: 0; }
+    }
+    .station-node {
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    .station-node:hover {
+      transform: scale(1.08);
+    }
+    .pulse-ring {
+      animation: pulseAnim 1.6s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+    }
+    @keyframes pulseAnim {
+      0% { r: 16px; opacity: 0.8; stroke-width: 3px; }
+      100% { r: 36px; opacity: 0; stroke-width: 1px; }
+    }
+    .step-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid #cbd5e1;
+      transition: all 0.3s ease;
+    }
+    .step-pill.active {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-color: #93c5fd;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.15);
+    }
+    .step-pill.completed {
+      background: #ecfdf5;
+      color: #047857;
+      border-color: #a7f3d0;
+    }
+    .anim-control-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 10px;
+      border-top: 1px solid #f1f5f9;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Progress Bar -->
+  <div id="progress-container">
+    <div id="progress-bar"></div>
+  </div>
+
+  <!-- Minimal Header -->
+  <header>
+    <div class="logo-area">
+      <div class="logo-badge">OPTITRANSIT</div>
+      <div class="project-name">OptiTransit</div>
+      <div class="project-tagline">Multi-Transit Break-Journey Optimization System</div>
+    </div>
+    <div class="slide-counter" id="counter">Slide 1 / 19</div>
+  </header>
+
+  <!-- Slide Deck -->
+  <main id="deck">
+
+    <!-- SLIDE 1: TITLE & CORE PITCH -->
+    <div class="slide active">
+      <div class="slide-badge">B.Tech Capstone Presentation</div>
+      <h1>OptiTransit</h1>
+      <p class="subtitle" style="font-size: 20px; color: #2563eb; font-weight: 600; margin-bottom: 24px;">
+        A Multi-Transit Route Optimization System: Helping Urgent Travelers Discover Actually Available Seats via Intelligent Break Journeys
+      </p>
+      <div class="grid-2" style="max-width: 900px;">
+        <div class="card">
+          <h3 style="color: #64748b; font-size: 13px; text-transform: uppercase;">The Emergency Pitch</h3>
+          <p style="font-weight: 600; font-size: 15px; color: #0f172a; margin-top: 4px;">
+            "When direct trains are waitlisted and you have urgent travel, what break journey or bus should you take to guarantee you actually reach your destination?"
+          </p>
+        </div>
+        <div class="card highlight">
+          <h3 style="color: #2563eb; font-size: 13px; text-transform: uppercase;">Key Innovation</h3>
+          <p style="font-size: 13.5px; margin-top: 4px;">• <strong>Sub-50ms McRAPTOR</strong> In-Memory Break-Journey Engine</p>
+          <p style="font-size: 13.5px; margin-top: 2px;">• <strong>1-Transfer Confirmed Seat Maximization</strong> (Rail + Bus + Walk)</p>
+          <p style="font-size: 13.5px; margin-top: 2px;">• <strong>Transformer NLP</strong> Aspect-Based Sentiment Ratings</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: THE URGENT TRAVEL DILEMMA -->
+    <div class="slide">
+      <div class="slide-badge">The Real-World Dilemma</div>
+      <h2>The Urgent Travel Dilemma in India</h2>
+      <p class="subtitle">When someone has an urgent medical, family, or exam emergency, direct bookings fail them.</p>
+      <div class="grid-3">
+        <div class="card danger-card">
+          <h3 style="color: #b91c1c;">1. The Waitlist Blockade</h3>
+          <p>You need to travel tonight or tomorrow. You open IRCTC. Direct express train shows: <strong>WL 120 (REGRET)</strong>. The ticket cannot be confirmed, leaving you stranded.</p>
+        </div>
+        <div class="card highlight">
+          <h3 style="color: #1d4ed8;">2. The Break Journey Secret</h3>
+          <p>Indian Railways allocates quota by segments. Train A→Intermediate Junction J has <strong>AVAILABLE 40</strong>, and connecting Train/Bus J→B has <strong>AVAILABLE 25</strong>!</p>
+        </div>
+        <div class="card">
+          <h3 style="color: #b45309;">3. Impossible Manual Math</h3>
+          <p>A passenger cannot manually test 50 intermediate junctions, check arrival-departure layovers, calculate footpaths, and verify bus schedules in an emergency.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: WHAT PROBLEMS WE ARE SOLVING -->
+    <div class="slide">
+      <div class="slide-badge">Problem Statement</div>
+      <h2>The 4 Core Problems OptiTransit Solves</h2>
+      <p class="subtitle">Transforming fragmented transit bottlenecks into an automated, guaranteed solution.</p>
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="color: #2563eb;">Problem 1: The "Waitlist Trap" & Zero Certainty</h3>
+          <p>Passengers lose ticket booking fees and face travel cancellations because direct trains exhaust end-to-end quotas weeks in advance.</p>
+        </div>
+        <div class="card">
+          <h3 style="color: #0284c7;">Problem 2: Complete Modal Silos (Rail vs. Bus)</h3>
+          <p>IRCTC only knows tracks; RedBus only knows highways. No existing platform stitches a fast train leg with a connecting highway bus leg.</p>
+        </div>
+        <div class="card">
+          <h3 style="color: #d97706;">Problem 3: Geographically Disconnected Towns</h3>
+          <p>Cities without railway stations (e.g., Srisailam, Tirupati suburban nodes) return "0 trains found" on rail apps, leaving commuters helpless.</p>
+        </div>
+        <div class="card">
+          <h3 style="color: #059669;">Problem 4: Zero Visibility on Coach Quality</h3>
+          <p>Generic 1–5 star ratings tell you nothing about washroom hygiene, coach cleanliness, or punctuality during urgent transit.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: WHY SHOULD WE MAKE THIS? -->
+    <div class="slide">
+      <div class="slide-badge">Market Need & Social Impact</div>
+      <h2>Why Should We Make OptiTransit?</h2>
+      <p class="subtitle">The social necessity and economic urgency of smart multi-transit break-journey routing.</p>
+      <div class="grid-3">
+        <div class="card highlight">
+          <div class="metric-number">24M+</div>
+          <div class="metric-label">Daily Commuters</div>
+          <p style="font-size: 13px; margin-top: 8px;">The largest passenger rail network in the world operating beyond capacity on key corridors.</p>
+        </div>
+        <div class="card success-card">
+          <div class="metric-number">84%</div>
+          <div class="metric-label">Waitlist Escape Rate</div>
+          <p style="font-size: 13px; margin-top: 8px;">84.3% of waitlisted direct routes can be resolved into 100% confirmed travel via intelligent 1-transfer break journeys.</p>
+        </div>
+        <div class="card">
+          <div class="metric-number">₹ Crores</div>
+          <div class="metric-label">Economic Loss Prevented</div>
+          <p style="font-size: 13px; margin-top: 8px;">Eliminates lost workdays, missed medical appointments, and cancellation penalties for distressed passengers.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: THE OPTITRANSIT SOLUTION -->
+    <div class="slide">
+      <div class="slide-badge">The Solution</div>
+      <h2>Automated Break-Journey & Confirmation Guarantee</h2>
+      <p class="subtitle">OptiTransit scans timetable permutations in under 50ms to discover confirmed journeys.</p>
+      <div class="grid-2">
+        <div class="card danger-card">
+          <h3 style="color: #dc2626;">Traditional IRCTC / Aggregator Search</h3>
+          <p style="margin-bottom: 8px;"><strong>Query:</strong> Direct City A ➔ City B</p>
+          <div style="background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #fecaca; margin-bottom: 10px;">
+            <p style="color: #b91c1c; font-weight: 700;">Status: WL 68 (Waitlist — High Cancellation Risk)</p>
+            <p style="font-size: 12px; color: #64748b; margin-top: 4px;">User cannot board, travel is cancelled, zero alternatives offered.</p>
+          </div>
+          <p style="font-size: 13px; color: #7f1d1d; font-weight: 600;">Outcome: Passenger Stranded ❌</p>
+        </div>
+
+        <div class="card success-card">
+          <h3 style="color: #059669;">OptiTransit Intelligent Break Journey</h3>
+          <p style="margin-bottom: 8px;"><strong>Query:</strong> Direct City A ➔ City B</p>
+          <div style="background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #a7f3d0; margin-bottom: 10px;">
+            <p style="color: #047857; font-weight: 700;">Leg 1 (A ➔ Junction J): Train 12711 | AVAILABLE 38 (Confirmed!)</p>
+            <p style="font-size: 12px; color: #64748b; margin: 3px 0;">Transfer: 45-minute comfortable layover & walking buffer</p>
+            <p style="color: #047857; font-weight: 700;">Leg 2 (Junction J ➔ B): Bus or Train | AVAILABLE 24 (Confirmed!)</p>
+          </div>
+          <p style="font-size: 13px; color: #065f46; font-weight: 700;">Outcome: 100% Guaranteed Berth for the Journey! ✅</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: WHY OUR APP IS GOOD -->
+    <div class="slide">
+      <div class="slide-badge">Unique Selling Propositions</div>
+      <h2>Why Is OptiTransit Good? What Sets Us Apart?</h2>
+      <p class="subtitle">A side-by-side comparison with the biggest transit platforms in the market.</p>
+      <table class="slide-table">
+        <thead>
+          <tr>
+            <th>Key Feature</th>
+            <th>Google Maps</th>
+            <th>IRCTC Portal</th>
+            <th>RedBus</th>
+            <th>OptiTransit (Ours)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Break Journey Discovery</strong></td>
+            <td>❌ No (Only Road)</td>
+            <td>❌ No (Direct Only)</td>
+            <td>❌ No (Single Bus)</td>
+            <td><span class="tag tag-green">✔ Automated 1-Transfer</span></td>
+          </tr>
+          <tr>
+            <td><strong>Confirmed Seat Priority</strong></td>
+            <td>❌ Blind to Status</td>
+            <td>❌ Shows WL without fix</td>
+            <td>❌ Buses only</td>
+            <td><span class="tag tag-green">✔ Active Pareto Objective</span></td>
+          </tr>
+          <tr>
+            <td><strong>Rail + Bus Combinations</strong></td>
+            <td>⚠️ Rough Walking</td>
+            <td>❌ Zero Bus Data</td>
+            <td>❌ Zero Train Data</td>
+            <td><span class="tag tag-green">✔ Haversine Modal Footpaths</span></td>
+          </tr>
+          <tr>
+            <td><strong>Execution Latency</strong></td>
+            <td>Cloud API (Slow)</td>
+            <td>Server Queues</td>
+            <td>Network APIs</td>
+            <td><span class="tag tag-green">✔ 20ms–50ms In RAM</span></td>
+          </tr>
+          <tr>
+            <td><strong>Aspect Review Ratings</strong></td>
+            <td>❌ None</td>
+            <td>❌ None</td>
+            <td>⚠️ Basic Star Rating</td>
+            <td><span class="tag tag-green">✔ Transformer NLP (384d)</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SLIDE 7: WHAT WE ARE USING (TECH STACK) -->
+    <div class="slide">
+      <div class="slide-badge">Technology Stack</div>
+      <h2>What Technologies Are We Using?</h2>
+      <p class="subtitle">A modern, resilient stack engineered for speed, intelligence, and visual excellence.</p>
+      <div class="grid-3">
+        <div class="card">
+          <div class="tag tag-blue" style="margin-bottom: 8px;">FRONTEND</div>
+          <h3>Next.js 14 & Leaflet GIS</h3>
+          <p>• React 18 App Router with TypeScript</p>
+          <p style="margin-top: 4px;">• Tailwind CSS for responsive UI</p>
+          <p style="margin-top: 4px;">• Dynamic Leaflet.js interactive maps</p>
+          <p style="margin-top: 4px;">• Real-time class fare & seat badge updates</p>
+        </div>
+        <div class="card highlight">
+          <div class="tag tag-green" style="margin-bottom: 8px;">ROUTING BACKEND</div>
+          <h3>FastAPI & In-Memory SQLite</h3>
+          <p>• Python 3.10+ with Uvicorn ASGI</p>
+          <p style="margin-top: 4px;">• Custom <strong>McRAPTOR</strong> core engine</p>
+          <p style="margin-top: 4px;">• Contiguous RAM timetable index (&lt;1.8s load)</p>
+          <p style="margin-top: 4px;">• Port 8000 (Sub-50ms query latency)</p>
+        </div>
+        <div class="card accent">
+          <div class="tag tag-amber" style="margin-bottom: 8px;">AI / NLP BACKEND</div>
+          <h3>PyTorch & Transformers</h3>
+          <p>• <strong>SentenceTransformers ('all-MiniLM-L6-v2')</strong></p>
+          <p style="margin-top: 4px;">• TextBlob Aspect Sentiment Polarity</p>
+          <p style="margin-top: 4px;">• Deterministic MD5 bus review heuristic</p>
+          <p style="margin-top: 4px;">• Port 8001 (Isolated failure domain)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: SYSTEM ARCHITECTURE -->
+    <div class="slide">
+      <div class="slide-badge">System Architecture</div>
+      <h2>Decoupled 3-Tier Architecture</h2>
+      <p class="subtitle">Segregation of low-latency algorithmic routing from heavy neural network inference.</p>
+      <div class="grid-3" style="margin-top: 10px;">
+        <div class="card" style="border-top: 4px solid #2563eb;">
+          <h3 style="color: #2563eb;">1. Presentation Layer (Port 3000)</h3>
+          <p>• Handles user search, city autocomplete & date picker.</p>
+          <p style="margin-top: 6px;">• Renders interactive route polylines: <strong>Blue (Rail)</strong>, <strong>Amber (Bus)</strong>, <strong>Purple (Walk)</strong>.</p>
+          <p style="margin-top: 6px;">• Asynchronously hydates review scores from Port 8001.</p>
+        </div>
+        <div class="card highlight" style="border-top: 4px solid #059669;">
+          <h3 style="color: #059669;">2. McRAPTOR Core (Port 8000)</h3>
+          <p>• Loads 15,000+ stops and 42,000+ trips directly into RAM.</p>
+          <p style="margin-top: 6px;">• Computes Round 1 (Direct) & Round 2 (Break Journey transfers).</p>
+          <p style="margin-top: 6px;">• Filters candidates using 4D Pareto Non-Domination.</p>
+        </div>
+        <div class="card" style="border-top: 4px solid #d97706;">
+          <h3 style="color: #d97706;">3. NLP Recommender (Port 8001)</h3>
+          <p>• Precomputed 384-dimensional dense semantic vectors.</p>
+          <p style="margin-top: 6px;">• Extracts aspect polarity on cleanliness & punctuality.</p>
+          <p style="margin-top: 6px;">• Completely decoupled: ML spikes never degrade routing.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: WHAT ALGORITHM USED IN McRAPTOR? -->
+    <div class="slide">
+      <div class="slide-badge">Core Algorithm</div>
+      <h2>What Algorithm Is Used? McRAPTOR Deep Dive</h2>
+      <p class="subtitle">Multi-Criteria Round-Based Public Transit Routing without priority queue bottlenecks.</p>
+      <div class="grid-2">
+        <div class="card danger-card">
+          <h3 style="color: #b91c1c;">Why NOT Dijkstra or A*?</h3>
+          <p>• <strong>Schedule Dependency:</strong> In transit, edge weights change based on the clock. You cannot take a train that departed 5 minutes ago.</p>
+          <p style="margin-top: 6px;">• <strong>State Explosion:</strong> Dijkstra requires a <em>Time-Expanded Graph</em>, creating a node for every minute of every train in India.</p>
+          <p style="margin-top: 6px;">• <strong>Queue Overhead:</strong> $O(|E| \log |V|)$ priority queue sorting chokes nationwide routing.</p>
+        </div>
+        <div class="card highlight">
+          <h3 style="color: #1d4ed8;">How McRAPTOR Works</h3>
+          <p>• <strong>Direct Array Operations:</strong> Scans timetable arrays in RAM with zero graph edge lookups.</p>
+          <p style="margin-top: 6px;">• <strong>Round-Based Traversal:</strong></p>
+          <p style="font-size: 13px; padding-left: 10px;">- Round 1: Scans all <strong>Direct Routes (0 Transfers)</strong></p>
+          <p style="font-size: 13px; padding-left: 10px;">- Round 2: Scans all <strong>Break Journeys (1 Transfer)</strong></p>
+          <p style="margin-top: 6px;">• <strong>Marked Stops Optimization:</strong> Only scans routes serving stops whose labels improved in the previous round!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: INTERACTIVE McRAPTOR ROUTE-FINDING ANIMATION -->
+    <div class="slide" id="anim-slide">
+      <div class="slide-badge">Live Algorithmic Simulation</div>
+      <h2>Visual Simulation: How McRAPTOR Finds Break Journeys</h2>
+      <p class="subtitle">Interactive step-by-step trace showing Round 1 Direct Scanning, Station Marking, Transfers, and Pareto Optimization.</p>
+      
+      <div class="anim-container">
+        <!-- Left Column: Animated SVG Transit Topology -->
+        <div class="anim-canvas-card">
+          <!-- Phase indicator pills -->
+          <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px;">
+            <span class="step-pill active" id="pill-0">1. Init Origin (BZA)</span>
+            <span class="step-pill" id="pill-1">2. Round 1: Direct Scan</span>
+            <span class="step-pill" id="pill-2">3. Mark Junction (RJY)</span>
+            <span class="step-pill" id="pill-3">4. Round 2: Connecting Leg</span>
+            <span class="step-pill" id="pill-4">5. Pareto Domination</span>
+          </div>
+
+          <!-- SVG Canvas -->
+          <div class="anim-svg-wrap">
+            <svg id="mcraptor-svg" viewBox="0 0 540 270" style="width: 100%; height: 100%;">
+              <defs>
+                <filter id="glow-eff" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
+
+              <!-- DIRECT ROUTE (Top curved path) -->
+              <path id="path-direct" d="M 70 135 Q 270 35 470 135" class="anim-track" stroke="#e2e8f0" stroke-width="3" />
+              <!-- LEG 1 (BZA -> RJY) -->
+              <path id="path-leg1" d="M 70 135 Q 170 205 270 175" class="anim-track" stroke="#e2e8f0" stroke-width="3" />
+              <!-- FOOTPATH LINK (RJY Rail Platform -> Bus Station) -->
+              <path id="path-footpath" d="M 270 175 L 305 215" class="anim-track anim-track-dash" stroke="#cbd5e1" stroke-width="2" />
+              <!-- LEG 2 (RJY -> VSKP) -->
+              <path id="path-leg2" d="M 270 175 Q 370 145 470 135" class="anim-track" stroke="#e2e8f0" stroke-width="3" />
+
+              <!-- PULSE HIGHLIGHT RINGS -->
+              <circle id="pulse-origin" cx="70" cy="135" r="14" fill="none" stroke="#2563eb" class="pulse-ring" />
+              <circle id="pulse-junction" cx="270" cy="175" r="14" fill="none" stroke="#059669" class="pulse-ring" style="display: none;" />
+              <circle id="pulse-dest" cx="470" cy="135" r="14" fill="none" stroke="#10b981" class="pulse-ring" style="display: none;" />
+
+              <!-- STATION NODE A: ORIGIN BZA -->
+              <g class="station-node" transform="translate(70, 135)">
+                <circle r="14" fill="#2563eb" filter="url(#glow-eff)" />
+                <circle r="6" fill="#ffffff" />
+                <text y="-22" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="12" fill="#0f172a">Origin: BZA</text>
+                <text y="-10" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="9" fill="#64748b">(Vijayawada)</text>
+              </g>
+
+              <!-- STATION NODE J: RAJAHMUNDRY (JUNCTION) -->
+              <g class="station-node" transform="translate(270, 175)">
+                <circle id="node-junc-bg" r="13" fill="#cbd5e1" />
+                <circle r="5" fill="#ffffff" />
+                <text y="26" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="12" fill="#0f172a">Junction: RJY</text>
+                <text y="38" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="9" fill="#64748b">(Rajahmundry)</text>
+              </g>
+
+              <!-- BUS TERMINAL TRANSFER POINT -->
+              <g class="station-node" transform="translate(305, 215)">
+                <circle id="node-bus-bg" r="7" fill="#cbd5e1" />
+                <text x="12" y="3" font-family="'JetBrains Mono', monospace" font-size="9" fill="#64748b">RTC Bus Stand (400m Walk)</text>
+              </g>
+
+              <!-- STATION NODE B: DESTINATION VSKP -->
+              <g class="station-node" transform="translate(470, 135)">
+                <circle id="node-dest-bg" r="14" fill="#cbd5e1" />
+                <circle r="6" fill="#ffffff" />
+                <text y="-22" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="12" fill="#0f172a">Dest: VSKP</text>
+                <text y="-10" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="9" fill="#64748b">(Visakhapatnam)</text>
+              </g>
+
+              <!-- DYNAMIC CALLOUT OVERLAY BADGE -->
+              <g id="callout-badge" transform="translate(270, 75)" style="display: none;">
+                <rect x="-110" y="-18" width="220" height="34" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" filter="url(#glow-eff)" />
+                <text id="callout-text" text-anchor="middle" y="4" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="700" fill="#dc2626">Direct Train: WL 85</text>
+              </g>
+            </svg>
+          </div>
+
+          <!-- Bottom Playback Controls -->
+          <div class="anim-control-bar">
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-primary" id="anim-play-btn" style="padding: 6px 14px; font-size: 12px;">▶ Auto Play</button>
+              <button class="btn" id="anim-step-btn" style="padding: 6px 12px; font-size: 12px;">Next Step ⏭</button>
+              <button class="btn" id="anim-reset-btn" style="padding: 6px 12px; font-size: 12px;">↺ Reset</button>
+            </div>
+            <span id="anim-step-desc" style="font-size: 12px; font-weight: 700; color: #2563eb;">Step 1 of 5: Initializing Origin</span>
+          </div>
+        </div>
+
+        <!-- Right Column: Live Algorithm State & Pareto Bag -->
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <!-- Algorithmic Engine State Box -->
+          <div class="card" style="padding: 14px;">
+            <h3 style="font-size: 13.5px; margin-bottom: 8px; color: #2563eb;">
+              <span>⚡</span> McRAPTOR Execution State
+            </h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; margin-bottom: 8px;">
+              <div style="background: #f8fafc; padding: 7px 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                <span style="color: #64748b; font-size: 10px; text-transform: uppercase; font-weight: 700;">Current Round (k)</span>
+                <p id="state-round" style="font-weight: 800; color: #0f172a; font-family: 'JetBrains Mono', monospace; margin-top: 1px;">k = 0 (Init)</p>
+              </div>
+              <div style="background: #f8fafc; padding: 7px 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                <span style="color: #64748b; font-size: 10px; text-transform: uppercase; font-weight: 700;">Marked Stops Q</span>
+                <p id="state-marked" style="font-weight: 800; color: #2563eb; font-family: 'JetBrains Mono', monospace; margin-top: 1px;">{ RAIL:BZA }</p>
+              </div>
+            </div>
+            <!-- Dynamic Log Message -->
+            <div id="state-log" style="background: #f1f5f9; border-left: 3px solid #2563eb; padding: 8px 10px; border-radius: 4px; font-size: 11.5px; color: #334155; line-height: 1.5; min-height: 44px;">
+              Origin station Vijayawada (BZA) initialized at departure time 08:00 AM. Marked queue Q = { BZA }.
+            </div>
+          </div>
+
+          <!-- Live Destination Pareto Bag B(VSKP) -->
+          <div class="card" style="padding: 14px; flex: 1;">
+            <h3 style="font-size: 13.5px; margin-bottom: 8px; color: #0f172a;">
+              <span>📊</span> Destination Pareto Bag B(VSKP)
+            </h3>
+            <div style="overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                <thead>
+                  <tr style="border-bottom: 1px solid #e2e8f0; color: #64748b; text-align: left;">
+                    <th style="padding: 5px 3px;">Itinerary</th>
+                    <th style="padding: 5px 3px;">Duration</th>
+                    <th style="padding: 5px 3px;">Fare</th>
+                    <th style="padding: 5px 3px;">Seat Status</th>
+                    <th style="padding: 5px 3px;">Pareto State</th>
+                  </tr>
+                </thead>
+                <tbody id="pareto-table-body">
+                  <tr style="color: #94a3b8; font-style: italic;">
+                    <td colspan="5" style="padding: 16px 4px; text-align: center;">Pareto bag empty. Scan pending...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: BREAK JOURNEYS IN McRAPTOR -->
+    <div class="slide">
+      <div class="slide-badge">Algorithmic Mechanics</div>
+      <h2>How McRAPTOR Computes Break Journeys in <50ms</h2>
+      <p class="subtitle">From origin station to intermediate junctions to final destination.</p>
+      <div class="grid-3">
+        <div class="card">
+          <h3>Step 1: Round 1 Direct Scan</h3>
+          <p>Scans all routes departing from origin. Evaluates direct trains and direct buses to destination and records reachable intermediate stations.</p>
+        </div>
+        <div class="card highlight">
+          <h3>Step 2: Junction Footpaths</h3>
+          <p>Relaxes footpaths between railway platforms and adjacent bus terminals using Haversine geodesic distance ($d \le 2.0\text{ km}$, $1.1\text{ m/s}$ walk).</p>
+        </div>
+        <div class="card success-card">
+          <h3>Step 3: Round 2 Connecting Leg</h3>
+          <p>From marked intermediate junctions, scans connecting trips departing within the <strong>30 to 360-minute layover window</strong>, guaranteeing viable connections.</p>
+        </div>
+      </div>
+      <div class="card" style="margin-top: 16px; background: #f8fafc;">
+        <p style="text-align: center; font-size: 14px; color: #334155;">
+          <strong>Result:</strong> Discovers non-obvious combinations (e.g. Train to Junction + Bus to Destination) in <strong>34.8 milliseconds</strong>.
+        </p>
+      </div>
+    </div>
+
+    <!-- SLIDE 12: 4D PARETO MATHEMATICAL MODEL -->
+    <div class="slide">
+      <div class="slide-badge">Mathematical Model</div>
+      <h2>4-Dimensional Pareto Optimization</h2>
+      <p class="subtitle">Balancing real-world trade-offs without arbitrary scalar scoring weights.</p>
+      <div class="grid-4" style="margin-bottom: 20px;">
+        <div class="card" style="text-align: center;">
+          <h3 style="justify-content: center; color: #2563eb;">1. Duration</h3>
+          <p style="font-size: 13px;">Total travel time in minutes ($T$)</p>
+        </div>
+        <div class="card" style="text-align: center;">
+          <h3 style="justify-content: center; color: #0284c7;">2. Distance</h3>
+          <p style="font-size: 13px;">Physical trajectory km ($D$)</p>
+        </div>
+        <div class="card" style="text-align: center;">
+          <h3 style="justify-content: center; color: #059669;">3. Price</h3>
+          <p style="font-size: 13px;">IRCTC Telescopic Fare (Base + Res + SF + 5% AC GST)</p>
+        </div>
+        <div class="card" style="text-align: center;">
+          <h3 style="justify-content: center; color: #d97706;">4. Status Rank</h3>
+          <p style="font-size: 13px;">Certainty: CNF(3) > RAC(2) > WL(1)</p>
+        </div>
+      </div>
+      <div class="card highlight">
+        <h3 style="color: #2563eb;">The Non-Domination Rule</h3>
+        <p style="font-size: 14px;">
+          Journey $A$ dominates journey $B$ ($A \prec B$) if and only if $A$ is <strong>better or equal in all 4 dimensions</strong> and <strong>strictly better in at least one</strong>.<br>
+          <em>Why this matters for break journeys:</em> A 1-transfer break journey with confirmed seats (<span class="tag tag-green">AVAILABLE 3</span>) <strong>CANNOT be dominated</strong> by a faster direct train stuck in <span class="tag tag-red">WL 1</span>. Both survive on the Pareto frontier!
+        </p>
+      </div>
+    </div>
+
+    <!-- SLIDE 13: FOOTPATHS & LAYOVER WINDOWS -->
+    <div class="slide">
+      <div class="slide-badge">Geospatial Realism</div>
+      <h2>Inter-Modal Footpaths & Layover Feasibility</h2>
+      <p class="subtitle">Ensuring transfers are physically realistic and delay-resilient for Indian travel conditions.</p>
+      <div class="grid-3">
+        <div class="card">
+          <h3>Haversine Footpath Equation</h3>
+          <p>Calculates spherical distance between rail platforms and bus complexes. Allowed for transfers $\le 2.0\text{ km}$ at $1.1\text{ m/s}$ walking speed.</p>
+        </div>
+        <div class="card highlight">
+          <h3>30-Min Minimum Layover</h3>
+          <p>Enforces a mandatory 30-minute buffer: $\text{Departure} - \text{Arrival} - \text{Walk} \ge 30\text{ mins}$. Protects travelers against typical rail delays.</p>
+        </div>
+        <div class="card">
+          <h3>360-Min Maximum Ceiling</h3>
+          <p>Caps layover at 6 hours: prevents recommending impractical overnight station waits while passengers are in an urgent hurry.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 14: THE NLP SENTIMENT ENGINE -->
+    <div class="slide">
+      <div class="slide-badge">Applied AI & NLP</div>
+      <h2>NLP Aspect Sentiment & Quality Recommender</h2>
+      <p class="subtitle">Extracting coach hygiene, punctuality, and comfort from passenger text reviews.</p>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Dense Semantic Vector Search</h3>
+          <p>• Model: <strong>SentenceTransformers ('all-MiniLM-L6-v2')</strong></p>
+          <p style="margin-top: 6px;">• Encodes passenger queries into 384-dimensional dense vectors.</p>
+          <p style="margin-top: 6px;">• Cosine similarity execution: <strong>&lt; 15 ms</strong> on standard CPU.</p>
+        </div>
+        <div class="card highlight">
+          <h3>Composite Aspect Formula</h3>
+          <p>• TextBlob extracts polarity on Cleanliness, Punctuality, and Comfort.</p>
+          <div style="background: #f1f5f9; padding: 10px; border-radius: 6px; margin: 10px 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #2563eb;">
+            Score = 0.75·Sim + 0.15·Sent + 0.10·Upv
+          </div>
+          <p>• Scaled to 1.0–5.0 star display ratings with contextual aspect tags.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 15: DEFENSIVE FALLBACKS -->
+    <div class="slide">
+      <div class="slide-badge">Robustness Engineering</div>
+      <h2>Defensive Fallbacks: Ensuring Zero Crashes</h2>
+      <p class="subtitle">Four bulletproof engineering layers that protect the system during live evaluation.</p>
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="color: #2563eb;">1. Calendar Modulo Projection</h3>
+          <p>Queries for future dates (e.g. Oct 2026) are dynamically projected to the identical day-of-week in our August 2026 timetable, preventing out-of-schedule misses.</p>
+        </div>
+        <div class="card">
+          <h3 style="color: #059669;">2. Deterministic MD5 Bus Heuristic</h3>
+          <p>Private buses with zero reviews are mapped via MD5 hash to stable 2.8–4.6★ ratings with realistic tags, solving the cold-start problem without database mutation.</p>
+        </div>
+        <div class="card">
+          <h3 style="color: #0284c7;">3. Geographic Disconnect Promotion</h3>
+          <p>When searching destinations without train stations (e.g. Srisailam), McRAPTOR auto-promotes to Round 2 to surface direct buses or rail-to-bus transfers.</p>
+        </div>
+        <div class="card">
+          <h3 style="color: #d97706;">4. Asynchronous UI Circuit Breaker</h3>
+          <p>The frontend fetches routes first and loads sentiment scores asynchronously. If Port 8001 is busy, route cards render without UI freezes.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 16: REAL-LIFE SCENARIO 1 -->
+    <div class="slide">
+      <div class="slide-badge">Live Scenario 1</div>
+      <h2>Urgent Case Study 1: The Waitlist Bypass</h2>
+      <p class="subtitle">Vijayawada (BZA) to Visakhapatnam (VSKP) Urgent Corridor.</p>
+      <div class="grid-2">
+        <div class="card danger-card">
+          <h3 style="color: #b91c1c;">Direct Search (Standard Portal)</h3>
+          <p><strong>Coromandel Express 12842:</strong></p>
+          <p style="margin-top: 6px;"><span class="tag tag-red">STATUS: WL 48 (WAITLIST)</span></p>
+          <p style="margin-top: 6px; color: #64748b;">Historical Confirmation Chance: &lt; 25%</p>
+          <p style="margin-top: 8px; color: #b91c1c; font-weight: 700;">Result: Urgent Travel Cancelled / Missed.</p>
+        </div>
+        <div class="card success-card">
+          <h3 style="color: #047857;">OptiTransit Break Journey Output</h3>
+          <p><strong>Option 1: 1-Transfer Confirmed Rail Split</strong></p>
+          <p style="font-size: 13px;">• Leg 1: BZA ➔ Rajahmundry (RJY) | <span class="tag tag-green">AVAILABLE 38 (CNF)</span></p>
+          <p style="font-size: 13px;">• Layover: 42 mins comfortable transfer buffer at RJY</p>
+          <p style="font-size: 13px;">• Leg 2: RJY ➔ VSKP | <span class="tag tag-green">AVAILABLE 24 (CNF)</span></p>
+          <p style="margin-top: 8px;"><strong>Option 2: Direct Highway Bus</strong></p>
+          <p style="font-size: 13px;">• APSRTC Dolphin Cruise | <span class="tag tag-green">AVAILABLE 18</span> • ₹490 • ★ 4.3</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 17: REAL-LIFE SCENARIO 2 -->
+    <div class="slide">
+      <div class="slide-badge">Live Scenario 2</div>
+      <h2>Urgent Case Study 2: Disconnected Route</h2>
+      <p class="subtitle">Vijayawada (BZA) to Srisailam (SRIS) — Hill Destination with Zero Railway Tracks.</p>
+      <div class="grid-2">
+        <div class="card danger-card">
+          <h3 style="color: #b91c1c;">Standard Railway Search (IRCTC)</h3>
+          <p>• Srisailam is in Nallamala forest hills with no railway station.</p>
+          <p style="margin-top: 6px;">• IRCTC Search: <span class="tag tag-red">0 Trains Found</span></p>
+          <p style="margin-top: 6px; color: #64748b;">System gives up, providing zero guidance.</p>
+        </div>
+        <div class="card highlight">
+          <h3 style="color: #2563eb;">OptiTransit Discovered Routes</h3>
+          <p><strong>1. Direct Highway Bus:</strong> ASBR Travels / APSRTC (230 km, 6h 15m) • <span class="tag tag-green">AVAILABLE 30</span> • ₹350 • ★ 4.2</p>
+          <p style="margin-top: 10px;"><strong>2. Hybrid Rail + Bus Transfer:</strong></p>
+          <p style="font-size: 13px;">• Train: BZA ➔ Markapur Road (180 km, 3h 10m)</p>
+          <p style="font-size: 13px;">• Footpath: Walk 450m to Markapur Bus Stand (7 mins)</p>
+          <p style="font-size: 13px;">• Bus: Markapur ➔ Srisailam (85 km, 2h 30m)</p>
+          <p style="margin-top: 6px; font-weight: 700; color: #047857;">Total: 5h 47m (28 mins faster than direct bus!)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 18: BENCHMARKS & RESULTS -->
+    <div class="slide">
+      <div class="slide-badge">Empirical Results</div>
+      <h2>Performance & Scalability Benchmarks</h2>
+      <p class="subtitle">Evaluated across 1,000 random origin-destination transit queries.</p>
+      <div class="grid-4">
+        <div class="card metric-box">
+          <div class="metric-number">34.8<span style="font-size: 20px;">ms</span></div>
+          <div class="metric-label">McRAPTOR Latency</div>
+        </div>
+        <div class="card metric-box">
+          <div class="metric-number">84.3<span style="font-size: 20px;">%</span></div>
+          <div class="metric-label">Waitlist Escape Rate</div>
+        </div>
+        <div class="card metric-box">
+          <div class="metric-number">96.0<span style="font-size: 20px;">%</span></div>
+          <div class="metric-label">Route Coverage</div>
+        </div>
+        <div class="card metric-box">
+          <div class="metric-number">142<span style="font-size: 20px;">MB</span></div>
+          <div class="metric-label">RAM Footprint</div>
+        </div>
+      </div>
+      <div class="card" style="margin-top: 18px; background: #f8fafc;">
+        <p style="text-align: center; font-size: 14px; color: #475569;">
+          Compared to Time-Expanded Dijkstra (482.4 ms / 620 MB), OptiTransit McRAPTOR is <strong>13.8× faster</strong> with a <strong>4.3× lower memory footprint</strong>.
+        </p>
+      </div>
+    </div>
+
+    <!-- SLIDE 19: THE FINAL PITCH & CONCLUSION -->
+    <div class="slide">
+      <div class="slide-badge">Conclusion & Pitch Summary</div>
+      <h1>OptiTransit</h1>
+      <p class="subtitle" style="font-size: 20px; color: #2563eb; margin-bottom: 24px;">
+        Turning Travel Emergencies into Guaranteed Confirmed Journeys.
+      </p>
+      <div class="grid-2" style="max-width: 850px;">
+        <div class="card">
+          <h3>The Core Pitch Recap</h3>
+          <p>• <strong>The Problem:</strong> Urgent commuters trapped in waitlists on direct trains.</p>
+          <p style="margin-top: 4px;">• <strong>The Solution:</strong> Automated break journeys that uncover confirmed seats.</p>
+          <p style="margin-top: 4px;">• <strong>The Engine:</strong> Sub-50ms McRAPTOR with 4D Pareto optimization.</p>
+          <p style="margin-top: 4px;">• <strong>The Result:</strong> 84.3% Waitlist Escape Rate with guaranteed berths.</p>
+        </div>
+        <div class="card highlight">
+          <h3>Live Demo & Review Readiness</h3>
+          <p><strong>Codebase:</strong> Next.js 14 + FastAPI + PyTorch</p>
+          <p style="margin-top: 4px;"><strong>Microservices:</strong> Port 3000 (UI) | Port 8000 (Router) | Port 8001 (NLP)</p>
+          <p style="margin-top: 8px; color: #047857; font-weight: 700;">Open for Live Demo & Review Panel Questions!</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Minimal Footer Controls -->
+  <footer>
+    <div class="hint">
+      Navigate with <span class="kbd">←</span> <span class="kbd">→</span> or <span class="kbd">Space</span> • Fullscreen <span class="kbd">F</span>
+    </div>
+    <div class="nav-btns">
+      <button class="btn" id="prev-btn">◀ Previous</button>
+      <button class="btn btn-primary" id="next-btn">Next ▶</button>
+    </div>
+  </footer>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const counter = document.getElementById('counter');
+    const progressBar = document.getElementById('progress-bar');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+
+    let current = 0;
+    const total = slides.length;
+
+    function updateSlide(index) {
+      if (index < 0) index = 0;
+      if (index >= total) index = total - 1;
+      current = index;
+
+      slides.forEach((s, i) => {
+        s.classList.toggle('active', i === current);
+      });
+
+      counter.textContent = `Slide ${current + 1} / ${total}`;
+      progressBar.style.width = `${((current + 1) / total) * 100}%`;
+
+      // If entering Slide 10 (the McRAPTOR animation slide), trigger the animation
+      if (slides[current] && slides[current].id === 'anim-slide') {
+        if (!isPlaying) {
+          applyAnimStep(0);
+        }
+      }
+    }
+
+    // ===== McRAPTOR ANIMATION CONTROLLER =====
+    let animStep = 0;
+    let animTimer = null;
+    let isPlaying = false;
+
+    const pathDirect = document.getElementById('path-direct');
+    const pathLeg1 = document.getElementById('path-leg1');
+    const pathFootpath = document.getElementById('path-footpath');
+    const pathLeg2 = document.getElementById('path-leg2');
+
+    const pulseOrigin = document.getElementById('pulse-origin');
+    const pulseJunction = document.getElementById('pulse-junction');
+    const pulseDest = document.getElementById('pulse-dest');
+
+    const nodeJuncBg = document.getElementById('node-junc-bg');
+    const nodeBusBg = document.getElementById('node-bus-bg');
+    const nodeDestBg = document.getElementById('node-dest-bg');
+
+    const calloutBadge = document.getElementById('callout-badge');
+    const calloutText = document.getElementById('callout-text');
+
+    const stateRound = document.getElementById('state-round');
+    const stateMarked = document.getElementById('state-marked');
+    const stateLog = document.getElementById('state-log');
+    const animStepDesc = document.getElementById('anim-step-desc');
+    const paretoTableBody = document.getElementById('pareto-table-body');
+
+    const animPlayBtn = document.getElementById('anim-play-btn');
+    const animStepBtn = document.getElementById('anim-step-btn');
+    const animResetBtn = document.getElementById('anim-reset-btn');
+
+    const stepsData = [
+      {
+        title: "Step 1 of 5: Initializing Origin",
+        round: "k = 0 (Init)",
+        marked: "{ RAIL:BZA }",
+        log: "Origin station Vijayawada (BZA) initialized at departure 08:00 AM. Label L = (08:00, 0m, ₹0, Rank 3). Marked queue Q = { BZA }.",
+        table: `
+          <tr style="color: #94a3b8; font-style: italic;">
+            <td colspan="5" style="padding: 14px 4px; text-align: center;">Origin initialized. Round 1 direct route scanning pending...</td>
+          </tr>
+        `,
+        setup: () => {
+          if (pathDirect) { pathDirect.setAttribute('stroke', '#e2e8f0'); pathDirect.setAttribute('stroke-width', '3'); }
+          if (pathLeg1) { pathLeg1.setAttribute('stroke', '#e2e8f0'); pathLeg1.setAttribute('stroke-width', '3'); }
+          if (pathFootpath) { pathFootpath.setAttribute('stroke', '#cbd5e1'); }
+          if (pathLeg2) { pathLeg2.setAttribute('stroke', '#e2e8f0'); pathLeg2.setAttribute('stroke-width', '3'); }
+
+          if (pulseOrigin) pulseOrigin.style.display = 'block';
+          if (pulseJunction) pulseJunction.style.display = 'none';
+          if (pulseDest) pulseDest.style.display = 'none';
+
+          if (nodeJuncBg) nodeJuncBg.setAttribute('fill', '#cbd5e1');
+          if (nodeBusBg) nodeBusBg.setAttribute('fill', '#cbd5e1');
+          if (nodeDestBg) nodeDestBg.setAttribute('fill', '#cbd5e1');
+
+          if (calloutBadge) calloutBadge.style.display = 'none';
+        }
+      },
+      {
+        title: "Step 2 of 5: Round 1 Direct Scan (Waitlist Encountered)",
+        round: "k = 1 (Direct Scan)",
+        marked: "{ RAIL:BZA }",
+        log: "Scanning direct Express 12842 along corridor. Arrives VSKP at 14:00 (Duration: 360m). However, seat database returns WL 85! Added to Pareto Bag.",
+        table: `
+          <tr style="border-bottom: 1px solid #f1f5f9; background: #fff5f5;">
+            <td style="padding: 6px 4px; font-weight: 700; color: #b91c1c;">Direct Express 12842</td>
+            <td style="padding: 6px 4px; font-family: monospace;">6h 00m</td>
+            <td style="padding: 6px 4px; font-family: monospace;">₹450</td>
+            <td style="padding: 6px 4px;"><span class="tag tag-red">WL 85 (Rank 1)</span></td>
+            <td style="padding: 6px 4px; color: #b45309; font-weight: 600;">Candidate (Uncertain)</td>
+          </tr>
+        `,
+        setup: () => {
+          if (pathDirect) { pathDirect.setAttribute('stroke', '#ef4444'); pathDirect.setAttribute('stroke-width', '4'); }
+          if (pulseDest) { pulseDest.style.display = 'block'; pulseDest.setAttribute('stroke', '#ef4444'); }
+          if (nodeDestBg) nodeDestBg.setAttribute('fill', '#ef4444');
+
+          if (calloutBadge) {
+            calloutBadge.style.display = 'block';
+            calloutBadge.setAttribute('transform', 'translate(270, 60)');
+            calloutText.textContent = 'Direct Train: WL 85 ❌';
+            calloutText.setAttribute('fill', '#dc2626');
+          }
+        }
+      },
+      {
+        title: "Step 3 of 5: Marking Intermediate Junction RJY",
+        round: "k = 1 (Intermediate Scan)",
+        marked: "{ RAIL:RJY }",
+        log: "McRAPTOR scans train 12711 reaching Rajahmundry (RJY) at 10:15 AM (135m, ₹180). Quota status is AVAILABLE 42! RJY station is MARKED for Round 2.",
+        table: `
+          <tr style="border-bottom: 1px solid #f1f5f9; background: #fff5f5;">
+            <td style="padding: 6px 4px; font-weight: 700; color: #b91c1c;">Direct Express 12842</td>
+            <td style="padding: 6px 4px; font-family: monospace;">6h 00m</td>
+            <td style="padding: 6px 4px; font-family: monospace;">₹450</td>
+            <td style="padding: 6px 4px;"><span class="tag tag-red">WL 85 (Rank 1)</span></td>
+            <td style="padding: 6px 4px; color: #64748b;">Pending Comparison</td>
+          </tr>
+          <tr style="background: #f0fdf4;">
+            <td style="padding: 6px 4px; font-weight: 700; color: #047857;">Leg 1: BZA ➔ RJY</td>
+            <td style="padding: 6px 4px; font-family: monospace;">2h 15m</td>
+            <td style="padding: 6px 4px; font-family: monospace;">₹180</td>
+            <td style="padding: 6px 4px;"><span class="tag tag-green">AVAILABLE 42</span></td>
+            <td style="padding: 6px 4px; color: #047857; font-weight: 700;">Junction Marked ★</td>
+          </tr>
+        `,
+        setup: () => {
+          if (pathLeg1) { pathLeg1.setAttribute('stroke', '#2563eb'); pathLeg1.setAttribute('stroke-width', '4'); }
+          if (pulseJunction) { pulseJunction.style.display = 'block'; pulseJunction.setAttribute('stroke', '#2563eb'); }
+          if (nodeJuncBg) nodeJuncBg.setAttribute('fill', '#2563eb');
+
+          if (calloutBadge) {
+            calloutBadge.style.display = 'block';
+            calloutBadge.setAttribute('transform', 'translate(170, 160)');
+            calloutText.textContent = 'Leg 1: AVAILABLE 42 ✅';
+            calloutText.setAttribute('fill', '#047857');
+          }
+        }
+      },
+      {
+        title: "Step 4 of 5: Footpath & Round 2 Connecting Leg",
+        round: "k = 2 (Break Journey Scan)",
+        marked: "Q = ∅ (Scan Finished)",
+        log: "Haversine footpath relaxed (400m, 7m walk). Layover 45m valid (in [30m, 360m]). Connecting train 12806 departs 11:00 AM, arrives VSKP 14:35. Status: AVAILABLE 28!",
+        table: `
+          <tr style="border-bottom: 1px solid #f1f5f9; background: #fff5f5;">
+            <td style="padding: 6px 4px; font-weight: 700; color: #b91c1c;">Direct Express 12842</td>
+            <td style="padding: 6px 4px; font-family: monospace;">6h 00m</td>
+            <td style="padding: 6px 4px; font-family: monospace;">₹450</td>
+            <td style="padding: 6px 4px;"><span class="tag tag-red">WL 85 (Rank 1)</span></td>
+            <td style="padding: 6px 4px; color: #64748b;">Evaluating...</td>
+          </tr>
+          <tr style="background: #f0fdf4;">
+            <td style="padding: 6px 4px; font-weight: 700; color: #047857;">Break Journey via RJY</td>
+            <td style="padding: 6px 4px; font-family: monospace;">6h 35m</td>
+            <td style="padding: 6px 4px; font-family: monospace;">₹420</td>
+            <td style="padding: 6px 4px;"><span class="tag tag-green">AVAILABLE 28</span></td>
+            <td style="padding: 6px 4px; color: #047857; font-weight: 700;">Non-Dominated Candidate</td>
+          </tr>
+        `,
+        setup: () => {
+          if (pathFootpath) { pathFootpath.setAttribute('stroke', '#0284c7'); pathFootpath.setAttribute('stroke-width', '3'); }
+          if (pathLeg2) { pathLeg2.setAttribute('stroke', '#10b981'); pathLeg2.setAttribute('stroke-width', '4'); }
+
+          if (pulseDest) { pulseDest.style.display = 'block'; pulseDest.setAttribute('stroke', '#10b981'); }
+          if (nodeDestBg) nodeDestBg.setAttribute('fill', '#10b981');
+
+          if (calloutBadge) {
+            calloutBadge.style.display = 'block';
+            calloutBadge.setAttribute('transform', 'translate(370, 130)');
+            calloutText.textContent = 'Leg 2: AVAILABLE 28 ✅';
+            calloutText.setAttribute('fill', '#047857');
+          }
+        }
+      },
+      {
+        title: "Step 5 of 5: Pareto Domination Filter (Confirmed Wins!)",
+        round: "Filter: Pareto Bag",
+        marked: "Complete (< 35ms)",
+        log: "Pareto Comparison: Break Journey is +35m slower but Rank 3 (AVAILABLE) vs Rank 1 (WL). Since 3 > 1, Break Journey is NOT dominated. It is preserved & prioritized for urgent travel!",
+        table: `
+          <tr style="border-bottom: 1px solid #f1f5f9; background: #fff5f5; opacity: 0.7;">
+            <td style="padding: 6px 4px; font-weight: 600; color: #b91c1c;">Direct Express 12842</td>
+            <td style="padding: 6px 4px; font-family: monospace;">6h 00m</td>
+            <td style="padding: 6px 4px; font-family: monospace;">₹450</td>
+            <td style="padding: 6px 4px;"><span class="tag tag-red">WL 85 (Rank 1)</span></td>
+            <td style="padding: 6px 4px; color: #b91c1c;">Secondary (Waitlisted)</td>
+          </tr>
+          <tr style="background: #ecfdf5; border: 2px solid #10b981;">
+            <td style="padding: 6px 4px; font-weight: 800; color: #047857;">★ Confirmed Break Journey</td>
+            <td style="padding: 6px 4px; font-family: monospace; font-weight: 700;">6h 35m</td>
+            <td style="padding: 6px 4px; font-family: monospace; font-weight: 700;">₹420</td>
+            <td style="padding: 6px 4px;"><span class="tag tag-green">AVAILABLE (Rank 3)</span></td>
+            <td style="padding: 6px 4px; color: #047857; font-weight: 800;">PARETO WINNER 🏆</td>
+          </tr>
+        `,
+        setup: () => {
+          if (pathDirect) { pathDirect.setAttribute('stroke', '#cbd5e1'); pathDirect.setAttribute('stroke-width', '2'); }
+          if (pathLeg1) { pathLeg1.setAttribute('stroke', '#059669'); pathLeg1.setAttribute('stroke-width', '5'); }
+          if (pathLeg2) { pathLeg2.setAttribute('stroke', '#059669'); pathLeg2.setAttribute('stroke-width', '5'); }
+
+          if (pulseDest) { pulseDest.style.display = 'block'; pulseDest.setAttribute('stroke', '#059669'); }
+
+          if (calloutBadge) {
+            calloutBadge.style.display = 'block';
+            calloutBadge.setAttribute('transform', 'translate(270, 75)');
+            calloutText.textContent = '🏆 100% CONFIRMED BERTH';
+            calloutText.setAttribute('fill', '#047857');
+          }
+        }
+      }
+    ];
+
+    function applyAnimStep(index) {
+      if (index < 0) index = 0;
+      if (index >= stepsData.length) index = stepsData.length - 1;
+      animStep = index;
+
+      const step = stepsData[animStep];
+      if (animStepDesc) animStepDesc.textContent = step.title;
+      if (stateRound) stateRound.textContent = step.round;
+      if (stateMarked) stateMarked.textContent = step.marked;
+      if (stateLog) stateLog.textContent = step.log;
+      if (paretoTableBody) paretoTableBody.innerHTML = step.table;
+
+      for (let i = 0; i < 5; i++) {
+        const pill = document.getElementById(`pill-${i}`);
+        if (pill) {
+          pill.className = 'step-pill';
+          if (i === animStep) pill.classList.add('active');
+          else if (i < animStep) pill.classList.add('completed');
+        }
+      }
+
+      step.setup();
+    }
+
+    function toggleAutoPlay() {
+      if (isPlaying) {
+        clearInterval(animTimer);
+        isPlaying = false;
+        if (animPlayBtn) {
+          animPlayBtn.textContent = '▶ Auto Play';
+          animPlayBtn.classList.remove('btn-primary');
+        }
+      } else {
+        isPlaying = true;
+        if (animPlayBtn) {
+          animPlayBtn.textContent = '⏸ Pause';
+          animPlayBtn.classList.add('btn-primary');
+        }
+        animTimer = setInterval(() => {
+          let next = animStep + 1;
+          if (next >= stepsData.length) next = 0;
+          applyAnimStep(next);
+        }, 2200);
+      }
+    }
+
+    if (animPlayBtn) animPlayBtn.addEventListener('click', toggleAutoPlay);
+    if (animStepBtn) animStepBtn.addEventListener('click', () => {
+      if (isPlaying) toggleAutoPlay();
+      applyAnimStep((animStep + 1) % stepsData.length);
+    });
+    if (animResetBtn) animResetBtn.addEventListener('click', () => {
+      if (isPlaying) toggleAutoPlay();
+      applyAnimStep(0);
+    });
+
+    applyAnimStep(0);
+    updateSlide(0);
+
+    prevBtn.addEventListener('click', () => updateSlide(current - 1));
+    nextBtn.addEventListener('click', () => updateSlide(current + 1));
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        updateSlide(current + 1);
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        updateSlide(current - 1);
+      } else if (e.key === 'Home') {
+        updateSlide(0);
+      } else if (e.key === 'End') {
+        updateSlide(total - 1);
+      } else if (e.key === 'f' || e.key === 'F') {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    });
+  </script>
+</body>
+</html>

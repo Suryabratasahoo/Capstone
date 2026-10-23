@@ -14,14 +14,14 @@ function Login() {
                 <div className="w-full max-w-[480px]">
                     {/* Logo Placeholder */}
                     <div className="mt-10 mb-10 text-2xl font-black tracking-tighter">
-                        connex<span className="text-brand-forest">link</span>
+                        opti<span className="text-brand-forest">transit</span>
                     </div>
 
                     <h1 className="text-[40px] font-black leading-tight tracking-[-0.03em] text-zinc-900 mb-2">
                         Welcome back
                     </h1>
                     <p className="text-zinc-500 mb-10 text-base">
-                        Log in to your ConnexLink
+                        Log in to your OptiTransit
                     </p>
 
                     <form className="space-y-4">

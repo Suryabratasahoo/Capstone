@@ -110,7 +110,7 @@ class RouteRecommender:
         rating_out_of_5 = 1 + (final_score * 4)
         
         return {
-            'train_number': row['train_number'],
+            'train_numbery': row['train_number'],
             'train_name': row['train_name'],
             'rating': round(rating_out_of_5, 1),
             'highlights': row['keywords'],

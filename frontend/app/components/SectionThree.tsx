@@ -13,10 +13,10 @@ export default function SectionThree() {
           {/* Headline and Subtext */}
           <div className="flex flex-col gap-5">
             <h2 className="text-[#e9e0f2] font-black tracking-tight text-5xl sm:text-6xl md:text-7xl leading-[0.95] select-none">
-              Share your ConnexLink anywhere you like!
+              Share your OptiTransit anywhere you like!
             </h2>
             <p className="text-white font-bold text-base md:text-lg xl:text-xl leading-relaxed max-w-xl">
-              Add your unique ConnexLink URL to all the platforms and places you find your audience. Then use your QR code to drive your offline traffic back to your link in bio.
+              Add your unique OptiTransit URL to all the platforms and places you find your audience. Then use your QR code to drive your offline traffic back to your link in bio.
             </p>
           </div>
 

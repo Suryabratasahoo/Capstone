@@ -21,7 +21,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "ConnexLink - Connecting Transit Routes",
+  title: "OptiTransit - Multi-Transit Route Optimization System",
   description: "Find seamless connections between flights, trains, and buses when direct routes are unavailable.",
 };
 

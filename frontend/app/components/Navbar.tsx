@@ -59,7 +59,7 @@ export default function Navbar() {
               </svg>
             </div>
             <span className="font-extrabold text-2xl md:text-3xl tracking-tight text-brand-charcoal">
-              connex<span className="text-brand-forest">link</span>
+              opti<span className="text-brand-forest">transit</span>
             </span>
           </Link>
 

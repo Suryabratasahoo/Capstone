@@ -4,6 +4,12 @@ from datetime import datetime
 from typing import List, Dict, Tuple
 import math
 from app.mcraptor_data import McRaptorTimetable
+from app.irctc_pricing import (
+    calculate_irctc_train_fare,
+    calculate_bus_fare,
+    calculate_leg_fare,
+    normalize_class_code
+)
 
 def haversine_distance_km(lat1, lon1, lat2, lon2):
     R = 6371
@@ -98,32 +104,102 @@ def get_leg_fare_and_status(
     travel_date_str: str,
     from_stop_id: str,
     to_stop_id: str,
-    travel_class: str = "3A"
+    travel_class: str = "3A",
+    distance_km: float = 0.0,
+    duration_mins: int = 180
 ) -> dict:
-    """Fetches seat availability and pricing for rail or bus legs."""
+    """Fetches seat availability and calculates official IRCTC / Bus pricing for a leg."""
     clean_from = strip_prefix(from_stop_id)
     clean_to = strip_prefix(to_stop_id)
     clean_service = strip_prefix(service_number)
+    service_name = timetable.service_names.get(clean_service, "")
+    service_type = timetable.service_types.get(clean_service, "EXPRESS")
 
-    if mode == "RAIL":
+    mode_upper = (mode or "").upper()
+
+    if mode_upper == "RAIL":
         segment_key = (clean_service, travel_date_str, clean_from, clean_to, travel_class)
         fallback_key = (clean_service, travel_date_str, travel_class)
 
+        seat_info = None
         if segment_key in timetable.seat_map:
-            return timetable.seat_map[segment_key]
-        if fallback_key in timetable.seat_map:
-            return timetable.seat_map[fallback_key]
-        
-        return {"status": "AVAILABLE", "available_seats": 20, "wl_number": 0, "price_inr": 850}
+            seat_info = timetable.seat_map[segment_key]
+        elif fallback_key in timetable.seat_map:
+            seat_info = timetable.seat_map[fallback_key]
 
-    elif mode == "BUS":
+        if seat_info:
+            status = seat_info.get("status", "AVAILABLE")
+            available_seats = seat_info.get("available_seats", 0)
+            wl_number = seat_info.get("wl_number", 0)
+            if status == "WL" and (wl_number is None or wl_number <= 0):
+                wl_number = 1
+        else:
+            status = "AVAILABLE"
+            available_seats = 24
+            wl_number = 0
+
+        irctc_fare = calculate_irctc_train_fare(
+            distance_km=distance_km,
+            class_code=travel_class,
+            service_number=clean_service,
+            service_name=service_name,
+            service_type=service_type,
+            duration_mins=duration_mins
+        )
+
+        return {
+            "status": status,
+            "available_seats": available_seats,
+            "wl_number": wl_number,
+            "price_inr": irctc_fare["total_fare"],
+            "fare_breakdown": irctc_fare
+        }
+
+    elif mode_upper == "BUS":
         fare_key = (clean_service, clean_from, clean_to, "NON_AC")
-        if fare_key in timetable.bus_fare_map:
-            return timetable.bus_fare_map[fare_key]
-        
-        return {"status": "AVAILABLE", "available_seats": 30, "wl_number": 0, "price_inr": 150}
+        seat_info = timetable.bus_fare_map.get(fare_key)
+        if seat_info:
+            status = seat_info.get("status", "AVAILABLE")
+            available_seats = seat_info.get("available_seats", 30)
+            wl_number = 0
+        else:
+            status = "AVAILABLE"
+            available_seats = 30
+            wl_number = 0
 
-    return {"status": "AVAILABLE", "available_seats": 99, "wl_number": 0, "price_inr": 0}
+        bus_fare = calculate_bus_fare(
+            distance_km=distance_km,
+            bus_class=travel_class if "BUS" in (travel_class or "") else "NON_AC",
+            bus_provider=service_name,
+            duration_mins=duration_mins
+        )
+
+        return {
+            "status": status,
+            "available_seats": available_seats,
+            "wl_number": wl_number,
+            "price_inr": bus_fare["total_fare"],
+            "fare_breakdown": bus_fare
+        }
+
+    return {
+        "status": "AVAILABLE",
+        "available_seats": 99,
+        "wl_number": 0,
+        "price_inr": 0,
+        "fare_breakdown": {
+            "total_fare": 0,
+            "base_fare": 0,
+            "reservation_fee": 0,
+            "superfast_charge": 0,
+            "catering_charge": 0,
+            "gst_amount": 0,
+            "is_ac": False,
+            "class_code": "WALK",
+            "distance_km": round(distance_km, 1),
+            "breakdown_text": "Free Walk Transfer (₹0)"
+        }
+    }
 
 
 def run_mcraptor_search(
@@ -184,7 +260,8 @@ def run_mcraptor_search(
                 dist_km = round(down_stop_data["distance_km"] - src_stop_data["distance_km"], 1)
 
                 fare_info = get_leg_fare_and_status(
-                    timetable, mode, service_number, travel_date_str, source_stop_id, down_stop_id, travel_class
+                    timetable, mode, service_number, travel_date_str, source_stop_id, down_stop_id, travel_class,
+                    distance_km=dist_km, duration_mins=duration_mins
                 )
 
                 route_payload = {
@@ -208,6 +285,7 @@ def run_mcraptor_search(
                             "departure_time": sec_to_time_str(src_stop_data["departure_sec"]),
                             "arrival_time": sec_to_time_str(down_stop_data["arrival_sec"]),
                             "distance_km": dist_km,
+                            "travel_class": travel_class if mode == "RAIL" else "BUS",
                             "seat_status": fare_info["status"],
                             "price_inr": fare_info["price_inr"],
                             "path": get_path_coordinates(timetable, route_stops, src_idx, down_idx)
@@ -376,12 +454,13 @@ def run_mcraptor_search(
                         if d_direct > 10 and (d1 + d2) > (d_direct * 2.0):
                             continue
 
-                    leg2_fare_info = get_leg_fare_and_status(
-                        timetable, t2_mode, t2_service, travel_date_str, inter_stop_id, dest_stop_id, travel_class
-                    )
-
                     leg2_duration = int((dest_stop_data["arrival_sec"] - inter_stop_data["departure_sec"]) // 60)
                     leg2_dist = round(dest_stop_data["distance_km"] - inter_stop_data["distance_km"], 1)
+
+                    leg2_fare_info = get_leg_fare_and_status(
+                        timetable, t2_mode, t2_service, travel_date_str, inter_stop_id, dest_stop_id, travel_class,
+                        distance_km=leg2_dist, duration_mins=leg2_duration
+                    )
 
                     total_mins = leg1["duration_mins"] + layover_mins + leg2_duration
                     total_dist = round(leg1["distance_km"] + leg2_dist, 1)
@@ -401,6 +480,7 @@ def run_mcraptor_search(
                             "departure_time": sec_to_time_str(leg1["dep_sec"]),
                             "arrival_time": sec_to_time_str(leg1["arr_sec"]),
                             "distance_km": leg1["distance_km"],
+                            "travel_class": travel_class if leg1["mode"] == "RAIL" else "BUS",
                             "seat_status": leg1["fare_info"]["status"],
                             "price_inr": leg1["fare_info"]["price_inr"],
                             "path": leg1["path"]
@@ -446,6 +526,7 @@ def run_mcraptor_search(
                         "departure_time": sec_to_time_str(inter_stop_data["departure_sec"]),
                         "arrival_time": sec_to_time_str(dest_stop_data["arrival_sec"]),
                         "distance_km": leg2_dist,
+                        "travel_class": travel_class if t2_mode == "RAIL" else "BUS",
                         "seat_status": leg2_fare_info["status"],
                         "price_inr": leg2_fare_info["price_inr"],
                         "path": get_path_coordinates(timetable, route_stops, inter_idx, dest_idx)
@@ -457,7 +538,7 @@ def run_mcraptor_search(
                         "travel_class": travel_class,
                         "overall_status": overall_status,
                         "available_seats": min(leg1["fare_info"]["available_seats"], leg2_fare_info["available_seats"]),
-                        "wl_number": max(leg1["fare_info"]["wl_number"], leg2_fare_info["wl_number"]),
+                        "wl_number": max(1, max(leg1["fare_info"]["wl_number"], leg2_fare_info["wl_number"])) if overall_status == "WL" else max(leg1["fare_info"]["wl_number"], leg2_fare_info["wl_number"]),
                         "total_price_inr": total_price,
                         "interchange_station": {
                             "code": inter_stop_id,

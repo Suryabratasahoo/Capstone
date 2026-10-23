@@ -14,7 +14,7 @@ function ForgotPassword() {
                 <div className="w-full max-w-[480px]">
                     {/* Logo Placeholder */}
                     <div className="mt-10 mb-10 text-2xl font-black tracking-tighter">
-                        connex<span className="text-brand-forest">link</span>
+                        opti<span className="text-brand-forest">transit</span>
                     </div>
 
                     <h1 className="text-[40px] font-black leading-tight tracking-[-0.03em] text-zinc-900 mb-2">

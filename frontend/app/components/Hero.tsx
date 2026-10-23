@@ -417,7 +417,7 @@ export default function Hero() {
                   {/* Footer */}
                   <div className="pt-2 text-center border-t border-white/10">
                     <span className="text-[8px] font-black text-white/50 uppercase">
-                      Powered by ConnexLink
+                      Powered by OptiTransit
                     </span>
                   </div>
 

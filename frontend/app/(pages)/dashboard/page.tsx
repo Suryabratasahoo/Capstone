@@ -659,7 +659,7 @@ export default function DashboardPage() {
                 </svg>
               </div>
               <span className="font-extrabold text-2xl tracking-tight text-zinc-800">
-                connex<span className="text-[#254f1a]">link</span>
+                opti<span className="text-[#254f1a]">transit</span>
               </span>
             </div>
 
@@ -800,7 +800,7 @@ export default function DashboardPage() {
         {/* Header content inside the Hero (Large bold typography) */}
         <div className="relative z-10 text-center max-w-4xl px-4 flex flex-col items-center gap-3.5 mb-14">
           <span className="text-[#d2e823] font-black uppercase tracking-[0.3em] text-xs sm:text-xs mt-5">
-            ConnexLink Engine
+            OptiTransit Engine
           </span>
           <h1 className="text-white font-black tracking-tight text-2xl sm:text-lg md:text-3xl lg:text-5xl leading-[0.95] select-none">
             An Urgent Plan? Make it Efficient
@@ -1357,7 +1357,7 @@ export default function DashboardPage() {
               Connected Travel Made Simple
             </h2>
             <p className="font-medium text-sm sm:text-base leading-relaxed text-white/90">
-              Travellers can find exclusive <span className="underline font-black cursor-pointer hover:text-zinc-950 transition-colors">multimodal travel offers</span>, discount coupons, cashback, and connection protection on ConnexLink. You can book synchronized train, bus, and flight tickets at the lowest prices to any destination. Choose from budget-friendly regional routes to high-speed premium express paths. Check for real-time schedule comparisons, select your preferred transit combinations, apply promo codes, and save money on your journeys today!
+              Travellers can find exclusive <span className="underline font-black cursor-pointer hover:text-zinc-950 transition-colors">multimodal travel offers</span>, discount coupons, cashback, and connection protection on OptiTransit. You can book synchronized train, bus, and flight tickets at the lowest prices to any destination. Choose from budget-friendly regional routes to high-speed premium express paths. Check for real-time schedule comparisons, select your preferred transit combinations, apply promo codes, and save money on your journeys today!
             </p>
           </div>
 
@@ -1366,7 +1366,7 @@ export default function DashboardPage() {
             <img
               src="/promo_artwork.png"
               className="w-72 sm:w-80 md:w-96 h-auto object-contain hover:scale-[1.05] hover:-translate-y-2.5 transition-all duration-500 select-none pointer-events-none drop-shadow-xl"
-              alt="ConnexLink Travel Promo"
+              alt="OptiTransit Travel Promo"
             />
           </div>
 

@@ -13,6 +13,7 @@ class StopRef(BaseModel):
 class Leg(BaseModel):
     leg_number: int
     mode: str = "TRAIN"  # "TRAIN", "BUS", or "WALK"
+    service_number: Optional[str] = None
     trip_identifier: Optional[str] = None  # Replaces train_number to support alphanumeric bus IDs
     service_name: str  # Replaces train_name (e.g., "Express Bus 101" or "Rajdhani Express")
     from_stop: StopRef
@@ -20,6 +21,13 @@ class Leg(BaseModel):
     departure_time: str
     arrival_time: str
     distance_km: float
+    travel_class: Optional[str] = None
+    seat_status: Optional[str] = None
+    available_seats: Optional[int] = 0
+    wl_number: Optional[int] = 0
+    price_inr: Optional[float] = 0.0
+    fare_breakdown: Optional[dict] = None
+    path: Optional[List[dict]] = None
 
 
 class TransferDetail(BaseModel):
@@ -40,6 +48,12 @@ class FootpathTransfer(BaseModel):
 class RouteOption(BaseModel):
     journey_type: str  # "DIRECT", "ONE_TRANSFER", "MULTI_MODAL"
     transfers: int
+    travel_class: Optional[str] = None
+    overall_status: Optional[str] = None
+    available_seats: Optional[int] = 0
+    wl_number: Optional[int] = 0
+    total_price_inr: Optional[float] = 0.0
+    fare_breakdown: Optional[dict] = None
     total_duration: str
     total_duration_mins: int
     total_distance_km: float

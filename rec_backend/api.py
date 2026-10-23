@@ -7,7 +7,7 @@ from recommender import RouteRecommender
 
 app = FastAPI(
     title="Route Recommendation API",
-    description="Microservice for fetching route ratings & recommendations. Part of the ConnexLink multi-modal transit platform.",
+    description="Microservice for fetching route ratings & recommendations. Part of the OptiTransit multi-modal transit platform.",
     version="2.0.0"
 )
 
@@ -20,11 +20,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-print("Initializing API Server...")
+print("Initializing API Server with ABSA Highlights...")
 # Load the data and initialize recommender once on startup
 df = load_and_process_data()
 recommender = RouteRecommender(df)
-print("API Server Ready.")
+print("API Server Ready with Aspect-Based Transit Highlights.")
 
 class RecommendationResponse(BaseModel):
     train_number: Union[int, str]
@@ -73,14 +73,15 @@ def get_bus_rating(bus_number: str):
     rating = 2.8 + (hash_val % 180) / 100.0
     
     # Pick a highlight based on the hash
-    all_highlights = ["comfortable seats", "on time", "clean", "good driving", "AC worked well", "budget friendly"]
-    highlight = all_highlights[hash_val % len(all_highlights)]
+    all_highlights = ["Comfortable Seats", "Punctual Schedule", "Clean Interior", "Smooth Driving", "Effective AC", "Budget Friendly"]
+    highlight1 = all_highlights[hash_val % len(all_highlights)]
+    highlight2 = all_highlights[(hash_val + 3) % len(all_highlights)]
     
     return {
         "train_number": bus_number,
         "train_name": f"{bus_number.split('-')[0]} Bus",
         "rating": round(rating, 1),
-        "highlights": [highlight, "state transport"],
+        "highlights": [highlight1, highlight2],
         "similarity_score": 1.0,
         "sentiment_score": 0.5,
         "total_upvotes": 10 + (hash_val % 90)

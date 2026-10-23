@@ -17,11 +17,11 @@ function Register() {
                 <div className="w-full max-w-[480px]">
                     {/* Logo Placeholder */}
                     <div className="mt-20 mb-10 text-2xl font-black tracking-tighter">
-                        connex<span className="text-brand-forest">link</span>
+                        opti<span className="text-brand-forest">transit</span>
                     </div>
 
                     <h1 className="text-[40px] font-black leading-tight tracking-[-0.03em] text-zinc-900 mb-2">
-                        Join ConnexLink
+                        Join OptiTransit
                     </h1>
                     <p className="text-zinc-500 mb-10 text-base">
                         Sign up for free!
@@ -47,7 +47,7 @@ function Register() {
                         </div>
 
                         <p className="text-xs text-zinc-500 font-medium mt-4">
-                            By clicking Create account, you agree to ConnexLink's{' '}
+                            By clicking Create account, you agree to OptiTransit's{' '}
                             <button 
                                 type="button"
                                 onClick={() => setIsTermsOpen(true)}

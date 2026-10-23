@@ -28,7 +28,7 @@ function ServiceRatingBadge({ serviceNumber, mode }: { serviceNumber: string, mo
 
   useEffect(() => {
     if (!serviceNumber) return;
-    
+
     // Determine the correct endpoint
     let endpoint = "";
     if (mode === 'RAIL' && !isNaN(Number(serviceNumber))) {
@@ -38,7 +38,7 @@ function ServiceRatingBadge({ serviceNumber, mode }: { serviceNumber: string, mo
     } else {
       return; // No ratings for flights or walks yet
     }
-    
+
     setLoading(true);
     fetch(endpoint)
       .then(res => {
@@ -58,14 +58,24 @@ function ServiceRatingBadge({ serviceNumber, mode }: { serviceNumber: string, mo
   if (!ratingData) return null;
 
   return (
-    <div className="inline-flex items-center gap-1.5 ml-2 group relative">
-      <span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-md text-[10px] font-black border border-amber-200 shadow-sm flex items-center">
+    <div className="inline-flex items-center gap-1.5 ml-1.5 group/badge relative">
+      <span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-md text-[10px] font-black border border-amber-200 shadow-sm flex items-center cursor-help">
         <span className="mr-0.5 text-amber-500">★</span> {ratingData.rating.toFixed(1)}/5
       </span>
       {/* Tooltip for highlights */}
       {ratingData.highlights.length > 0 && (
-        <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-800 text-white text-[10px] py-1 px-2 rounded w-max whitespace-nowrap z-50 pointer-events-none">
-          Highlights: {ratingData.highlights.slice(0, 3).join(', ')}
+        <div className="absolute top-full mt-1.5 left-0 opacity-0 group-hover/badge:opacity-100 transition-opacity bg-zinc-900/95 backdrop-blur-sm text-white text-[10px] py-1.5 px-2.5 rounded-lg shadow-xl max-w-xs overflow-y-auto z-50 pointer-events-none border border-zinc-700/50">
+          <div className="text-[8px] font-bold tracking-wider text-zinc-400 uppercase mb-0.5">Passenger Feedback</div>
+          <div className="flex flex-wrap items-center gap-1 font-medium">
+            {ratingData.highlights.slice(0, 3).map((h, i) => (
+              <span key={i} className="inline-flex items-center gap-1">
+                {i > 0 && <span className="text-zinc-500">•</span>}
+                <span className={h.includes('Clean') || h.includes('Punctual') || h.includes('Good') || h.includes('Working') || h.includes('Comfortable') || h.includes('Helpful') || h.includes('Smooth') || h.includes('Budget') ? 'text-emerald-400 font-semibold' : 'text-amber-300'}>
+                  {h}
+                </span>
+              </span>
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -79,12 +89,22 @@ function PlannerContent() {
   const initialFrom = searchParams.get('from') || 'Vijayawada';
   const initialTo = searchParams.get('to') || 'Bengaluru';
   const initialDate = searchParams.get('date') || '2026-08-01';
+  const initialClass = searchParams.get('class') || '3A';
 
   const [fromLocation, setFromLocation] = useState(initialFrom);
   const [toLocation, setToLocation] = useState(initialTo);
   const [travelDate, setTravelDate] = useState(initialDate);
-  const [travelClass, setTravelClass] = useState('3A');
+  const [travelClass, setTravelClass] = useState(initialClass);
   const [requireBus, setRequireBus] = useState(false);
+
+  const CLASS_LABELS: Record<string, string> = {
+    '1A': '1A (First AC)',
+    '2A': '2A (2-Tier AC)',
+    '3A': '3A (3-Tier AC)',
+    'CC': 'CC (Chair Car)',
+    'SL': 'SL (Sleeper)',
+    '2S': '2S (Second Sitting)',
+  };
 
   const [loading, setLoading] = useState(true);
   const [rawApiData, setRawApiData] = useState<any>(null);
@@ -138,7 +158,7 @@ function PlannerContent() {
   useEffect(() => {
     fetchResults();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialFrom, initialTo, initialDate]);
+  }, [initialFrom, initialTo, initialDate, initialClass]);
 
   useEffect(() => {
     if (rawApiData) {
@@ -176,7 +196,7 @@ function PlannerContent() {
       });
     } else if (sortCriterion === "DEPARTURE_TIME") {
       const parseDepTime = (str: string) => {
-        if(!str) return 0;
+        if (!str) return 0;
         const match = str.match(/(\d{2}):(\d{2})(?:\s*\(Day\s*(\d+)\))?/);
         if (!match) return 0;
         const h = parseInt(match[1], 10);
@@ -196,7 +216,7 @@ function PlannerContent() {
 
   const handleManualSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    router.replace(`/planner?from=${encodeURIComponent(fromLocation)}&to=${encodeURIComponent(toLocation)}&date=${travelDate}`);
+    router.replace(`/planner?from=${encodeURIComponent(fromLocation)}&to=${encodeURIComponent(toLocation)}&date=${travelDate}&class=${travelClass}`);
     fetchResults();
   };
 
@@ -224,7 +244,7 @@ function PlannerContent() {
           weight: 4,
           opacity: 0.8,
         }).addTo(polylineGroup.current);
-        
+
         bounds.extend(polyline.getBounds());
 
         // Draw intermediate stations as small dots
@@ -238,7 +258,7 @@ function PlannerContent() {
               opacity: 0.9,
               fillOpacity: 1
             }).addTo(polylineGroup.current);
-            
+
             // If the backend provided station names in the path, show a sleek tooltip
             if (pt.name) {
               dot.bindTooltip(pt.name, { className: 'bg-zinc-900 text-white border-zinc-700 text-xs font-bold px-2 py-1', direction: 'top', opacity: 0.9 });
@@ -281,28 +301,40 @@ function PlannerContent() {
       {/* Top Header Navigation */}
       <header className="h-16 bg-white border-b border-zinc-200 px-6 flex items-center justify-between shrink-0 shadow-sm z-30">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
-          <span className="text-xl font-black text-brand-forest">Pareto<span className="text-brand-lime drop-shadow-sm">Planner</span></span>
+          <span className="text-xl font-black text-brand-forest">Router<span className="text-black drop-shadow-sm">Planner</span></span>
         </div>
         <form onSubmit={handleManualSearch} className="flex items-center gap-2">
           <div className="w-40 relative">
-            <CityAutocomplete 
+            <CityAutocomplete
               value={fromLocation} onChange={setFromLocation}
               inputClassName="bg-zinc-100 border border-zinc-200 rounded-full px-4 py-1.5 text-sm font-bold w-full focus:outline-brand-forest"
             />
           </div>
           <span className="text-zinc-400">→</span>
           <div className="w-40 relative">
-            <CityAutocomplete 
+            <CityAutocomplete
               value={toLocation} onChange={setToLocation}
               inputClassName="bg-zinc-100 border border-zinc-200 rounded-full px-4 py-1.5 text-sm font-bold w-full focus:outline-brand-forest"
             />
           </div>
-          <input 
-            type="date" value={travelDate} onChange={(e)=>setTravelDate(e.target.value)}
+          <input
+            type="date" value={travelDate} onChange={(e) => setTravelDate(e.target.value)}
             className="bg-zinc-100 border border-zinc-200 rounded-full px-4 py-1.5 text-sm font-bold focus:outline-brand-forest"
           />
+          <select
+            value={travelClass}
+            onChange={(e) => setTravelClass(e.target.value)}
+            className="bg-zinc-100 border border-zinc-200 rounded-full px-3 py-1.5 text-xs font-bold text-zinc-800 focus:outline-brand-forest cursor-pointer"
+          >
+            <option value="3A">Class: 3A (3-Tier AC)</option>
+            <option value="2A">Class: 2A (2-Tier AC)</option>
+            <option value="1A">Class: 1A (First AC)</option>
+            <option value="SL">Class: SL (Sleeper)</option>
+            <option value="CC">Class: CC (Chair Car)</option>
+            <option value="2S">Class: 2S (Second Sitting)</option>
+          </select>
           <label className="flex items-center gap-1.5 text-xs font-bold cursor-pointer ml-2">
-            <input type="checkbox" checked={requireBus} onChange={(e)=>setRequireBus(e.target.checked)} className="accent-brand-forest w-4 h-4"/>
+            <input type="checkbox" checked={requireBus} onChange={(e) => setRequireBus(e.target.checked)} className="accent-brand-forest w-4 h-4" />
             Bus Required
           </label>
           <button type="submit" className="ml-2 bg-brand-forest text-white rounded-full px-5 py-1.5 text-sm font-bold hover:bg-black transition-colors shadow-md">
@@ -313,24 +345,24 @@ function PlannerContent() {
 
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden relative">
-        
+
         {/* Left Panel: Filters & Results */}
         <div className="w-[450px] bg-white border-r border-zinc-200 flex flex-col shrink-0 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-          
+
           {/* Controls Bar */}
           <div className="p-4 border-b border-zinc-100 bg-brand-cream/30">
             <div className="flex justify-between items-end mb-3">
               <div>
-                <h2 className="text-sm font-black text-brand-forest">Pareto Optimal Routes</h2>
+                <h2 className="text-sm font-black text-brand-forest">Optimal Routes For Your Journey</h2>
                 <p className="text-xs text-zinc-500 mt-0.5">
                   {loading ? 'Searching...' : `Found ${rawApiData?.total_options_found || 0} routes in ${rawApiData?.search_time_ms || 0}ms`}
                 </p>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-2">
-              <select 
-                value={filterType} 
+              <select
+                value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
                 className="bg-white border border-zinc-200 rounded-lg px-2 py-2 text-xs font-bold text-zinc-700 outline-none focus:border-brand-forest shadow-sm"
               >
@@ -340,8 +372,8 @@ function PlannerContent() {
                 <option value="AVAILABLE_ONLY">Confirmed Seats Only</option>
               </select>
 
-              <select 
-                value={sortCriterion} 
+              <select
+                value={sortCriterion}
                 onChange={(e) => setSortCriterion(e.target.value)}
                 className="bg-white border border-zinc-200 rounded-lg px-2 py-2 text-xs font-bold text-zinc-700 outline-none focus:border-brand-forest shadow-sm"
               >
@@ -357,9 +389,9 @@ function PlannerContent() {
           {/* Results List */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-zinc-50/50">
             {loading ? (
-              <div className="flex flex-col items-center justify-center h-40 space-y-3 opacity-50">
+              <div className="flex flex-col mt-40 items-center justify-center h-40 space-y-3 opacity-50">
                 <div className="w-8 h-8 border-4 border-brand-lime border-t-brand-forest rounded-full animate-spin"></div>
-                <p className="text-xs font-bold text-brand-forest animate-pulse">Running McRAPTOR Engine...</p>
+                <p className="text-xs font-bold text-brand-forest animate-pulse">Running Router...</p>
               </div>
             ) : processedOptions.length === 0 ? (
               <div className="text-center py-10 text-zinc-400 text-sm font-bold">
@@ -369,106 +401,181 @@ function PlannerContent() {
               processedOptions.map((opt, idx) => {
                 const isExpanded = expandedIndex === idx;
                 return (
-                <div 
-                  key={idx} 
-                  onClick={() => {
-                    drawRouteOnMap(opt);
-                    setExpandedIndex(isExpanded ? null : idx);
-                  }}
-                  className={`bg-white rounded-2xl p-4 border shadow-sm hover:shadow-md hover:border-brand-forest/30 transition-all cursor-pointer group ${isExpanded ? 'border-brand-forest/40 bg-brand-cream/20' : 'border-zinc-200'}`}
-                >
-                  {/* Card Header: Duration & Price */}
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <span className="text-lg font-black text-brand-forest">{opt.total_duration}</span>
-                      <span className="text-[10px] text-zinc-400 font-bold ml-2 uppercase tracking-wider">{opt.transfers} Transfers</span>
-                      {/* Show rating for the primary leg if it's a train or bus */}
-                      {(opt.legs[0]?.mode === 'RAIL' || opt.legs[0]?.mode === 'BUS') && (
-                        <ServiceRatingBadge serviceNumber={opt.legs[0].service_number} mode={opt.legs[0].mode} />
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <span className="text-lg font-black text-zinc-800">₹{opt.total_price_inr}</span>
-                      <div className="mt-0.5">
-                        {opt.overall_status === 'AVAILABLE' ? (
-                          <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-black tracking-widest">AVAILABLE</span>
-                        ) : opt.overall_status === 'RAC' ? (
-                          <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[10px] font-black tracking-widest">RAC</span>
-                        ) : (
-                          <span className="bg-rose-100 text-rose-700 px-2 py-0.5 rounded text-[10px] font-black tracking-widest">{opt.overall_status}</span>
+                  <div
+                    key={idx}
+                    onClick={() => {
+                      drawRouteOnMap(opt);
+                      setExpandedIndex(isExpanded ? null : idx);
+                    }}
+                    className={`group cursor-pointer rounded-2xl border p-4 shadow-sm transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/40 focus-visible:ring-offset-2 hover:-translate-y-0.5 hover:border-brand-forest/40 hover:shadow-lg hover:shadow-brand-forest/5 ${isExpanded
+                        ? 'border-brand-forest/40 bg-brand-cream/20 shadow-md shadow-brand-forest/5'
+                        : 'border-zinc-200/80 bg-white hover:bg-brand-cream/5'
+                      }`}
+                  >
+                    {/* Card Header: Duration & Price */}
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <span className="text-lg font-black text-brand-forest">{opt.total_duration}</span>
+                        <span className="text-[10px] text-zinc-400 font-bold ml-2 uppercase tracking-wider">{opt.transfers} Transfers</span>
+                        {/* Show rating for the primary leg if it's a train or bus */}
+                        {(opt.legs[0]?.mode === 'RAIL' || opt.legs[0]?.mode === 'BUS') && (
+                          <ServiceRatingBadge serviceNumber={opt.legs[0].service_number} mode={opt.legs[0].mode} />
                         )}
                       </div>
+                      <div className="text-right">
+                        <span className="text-lg font-black text-zinc-800">₹{opt.total_price_inr}</span>
+                        <div className="text-[9px] text-zinc-400 font-semibold tracking-wide uppercase">
+                          Class {opt.travel_class || travelClass} • Total Fare
+                        </div>
+                        <div className="mt-0.5">
+                          {opt.overall_status === 'AVAILABLE' ? (
+                            <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-black tracking-widest">
+                              {opt.travel_class || travelClass} • AVAILABLE {opt.available_seats && opt.available_seats > 0 ? `(${opt.available_seats})` : ''}
+                            </span>
+                          ) : opt.overall_status === 'RAC' ? (
+                            <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[10px] font-black tracking-widest">
+                              {opt.travel_class || travelClass} • RAC {opt.wl_number && opt.wl_number > 0 ? opt.wl_number : ''}
+                            </span>
+                          ) : (opt.overall_status === 'WL' || opt.overall_status === 'WAITLIST') ? (
+                            <span className="bg-rose-100 text-rose-700 px-2 py-0.5 rounded text-[10px] font-black tracking-widest">
+                              {opt.travel_class || travelClass} • WL {opt.wl_number && opt.wl_number > 0 ? opt.wl_number : 1}
+                            </span>
+                          ) : (
+                            <span className="bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded text-[10px] font-black tracking-widest">
+                              {opt.travel_class || travelClass} • {opt.overall_status || 'UNKNOWN'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Expand / Collapse Indicator */}
-                  {!isExpanded && (
-                    <div className="text-center mt-1 pt-3 border-t border-zinc-100/80">
-                      <span className="text-[10px] font-black text-brand-forest/60 group-hover:text-brand-forest uppercase tracking-widest flex items-center justify-center gap-1">
-                        View {opt.legs.length} Leg Journey on Map
-                        <svg className="w-3 h-3 stroke-[3]" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg>
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Legs Timeline - ONLY RENDERED IF EXPANDED */}
-                  {isExpanded && (
-                    <div className="relative pl-3 border-l-2 border-brand-lime/50 space-y-4 py-1 mt-4 pt-4 border-t border-zinc-100">
-                      {opt.legs.map((leg: any, lIdx: number) => (
-                        <div key={lIdx} className="relative">
-                          <div className="absolute -left-[18.5px] top-1 bg-white border-2 border-brand-lime w-3.5 h-3.5 rounded-full z-10 group-hover:border-brand-forest transition-colors"></div>
-                          <div className="flex items-start gap-2">
-                            <span className="text-base leading-none">{getModeIcon(leg.mode)}</span>
-                            <div className="flex-1">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <p className="text-[11px] font-black text-zinc-800 tracking-wide">{leg.service_name}</p>
-                                {(leg.mode === 'RAIL' || leg.mode === 'BUS') && <ServiceRatingBadge serviceNumber={leg.service_number} mode={leg.mode} />}
-                                {leg.mode !== 'WALK' && leg.seat_status === 'AVAILABLE' && leg.available_seats !== undefined && (
-                                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-700 shadow-sm">
-                                    {leg.available_seats} Seats Available
+                    {/* Quick Journey Leg Status Preview */}
+                    <div className="flex flex-wrap items-center gap-1.5 py-1.5 px-2 bg-zinc-50/80 rounded-lg border border-zinc-100 mb-2">
+                      {opt.legs.map((leg: any, lIdx: number) => {
+                        const legClass = leg.mode === 'RAIL' ? (leg.travel_class || opt.travel_class || travelClass) : (leg.mode === 'BUS' ? 'BUS' : '');
+                        return (
+                          <React.Fragment key={lIdx}>
+                            {lIdx > 0 && <span className="text-zinc-300 text-[10px] font-bold">→</span>}
+                            <div className="inline-flex items-center gap-1 text-[11px] font-bold text-zinc-700">
+                              <span>{getModeIcon(leg.mode)}</span>
+                              <span className="font-extrabold text-zinc-800">{leg.service_number || (leg.mode === 'WALK' ? 'Transfer' : leg.service_name?.slice(0, 16))}</span>
+                              {legClass && leg.mode === 'RAIL' && (
+                                <span className="text-[9px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-1 py-0.2 rounded font-mono">
+                                  {legClass}
+                                </span>
+                              )}
+                              {leg.mode !== 'WALK' && (
+                                leg.seat_status === 'AVAILABLE' ? (
+                                  <span className="text-[9px] font-black text-emerald-700 bg-emerald-100/70 px-1.5 py-0.5 rounded">
+                                    AVL {leg.available_seats && leg.available_seats > 0 ? leg.available_seats : ''}
                                   </span>
-                                )}
-                                {leg.mode !== 'WALK' && leg.seat_status === 'RAC' && leg.wl_number !== undefined && (
-                                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-700 shadow-sm">
-                                    RAC {leg.wl_number}
+                                ) : leg.seat_status === 'RAC' ? (
+                                  <span className="text-[9px] font-black text-amber-700 bg-amber-100/70 px-1.5 py-0.5 rounded">
+                                    RAC {leg.wl_number && leg.wl_number > 0 ? leg.wl_number : 1}
                                   </span>
-                                )}
-                                {leg.mode !== 'WALK' && leg.seat_status === 'WAITLIST' && leg.wl_number !== undefined && (
-                                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-rose-50 border border-rose-200 text-rose-700 shadow-sm">
-                                    WL {leg.wl_number}
+                                ) : (
+                                  <span className="text-[9px] font-black text-rose-700 bg-rose-100/80 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                    <span className="w-1 h-1 rounded-full bg-rose-500 animate-pulse"></span>
+                                    WL {leg.wl_number && leg.wl_number > 0 ? leg.wl_number : 1}
                                   </span>
-                                )}
-                              </div>
-                              <div className="flex justify-between text-[10px] text-zinc-500 font-medium mt-0.5">
-                                <span>{leg.from_stop.name} <strong className="text-zinc-700">{leg.departure_time}</strong></span>
-                                <span>→</span>
-                                <span><strong className="text-zinc-700">{leg.arrival_time}</strong> {leg.to_stop.name}</span>
-                              </div>
-                              
-                              {/* Intermediate Stops */}
-                              {leg.path && leg.path.length > 2 && (
-                                <div className="mt-2 pl-2 border-l-2 border-zinc-200/50 space-y-1">
-                                  <div className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">
-                                    {leg.path.length - 2} Intermediate Stops
-                                  </div>
-                                  <div className="max-h-24 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-zinc-200 space-y-1.5">
-                                    {leg.path.slice(1, -1).map((stop: any, sIdx: number) => (
-                                      <div key={sIdx} className="flex items-center gap-1.5 text-[10px] text-zinc-500 font-bold">
-                                        <span className="w-1 h-1 rounded-full bg-zinc-300"></span>
-                                        <span>{stop.name || stop.id}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
+                                )
                               )}
                             </div>
-                          </div>
-                        </div>
-                      ))}
+                          </React.Fragment>
+                        );
+                      })}
                     </div>
-                  )}
-                </div>
-              )})
+
+                    {/* Expand / Collapse Indicator */}
+                    {!isExpanded && (
+                      <div className="text-center mt-1 pt-2 border-t border-zinc-100/80">
+                        <span className="text-[10px] font-black text-brand-forest/60 group-hover:text-brand-forest uppercase tracking-widest flex items-center justify-center gap-1">
+                          View {opt.legs.length} Leg Journey on Map
+                          <svg className="w-3 h-3 stroke-[3]" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6" /></svg>
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Legs Timeline - ONLY RENDERED IF EXPANDED */}
+                    {isExpanded && (
+                      <div className="relative pl-3 border-l-2 border-brand-lime/50 space-y-4 py-1 mt-4 pt-4 border-t border-zinc-100">
+                        {opt.legs.map((leg: any, lIdx: number) => (
+                          <div key={lIdx} className="relative">
+                            <div className="absolute -left-[18.5px] top-1 bg-white border-2 border-brand-lime w-3.5 h-3.5 rounded-full z-10 group-hover:border-brand-forest transition-colors"></div>
+                            <div className="flex items-start gap-2">
+                              <span className="text-base leading-none">{getModeIcon(leg.mode)}</span>
+                              <div className="flex-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <p className="text-[11px] font-black text-zinc-800 tracking-wide">{leg.service_name}</p>
+                                  {leg.mode === 'RAIL' && (
+                                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-indigo-50 border border-indigo-200 text-indigo-700 font-mono tracking-wider shadow-sm">
+                                      Class {leg.travel_class || opt.travel_class || travelClass}
+                                    </span>
+                                  )}
+                                  {leg.mode === 'BUS' && (
+                                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-700 font-mono tracking-wider shadow-sm">
+                                      Bus
+                                    </span>
+                                  )}
+                                  {leg.mode !== 'WALK' && leg.seat_status === 'AVAILABLE' && (
+                                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-700 shadow-sm">
+                                      {leg.available_seats && leg.available_seats > 0 ? `${leg.available_seats} Seats Available` : 'Available'}
+                                    </span>
+                                  )}
+                                  {leg.mode !== 'WALK' && leg.seat_status === 'RAC' && (
+                                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-700 shadow-sm">
+                                      RAC {leg.wl_number && leg.wl_number > 0 ? leg.wl_number : 1}
+                                    </span>
+                                  )}
+                                  {leg.mode !== 'WALK' && (leg.seat_status === 'WL' || leg.seat_status === 'WAITLIST') && (
+                                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-rose-50 border border-rose-200 text-rose-700 shadow-sm flex items-center gap-1 font-mono">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                                      WL {leg.wl_number && leg.wl_number > 0 ? leg.wl_number : 1}
+                                    </span>
+                                  )}
+                                  {(leg.mode === 'RAIL' || leg.mode === 'BUS') && <ServiceRatingBadge serviceNumber={leg.service_number} mode={leg.mode} />}
+                                </div>
+                                <div className="flex justify-between text-[10px] text-zinc-500 font-medium mt-0.5">
+                                  <span>{leg.from_stop.name} <strong className="text-zinc-700">{leg.departure_time}</strong></span>
+                                  <span>→</span>
+                                  <span><strong className="text-zinc-700">{leg.arrival_time}</strong> {leg.to_stop.name}</span>
+                                </div>
+                                {leg.mode !== 'WALK' && (
+                                  <div className="flex flex-wrap justify-between items-center text-[10px] text-zinc-600 font-semibold mt-1 bg-zinc-50/80 px-2 py-0.5 rounded border border-zinc-100">
+                                    <span>{leg.distance_km} km • Class: <strong className="text-zinc-900 font-mono">{leg.travel_class || opt.travel_class || travelClass}</strong> • Leg Fare: <strong className="text-zinc-900">₹{leg.price_inr}</strong></span>
+                                    {leg.fare_breakdown?.breakdown_text && (
+                                      <span className="text-[9px] text-zinc-400 font-normal hidden sm:inline" title={leg.fare_breakdown.breakdown_text}>
+                                        {leg.fare_breakdown.breakdown_text}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Intermediate Stops */}
+                                {leg.path && leg.path.length > 2 && (
+                                  <div className="mt-2 pl-2 border-l-2 border-zinc-200/50 space-y-1">
+                                    <div className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">
+                                      {leg.path.length - 2} Intermediate Stops
+                                    </div>
+                                    <div className="max-h-24 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-zinc-200 space-y-1.5">
+                                      {leg.path.slice(1, -1).map((stop: any, sIdx: number) => (
+                                        <div key={sIdx} className="flex items-center gap-1.5 text-[10px] text-zinc-500 font-bold">
+                                          <span className="w-1 h-1 rounded-full bg-zinc-300"></span>
+                                          <span>{stop.name || stop.id}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })
             )}
           </div>
 
