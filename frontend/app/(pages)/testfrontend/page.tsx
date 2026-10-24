@@ -121,6 +121,349 @@ function ServiceRatingBadge({ serviceNumber, mode }: { serviceNumber: string, mo
   );
 }
 
+function TransitCopilotWidget({
+  activeRoute,
+  fromCity,
+  toCity,
+  travelDate,
+}: {
+  activeRoute: any;
+  fromCity: string;
+  toCity: string;
+  travelDate: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedLang, setSelectedLang] = useState<'en' | 'hi' | 'te'>('en');
+  const [inputMessage, setInputMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+
+  const initialGreetings: Record<'en' | 'hi' | 'te', string> = {
+    en: "Namaste! I am your OptiTransit AI Copilot. I can analyze transfer layovers, explain why routes were selected, and check accessibility for senior travelers.",
+    hi: "नमस्ते! मैं आपका ऑप्टिट्रांजिट एआई साथी हूँ। मैं लेओवर का समय, रूट चुनने का कारण और वरिष्ठ नागरिकों की यात्रा सुविधा की जाँच कर सकता हूँ।",
+    te: "నమస్కారం! నేను మీ ఆప్టిట్రాన్సిట్ ఏఐ కోపైలట్‌ని. లేఓవర్ సమయం, రూట్ ఎంపిక కారణాలు మరియు వృద్ధుల ప్రయాణ సౌలభ్యాన్ని నేను విశ్లేషించగలను.",
+  };
+
+  const [messages, setMessages] = useState<
+    Array<{ id: string; sender: 'user' | 'bot'; text: string; time: string }>
+  >([
+    {
+      id: 'welcome',
+      sender: 'bot',
+      text: initialGreetings['en'],
+      time: 'Just now',
+    },
+  ]);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping, isOpen]);
+
+  // Update welcome message when language changes if no conversation yet
+  const handleLanguageChange = (lang: 'en' | 'hi' | 'te') => {
+    setSelectedLang(lang);
+    if (messages.length === 1 && messages[0].id === 'welcome') {
+      setMessages([
+        {
+          id: 'welcome',
+          sender: 'bot',
+          text: initialGreetings[lang],
+          time: 'Just now',
+        },
+      ]);
+    }
+  };
+
+  const starterChips: Record<'en' | 'hi' | 'te', string[]> = {
+    en: [
+      "I want to visit my son in Bhopal",
+      "Is 2 hours enough in Vijayawada to eat and change to bus?",
+      "Why did you recommend this route over direct train?",
+      "Is this route comfortable for a 75-year-old?",
+    ],
+    hi: [
+      "मैं भोपाल में अपने बेटे से मिलने जा रहा हूँ",
+      "क्या विजयवाड़ा में 2 घंटे खाना खाने और बस बदलने के लिए काफी हैं?",
+      "सीधी ट्रेन के बजाय यह विकल्प क्यों चुना?",
+      "क्या यह रूट 75 वर्ष के बुजुर्ग के लिए आरामदायक है?",
+    ],
+    te: [
+      "నేను భోపాల్‌లో నా కుమారుడిని కలవాలనుకుంటున్నాను",
+      "విజయవాడలో భోజనం చేసి బస్సు మారడానికి 2 గంటలు సరిపోతుందా?",
+      "డైరెక్ట్ రైలు కంటే ఈ రూట్ ఎందుకు మంచిది?",
+      "75 ఏళ్ల వృద్ధుడికి ఈ ప్రయాణం అనుకూలంగా ఉంటుందా?",
+    ],
+  };
+
+  const generateSmartResponse = (userText: string, lang: 'en' | 'hi' | 'te'): string => {
+    const lower = userText.toLowerCase();
+
+    // 1. Missing Origin / Clarification scenario ("I want to visit my son in Bhopal")
+    if (lower.includes('visit my son in bhopal') || (lower.includes('bhopal') && !lower.includes('from') && !lower.includes('chennai'))) {
+      if (lang === 'te') {
+        return "భోపాల్ వెళ్లడం చాలా సంతోషకరం! మీ ప్రయాణాన్ని ప్లాన్ చేయడానికి, దయచేసి మీరు ప్రస్తుతం ఏ నగరం లేదా స్టేషన్ నుండి బయలుదేరుతున్నారో తెలియజేయగలరా? (ఉదా: చెన్నై లేదా విజయవాడ)";
+      }
+      if (lang === 'hi') {
+        return "भोपाल जाना बहुत अच्छी बात है! आपकी यात्रा की योजना बनाने के लिए, कृपया बताएं कि आप अभी किस शहर या स्टेशन से शुरुआत कर रहे हैं? (जैसे: चेन्नई या विजयवाड़ा)";
+      }
+      return "That's wonderful to visit your son in Bhopal! To find the safest and most comfortable options for you, could you please tell me: Where are you starting your journey from?";
+    }
+
+    // 2. Layover & Dining Constraint scenario ("2 hour is not enough... i will eat")
+    if (lower.includes('2 hour') || lower.includes('2 hours') || lower.includes('eat') || lower.includes('enough') || lower.includes('భోజనం') || lower.includes('खाना')) {
+      if (lang === 'te') {
+        return "మీరు చెప్పింది 100% నిజం సర్. విజయవాడ రైల్వే స్టేషన్ నుండి పండిట్ నెహ్రూ బస్ టెర్మినల్ 2.2 కి.మీ దూరంలో ఉంది. లగేజీతో ఆటో ఎక్కడం మరియు విశ్రాంతిగా భోజనం చేయడానికి 2 గంటల సమయం వృద్ధులకు చాలా తక్కువ.\n\n💡 నా సిఫార్సు: మీకు కనీసం 3.5 నుండి 4 గంటల లేఓవర్ ఉండే మార్గాన్ని ఎంచుకోవడం మంచిది. దీనివల్ల స్టేషన్ దగ్గర ఉన్న భోజనశాలలో హాయిగా తిని, తీరిగ్గా బస్సు చేరుకోవచ్చు.";
+      }
+      if (lang === 'hi') {
+        return "आपकी बात बिल्कुल सही है। विजयवाड़ा रेलवे स्टेशन से बस स्टैंड लगभग 2.2 किमी दूर है। सामान के साथ ऑटो लेना और शांति से भोजन करने के लिए 2 घंटे का समय एक बुजुर्ग यात्री के लिए बहुत कम है।\n\n💡 मेरा सुझाव: कम से कम 3.5 से 4 घंटे के बफर वाला रूट चुनें। इससे आप स्टेशन पर आराम से खाना खा सकेंगे और बिना किसी हड़बड़ी के बस तक पहुँच सकेंगे।";
+      }
+      return "You are completely right, sir. At 75, a 2-hour window between Vijayawada Railway Station and the Pandit Nehru Bus Stand (2.2 km away) is far too tight if you plan to eat. Taking an auto with luggage takes ~25 minutes, and a relaxed sit-down meal takes 45–60 minutes.\n\n💡 Recommendation: I advise choosing an option with at least a 3.5 to 4-hour layover buffer. This guarantees you have time for a relaxed hot meal without the stress of missing your bus.";
+    }
+
+    // 3. Explainable AI: "Why this route over direct?"
+    if (lower.includes('why') || lower.includes('direct') || lower.includes('ఎందుకు') || lower.includes('क्यों')) {
+      const interchange = activeRoute?.interchange_station?.name || 'Itarsi Jn';
+      const wlNum = activeRoute?.wl_number || 38;
+      if (lang === 'te') {
+        return `ఈ మార్గాన్ని ఎందుకు ఎంచుకున్నామంటే: ప్రత్యక్ష (Direct) రైళ్లలో ప్రస్తుతం WL ${wlNum} ఉంది, అంటే సీటు కన్ఫర్మ్ అయ్యే అవకాశం 15% కంటే తక్కువ.\n\nఈ ప్రయాణంలో ${interchange} వద్ద 1 బదిలీ చేయడం ద్వారా మీకు కన్ఫర్మ్ బర్త్ లభిస్తుంది, అలాగే ప్లాట్‌ఫారమ్ మారడానికి తగినంత సేఫ్టీ సమయం ఉంది.`;
+      }
+      if (lang === 'hi') {
+        return `यह रूट इसलिए चुना गया क्योंकि सीधी ट्रेनों में फिलहाल वेटिंग लिस्ट WL ${wlNum} है, जिसके कन्फर्म होने की संभावना बेहद कम (15% से कम) है।\n\n${interchange} पर 1 ट्रांसफर के साथ यह रूट आपको 100% कन्फर्म सीट देता है और प्लेटफॉर्म बदलने के लिए पर्याप्त समय भी देता है।`;
+      }
+      return `Here is why OptiTransit recommended this route:\n\n1. Seat Confirmation: Direct trains on this date are currently stuck on WL ${wlNum} (under 15% confirmation probability).\n2. Confirmed Alternative: Splitting the journey at ${interchange} gives you guaranteed confirmed berths for both segments.\n3. Safe Buffer: The layover provides a stress-free connection with lift and escalator access.`;
+    }
+
+    // 4. Senior Citizen Comfort Query
+    if (lower.includes('75') || lower.includes('senior') || lower.includes('elder') || lower.includes('వృద్ధ') || lower.includes('बुजुर्ग')) {
+      if (lang === 'te') {
+        return "వృద్ధులకు ప్రయాణ సలహా: 75 ఏళ్ల ప్రయాణికుల కోసం మేము తక్కువ బదిలీలు (0-1 బదిలీ), లిఫ్ట్ సదుపాయాలు ఉన్న స్టేషన్లు మరియు లోయర్ బెర్త్ (Lower Berth) అవకాశాలను ప్రాధాన్యతగా చూపిస్తాము.";
+      }
+      if (lang === 'hi') {
+        return "वरिष्ठ नागरिक यात्रा सलाह: 75 वर्ष के यात्रियों के लिए हम कम से कम ट्रांसफर, लिफ्ट/एस्केलेटर की सुविधा वाले स्टेशन और लोअर बर्थ (Lower Berth) की उपलब्धता को प्राथमिकता देते हैं।";
+      }
+      return "Senior Traveler Assessment: For a 75-year-old traveler, we prioritize:\n• Ground-floor lower berths in sleeper/AC segments\n• Avoiding tight cross-city transfers under 2.5 hours\n• Stations with operational lifts/escalators between platforms.";
+    }
+
+    // Default contextual response
+    if (lang === 'te') {
+      return `ఖచ్చితంగా! మీ ప్రయాణం (${fromCity} నుండి ${toCity}) కోసం నేను సహాయం చేయగలను. మీరు ఏదైనా నిర్దిష్ట సమయం లేదా వృద్ధుల సహాయం గురించి అడగాలనుకుంటున్నారా?`;
+    }
+    if (lang === 'hi') {
+      return `बिल्कुल! आपकी यात्रा (${fromCity} से ${toCity}) के लिए मैं पूरी सहायता कर सकता हूँ। क्या आप किसी विशेष समय या सहायता के बारे में जानना चाहते हैं?`;
+    }
+    return `I am here to help with your journey from ${fromCity} to ${toCity}. You can ask me to evaluate layovers, suggest meal breaks, or find senior-friendly connections!`;
+  };
+
+  const handleSendMessage = (textToSend?: string) => {
+    const text = textToSend || inputMessage;
+    if (!text.trim()) return;
+
+    const userMsg = {
+      id: `user-${Date.now()}`,
+      sender: 'user' as const,
+      text: text.trim(),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+    if (!textToSend) setInputMessage('');
+    setIsTyping(true);
+
+    // Simulate intelligent LLM processing delay
+    setTimeout(() => {
+      const responseText = generateSmartResponse(text, selectedLang);
+      const botMsg = {
+        id: `bot-${Date.now()}`,
+        sender: 'bot' as const,
+        text: responseText,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+      setMessages((prev) => [...prev, botMsg]);
+      setIsTyping(false);
+    }, 850);
+  };
+
+  return (
+    <>
+      {/* Floating Toggle Button */}
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 bg-gradient-to-r from-brand-forest to-emerald-700 text-white px-4 py-3 rounded-full shadow-2xl hover:shadow-brand-forest/40 hover:scale-105 transition-all duration-200 border border-emerald-400/30 group"
+          title="Open OptiTransit AI Copilot"
+        >
+          <span className="relative flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-brand-lime"></span>
+          </span>
+          <span className="text-lg">🤖</span>
+          <div className="text-left">
+            <div className="text-xs font-black tracking-wide flex items-center gap-1.5">
+              <span>AI Transit Copilot</span>
+              <span className="text-[9px] bg-emerald-500/30 text-emerald-100 px-1.5 py-0.2 rounded border border-emerald-300/30 uppercase tracking-widest font-mono">
+                {selectedLang.toUpperCase()}
+              </span>
+            </div>
+            <div className="text-[10px] text-emerald-100/80 font-medium">Explainable Route Assistant</div>
+          </div>
+        </button>
+      )}
+
+      {/* Expanded Chat Drawer / Card */}
+      {isOpen && (
+        <div className="fixed bottom-6 right-6 z-50 w-[410px] h-[580px] bg-white rounded-3xl shadow-2xl border border-zinc-200 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-brand-forest via-emerald-800 to-zinc-900 text-white p-3.5 flex items-center justify-between shrink-0 shadow-md">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-brand-lime/20 border border-brand-lime/40 flex items-center justify-center text-base">
+                🤖
+              </div>
+              <div>
+                <h3 className="text-xs font-black tracking-wide flex items-center gap-1.5">
+                  OptiTransit Copilot
+                  <span className="text-[9px] bg-emerald-400/20 text-emerald-200 px-1 py-0.2 rounded border border-emerald-400/30">
+                    XAI Beta
+                  </span>
+                </h3>
+                <p className="text-[10px] text-zinc-300 font-medium">Senior & Multi-Modal Travel Advisor</p>
+              </div>
+            </div>
+
+            {/* Language Selector + Close */}
+            <div className="flex items-center gap-1.5">
+              <div className="flex bg-black/30 p-0.5 rounded-lg border border-white/10 text-[10px] font-bold">
+                <button
+                  onClick={() => handleLanguageChange('en')}
+                  className={`px-1.5 py-0.5 rounded ${selectedLang === 'en' ? 'bg-brand-lime text-black font-black' : 'text-zinc-300 hover:text-white'}`}
+                >
+                  EN
+                </button>
+                <button
+                  onClick={() => handleLanguageChange('hi')}
+                  className={`px-1.5 py-0.5 rounded ${selectedLang === 'hi' ? 'bg-brand-lime text-black font-black' : 'text-zinc-300 hover:text-white'}`}
+                >
+                  हि
+                </button>
+                <button
+                  onClick={() => handleLanguageChange('te')}
+                  className={`px-1.5 py-0.5 rounded ${selectedLang === 'te' ? 'bg-brand-lime text-black font-black' : 'text-zinc-300 hover:text-white'}`}
+                >
+                  తె
+                </button>
+              </div>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-zinc-300 hover:text-white text-xs font-bold transition-colors"
+                title="Minimize chat"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          {/* Context Header: Current active route info */}
+          {activeRoute && (
+            <div className="bg-brand-cream/60 px-3.5 py-1.5 border-b border-zinc-200 flex items-center justify-between text-[10px] text-zinc-600 font-bold shrink-0">
+              <span className="flex items-center gap-1 truncate">
+                <span className="text-brand-forest font-black">Route Context:</span>
+                <span>{activeRoute.legs?.length || 1} Legs • {activeRoute.total_duration}</span>
+              </span>
+              <span className="text-zinc-400 uppercase font-mono text-[9px]">
+                {activeRoute.interchange_station ? `via ${activeRoute.interchange_station.name}` : 'Direct'}
+              </span>
+            </div>
+          )}
+
+          {/* Messages Scroll Area */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-zinc-50/60">
+            {messages.map((m) => (
+              <div
+                key={m.id}
+                className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}
+              >
+                <div
+                  className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs font-medium shadow-xs leading-relaxed whitespace-pre-line ${
+                    m.sender === 'user'
+                      ? 'bg-brand-forest text-white rounded-br-xs'
+                      : 'bg-white text-zinc-800 border border-zinc-200/80 rounded-bl-xs'
+                  }`}
+                >
+                  {m.text}
+                </div>
+                <span className="text-[9px] text-zinc-400 mt-0.5 px-1 font-medium">{m.time}</span>
+              </div>
+            ))}
+
+            {isTyping && (
+              <div className="flex items-center gap-1.5 bg-white border border-zinc-200 px-3 py-2 rounded-2xl w-fit shadow-xs">
+                <div className="w-1.5 h-1.5 bg-brand-forest rounded-full animate-bounce"></div>
+                <div className="w-1.5 h-1.5 bg-brand-forest rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                <div className="w-1.5 h-1.5 bg-brand-forest rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                <span className="text-[10px] font-bold text-zinc-400 ml-1">Analyzing route details...</span>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Starter Question Chips */}
+          <div className="p-2 border-t border-zinc-100 bg-white/90 shrink-0">
+            <div className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">
+              Suggested Questions
+            </div>
+            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              {starterChips[selectedLang].map((chip, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSendMessage(chip)}
+                  className="shrink-0 bg-zinc-100 hover:bg-brand-cream text-zinc-700 hover:text-brand-forest border border-zinc-200 hover:border-brand-forest/40 rounded-full px-2.5 py-1 text-[10px] font-bold transition-all text-left truncate max-w-[240px]"
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Input Box Form */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSendMessage();
+            }}
+            className="p-2.5 bg-white border-t border-zinc-200 flex items-center gap-2 shrink-0"
+          >
+            <input
+              type="text"
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              placeholder={
+                selectedLang === 'te'
+                  ? "మీ ప్రయాణం లేదా వృద్ధుల సహాయం గురించి అడగండి..."
+                  : selectedLang === 'hi'
+                  ? "अपनी यात्रा या बुजुर्गों की सुविधा के बारे में पूछें..."
+                  : "Ask about layovers, meal breaks, or elder travel..."
+              }
+              className="flex-1 bg-zinc-100 border border-zinc-200 rounded-full px-3.5 py-2 text-xs font-semibold text-zinc-800 focus:outline-none focus:border-brand-forest"
+            />
+            <button
+              type="submit"
+              disabled={!inputMessage.trim()}
+              className="bg-brand-forest hover:bg-black disabled:opacity-40 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shadow-md transition-colors shrink-0"
+              title="Send Message"
+            >
+              ↑
+            </button>
+          </form>
+        </div>
+      )}
+    </>
+  );
+}
+
 function TestFrontendContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -761,13 +1104,21 @@ function TestFrontendContent() {
         <div className="flex-1 bg-zinc-200 relative z-10">
           <div id="map" ref={mapRef} className="w-full h-full absolute inset-0 z-0"></div>
           {/* Subtle overlay logo on map */}
-          <div className="absolute bottom-6 right-6 z-[400] pointer-events-none opacity-80 bg-white/90 backdrop-blur px-3 py-1.5 rounded-xl shadow-sm border border-zinc-200 flex flex-col gap-0.5">
+          <div className="absolute bottom-6 left-6 z-[400] pointer-events-none opacity-80 bg-white/90 backdrop-blur px-3 py-1.5 rounded-xl shadow-sm border border-zinc-200 flex flex-col gap-0.5">
             <span className="text-xs font-black text-brand-forest">Powered by McRAPTOR</span>
             <span className="text-[9px] font-bold text-zinc-500">OptiTransit Prototype Test Suite</span>
           </div>
         </div>
 
       </div>
+
+      {/* Floating AI Transit Copilot Chatbot */}
+      <TransitCopilotWidget
+        activeRoute={processedOptions[expandedIndex ?? 0]}
+        fromCity={fromLocation}
+        toCity={toLocation}
+        travelDate={travelDate}
+      />
     </div>
   );
 }
