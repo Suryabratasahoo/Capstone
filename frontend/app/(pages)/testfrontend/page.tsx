@@ -5,6 +5,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import 'leaflet/dist/leaflet.css';
 import CityAutocomplete from '../../components/CityAutocomplete';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 // Dynamically import leaflet because it requires the window object
 let L: any = null;
@@ -121,13 +123,55 @@ function ServiceRatingBadge({ serviceNumber, mode }: { serviceNumber: string, mo
   );
 }
 
+function FormattedBotMessage({ text }: { text: string }) {
+  return (
+    <div className="text-zinc-800">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed text-xs">{children}</p>,
+          strong: ({ children }) => (
+            <strong className="font-extrabold text-zinc-950 bg-amber-50/80 px-1 py-0.5 rounded border border-amber-200/60 inline">
+              {children}
+            </strong>
+          ),
+          ul: ({ children }) => <ul className="my-1.5 pl-4 list-disc space-y-1 marker:text-brand-forest text-xs">{children}</ul>,
+          ol: ({ children }) => <ol className="my-1.5 pl-4 list-decimal space-y-1 marker:font-bold marker:text-brand-forest text-xs">{children}</ol>,
+          li: ({ children }) => <li className="text-[11.5px] leading-relaxed">{children}</li>,
+          h1: ({ children }) => <h3 className="font-black text-xs text-brand-forest mt-2 mb-1">{children}</h3>,
+          h2: ({ children }) => <h3 className="font-black text-xs text-brand-forest mt-2 mb-1">{children}</h3>,
+          h3: ({ children }) => <h3 className="font-black text-xs text-brand-forest mt-2 mb-1">{children}</h3>,
+          h4: ({ children }) => <h4 className="font-black text-[11px] text-zinc-900 mt-1.5 mb-0.5">{children}</h4>,
+          table: ({ children }) => (
+            <div className="overflow-x-auto my-2 rounded-lg border border-zinc-200 shadow-xs">
+              <table className="min-w-full divide-y divide-zinc-200 text-[10.5px]">{children}</table>
+            </div>
+          ),
+          thead: ({ children }) => <thead className="bg-zinc-100 font-bold text-zinc-700">{children}</thead>,
+          th: ({ children }) => <th className="px-2.5 py-1.5 text-left font-bold">{children}</th>,
+          td: ({ children }) => <td className="px-2.5 py-1.5 border-t border-zinc-100 text-zinc-800">{children}</td>,
+          code: ({ children }) => (
+            <code className="bg-zinc-100 text-indigo-700 font-mono text-[10px] px-1 py-0.5 rounded border border-zinc-200">
+              {children}
+            </code>
+          ),
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    </div>
+  );
+}
+
 function TransitCopilotWidget({
   activeRoute,
+  selectedRouteIndex = 0,
   fromCity,
   toCity,
   travelDate,
 }: {
   activeRoute: any;
+  selectedRouteIndex?: number;
   fromCity: string;
   toCity: string;
   travelDate: string;
@@ -138,9 +182,9 @@ function TransitCopilotWidget({
   const [isTyping, setIsTyping] = useState(false);
 
   const initialGreetings: Record<'en' | 'hi' | 'te', string> = {
-    en: "Namaste! I am your OptiTransit AI Copilot. I can analyze transfer layovers, explain why routes were selected, and check accessibility for senior travelers.",
-    hi: "नमस्ते! मैं आपका ऑप्टिट्रांजिट एआई साथी हूँ। मैं लेओवर का समय, रूट चुनने का कारण और वरिष्ठ नागरिकों की यात्रा सुविधा की जाँच कर सकता हूँ।",
-    te: "నమస్కారం! నేను మీ ఆప్టిట్రాన్సిట్ ఏఐ కోపైలట్‌ని. లేఓవర్ సమయం, రూట్ ఎంపిక కారణాలు మరియు వృద్ధుల ప్రయాణ సౌలభ్యాన్ని నేను విశ్లేషించగలను.",
+    en: "Namaste! I am your OptiTransit AI Copilot. I am actively tracking the route highlighted on your screen. Ask me about train numbers, timings, layover safety, or senior citizen comfort.",
+    hi: "नमस्ते! मैं आपका ऑप्टिट్రాंजिट एआई साथी हूँ। मैं आपकी स्क्रीन पर चुने गए रूट की निगरानी कर रहा हूँ। ट्रेन नंबर, समय, लेओवर की सुविधा या बुजुर्गों की सहायता के बारे में पूछें।",
+    te: "నమస్కారం! నేను మీ ఆప్టిట్రాన్సిట్ ఏఐ కోపైలట్‌ని. మీ స్క్రీన్‌పై ఎంచుకున్న ప్రయాణ మార్గాన్ని నేను పరిశీలిస్తున్నాను. రైలు నంబర్లు, సమయాలు, లేఓవర్ లేదా వృద్ధుల ప్రయాణ సౌలభ్యం గురించి నన్ను అడగండి.",
   };
 
   const [messages, setMessages] = useState<
@@ -179,24 +223,26 @@ function TransitCopilotWidget({
     }
   };
 
+  const currentRouteNum = (selectedRouteIndex ?? 0) + 1;
+
   const starterChips: Record<'en' | 'hi' | 'te', string[]> = {
     en: [
-      "I want to visit my son in Bhopal",
-      "Is 2 hours enough in Vijayawada to eat and change to bus?",
-      "Why did you recommend this route over direct train?",
-      "Is this route comfortable for a 75-year-old?",
+      `Explain Route #${currentRouteNum} in detail`,
+      "What are the exact train numbers and departure times in this route?",
+      "Is the layover time in this route safe to eat lunch?",
+      "Why did OptiTransit recommend this route over direct train?",
     ],
     hi: [
-      "मैं भोपाल में अपने बेटे से मिलने जा रहा हूँ",
-      "क्या विजयवाड़ा में 2 घंटे खाना खाने और बस बदलने के लिए काफी हैं?",
+      `मुझे रूट #${currentRouteNum} के बारे में विस्तार से समझाएं`,
+      "इस रूट में कौन सी ट्रेनें और क्या समय है?",
+      "क्या इस रूट का लेओवर खाना खाने के लिए सुरक्षित है?",
       "सीधी ट्रेन के बजाय यह विकल्प क्यों चुना?",
-      "क्या यह रूट 75 वर्ष के बुजुर्ग के लिए आरामदायक है?",
     ],
     te: [
-      "నేను భోపాల్‌లో నా కుమారుడిని కలవాలనుకుంటున్నాను",
-      "విజయవాడలో భోజనం చేసి బస్సు మారడానికి 2 గంటలు సరిపోతుందా?",
+      `రూట్ #${currentRouteNum} వివరాలను నాకు పూర్తిగా వివరించండి`,
+      "ఈ ప్రయాణంలో రైలు నంబర్లు మరియు బయలుదేరే సమయాలు ఏమిటి?",
+      "ఈ రూట్ లేఓవర్ భోజనం చేయడానికి సురక్షితమైనదేనా?",
       "డైరెక్ట్ రైలు కంటే ఈ రూట్ ఎందుకు మంచిది?",
-      "75 ఏళ్ల వృద్ధుడికి ఈ ప్రయాణం అనుకూలంగా ఉంటుందా?",
     ],
   };
 
@@ -259,7 +305,7 @@ function TransitCopilotWidget({
     return `I am here to help with your journey from ${fromCity} to ${toCity}. You can ask me to evaluate layovers, suggest meal breaks, or find senior-friendly connections!`;
   };
 
-  const handleSendMessage = (textToSend?: string) => {
+  const handleSendMessage = async (textToSend?: string) => {
     const text = textToSend || inputMessage;
     if (!text.trim()) return;
 
@@ -270,12 +316,74 @@ function TransitCopilotWidget({
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
     if (!textToSend) setInputMessage('');
     setIsTyping(true);
 
-    // Simulate intelligent LLM processing delay
-    setTimeout(() => {
+    try {
+      // Sanitize the active selected route to exclude huge GPS polyline arrays before passing to LLM
+      const sanitizedRoute = activeRoute
+        ? {
+            journey_type: activeRoute.journey_type,
+            transfers: activeRoute.transfers,
+            travel_class: activeRoute.travel_class,
+            overall_status: activeRoute.overall_status,
+            available_seats: activeRoute.available_seats,
+            wl_number: activeRoute.wl_number,
+            total_price_inr: activeRoute.total_price_inr,
+            total_duration: activeRoute.total_duration,
+            total_duration_mins: activeRoute.total_duration_mins,
+            total_distance_km: activeRoute.total_distance_km,
+            interchange_station: activeRoute.interchange_station,
+            legs: (activeRoute.legs || []).map((l: any) => ({
+              leg_number: l.leg_number,
+              mode: l.mode,
+              service_number: l.service_number,
+              service_name: l.service_name,
+              from_stop: { name: l.from_stop?.name, code: l.from_stop?.id || l.from_stop?.code },
+              to_stop: { name: l.to_stop?.name, code: l.to_stop?.id || l.to_stop?.code },
+              departure_time: l.departure_time,
+              arrival_time: l.arrival_time,
+              distance_km: l.distance_km,
+              travel_class: l.travel_class,
+              seat_status: l.seat_status,
+              wl_number: l.wl_number,
+              available_seats: l.available_seats,
+              price_inr: l.price_inr,
+              fare_breakdown: l.fare_breakdown?.breakdown_text,
+            })),
+          }
+        : null;
+
+      // Connect to live Groq LLM API route with selected route context
+      const res = await fetch('/api/copilot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: updatedMessages.filter((m) => m.id !== 'welcome'),
+          language: selectedLang,
+          selectedRoute: sanitizedRoute,
+          searchContext: { fromCity, toCity, travelDate },
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`API returned ${res.status}`);
+      }
+
+      const data = await res.json();
+      const botReply = data.reply || generateSmartResponse(text, selectedLang);
+
+      const botMsg = {
+        id: `bot-${Date.now()}`,
+        sender: 'bot' as const,
+        text: botReply,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+      setMessages((prev) => [...prev, botMsg]);
+    } catch (err) {
+      console.warn('Live Groq call fallback to local heuristic engine:', err);
       const responseText = generateSmartResponse(text, selectedLang);
       const botMsg = {
         id: `bot-${Date.now()}`,
@@ -284,8 +392,9 @@ function TransitCopilotWidget({
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, botMsg]);
+    } finally {
       setIsTyping(false);
-    }, 850);
+    }
   };
 
   return (
@@ -309,7 +418,7 @@ function TransitCopilotWidget({
                 {selectedLang.toUpperCase()}
               </span>
             </div>
-            <div className="text-[10px] text-emerald-100/80 font-medium">Explainable Route Assistant</div>
+            <div className="text-[10px] text-emerald-100/80 font-medium">⚡ Groq LPU Powered</div>
           </div>
         </button>
       )}
@@ -327,7 +436,7 @@ function TransitCopilotWidget({
                 <h3 className="text-xs font-black tracking-wide flex items-center gap-1.5">
                   OptiTransit Copilot
                   <span className="text-[9px] bg-emerald-400/20 text-emerald-200 px-1 py-0.2 rounded border border-emerald-400/30">
-                    XAI Beta
+                    ⚡ Groq 120B
                   </span>
                 </h3>
                 <p className="text-[10px] text-zinc-300 font-medium">Senior & Multi-Modal Travel Advisor</p>
@@ -368,12 +477,14 @@ function TransitCopilotWidget({
 
           {/* Context Header: Current active route info */}
           {activeRoute && (
-            <div className="bg-brand-cream/60 px-3.5 py-1.5 border-b border-zinc-200 flex items-center justify-between text-[10px] text-zinc-600 font-bold shrink-0">
-              <span className="flex items-center gap-1 truncate">
-                <span className="text-brand-forest font-black">Route Context:</span>
-                <span>{activeRoute.legs?.length || 1} Legs • {activeRoute.total_duration}</span>
+            <div className="bg-emerald-50 px-3.5 py-1.5 border-b border-emerald-200/80 flex items-center justify-between text-[10px] text-zinc-700 font-bold shrink-0">
+              <span className="flex items-center gap-1.5 truncate">
+                <span className="bg-brand-forest text-white px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
+                  Route #{currentRouteNum}
+                </span>
+                <span>{activeRoute.legs?.length || 1} Legs • {activeRoute.total_duration} • ₹{activeRoute.total_price_inr}</span>
               </span>
-              <span className="text-zinc-400 uppercase font-mono text-[9px]">
+              <span className="text-emerald-800 uppercase font-mono text-[9px] font-extrabold">
                 {activeRoute.interchange_station ? `via ${activeRoute.interchange_station.name}` : 'Direct'}
               </span>
             </div>
@@ -387,13 +498,17 @@ function TransitCopilotWidget({
                 className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}
               >
                 <div
-                  className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs font-medium shadow-xs leading-relaxed whitespace-pre-line ${
+                  className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 text-xs shadow-xs leading-relaxed ${
                     m.sender === 'user'
-                      ? 'bg-brand-forest text-white rounded-br-xs'
-                      : 'bg-white text-zinc-800 border border-zinc-200/80 rounded-bl-xs'
+                      ? 'bg-brand-forest text-white rounded-br-xs font-semibold whitespace-pre-wrap'
+                      : 'bg-white text-zinc-800 border border-zinc-200/90 rounded-bl-xs'
                   }`}
                 >
-                  {m.text}
+                  {m.sender === 'user' ? (
+                    m.text
+                  ) : (
+                    <FormattedBotMessage text={m.text} />
+                  )}
                 </div>
                 <span className="text-[9px] text-zinc-400 mt-0.5 px-1 font-medium">{m.time}</span>
               </div>
@@ -486,6 +601,7 @@ function TestFrontendContent() {
   const [filterType, setFilterType] = useState('ALL');
   const [sortCriterion, setSortCriterion] = useState('DURATION');
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0); // Auto-expand first result in test view
+  const [selectedRouteIndex, setSelectedRouteIndex] = useState<number>(0); // Track which route is focused for AI Copilot
 
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
@@ -582,6 +698,7 @@ function TestFrontendContent() {
 
     setProcessedOptions(processed);
     if (processed.length > 0) {
+      setSelectedRouteIndex(0);
       drawRouteOnMap(processed[0]);
     }
   };
@@ -798,14 +915,18 @@ function TestFrontendContent() {
             ) : (
               processedOptions.map((opt, idx) => {
                 const isExpanded = expandedIndex === idx;
+                const isSelected = selectedRouteIndex === idx;
                 return (
                   <div
                     key={idx}
                     onClick={() => {
                       drawRouteOnMap(opt);
+                      setSelectedRouteIndex(idx);
                       setExpandedIndex(isExpanded ? null : idx);
                     }}
-                    className={`group cursor-pointer rounded-2xl border p-4 shadow-sm transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/40 focus-visible:ring-offset-2 hover:-translate-y-0.5 hover:border-brand-forest/40 hover:shadow-lg hover:shadow-brand-forest/5 ${isExpanded
+                    className={`group cursor-pointer rounded-2xl border p-4 shadow-sm transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/40 focus-visible:ring-offset-2 hover:-translate-y-0.5 hover:border-brand-forest/40 hover:shadow-lg hover:shadow-brand-forest/5 ${
+                      isSelected ? 'ring-2 ring-emerald-500/80 shadow-md shadow-emerald-500/10' : ''
+                    } ${isExpanded
                         ? 'border-brand-forest/40 bg-brand-cream/20 shadow-md shadow-brand-forest/5'
                         : 'border-zinc-200/80 bg-white hover:bg-brand-cream/5'
                       }`}
@@ -815,6 +936,12 @@ function TestFrontendContent() {
                       <div>
                         <span className="text-lg font-black text-brand-forest">{opt.total_duration}</span>
                         <span className="text-[10px] text-zinc-400 font-bold ml-2 uppercase tracking-wider">{opt.transfers} Transfers</span>
+                        {isSelected && (
+                          <span className="bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full ml-2 shadow-xs uppercase tracking-wider inline-flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                            AI Focus
+                          </span>
+                        )}
                         {/* Show rating for the primary leg if it's a train or bus */}
                         {(isRailMode(opt.legs[0]?.mode) || opt.legs[0]?.mode === 'BUS') && (
                           <ServiceRatingBadge serviceNumber={opt.legs[0].service_number} mode={opt.legs[0].mode} />
@@ -1114,7 +1241,8 @@ function TestFrontendContent() {
 
       {/* Floating AI Transit Copilot Chatbot */}
       <TransitCopilotWidget
-        activeRoute={processedOptions[expandedIndex ?? 0]}
+        activeRoute={processedOptions[selectedRouteIndex] || processedOptions[0]}
+        selectedRouteIndex={selectedRouteIndex}
         fromCity={fromLocation}
         toCity={toLocation}
         travelDate={travelDate}
