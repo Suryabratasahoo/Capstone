@@ -228,19 +228,22 @@ function TransitCopilotWidget({
   const starterChips: Record<'en' | 'hi' | 'te', string[]> = {
     en: [
       `Explain Route #${currentRouteNum} in detail`,
-      "What are the exact train numbers and departure times in this route?",
+      "How does the Bus Senior Citizen Lower Berth quota work?",
+      "How does Alternate Station Boarding unlock confirmed seats?",
       "Is the layover time in this route safe to eat lunch?",
       "Why did OptiTransit recommend this route over direct train?",
     ],
     hi: [
       `मुझे रूट #${currentRouteNum} के बारे में विस्तार से समझाएं`,
-      "इस रूट में कौन सी ट्रेनें और क्या समय है?",
+      "बस में वरिष्ठ नागरिकों के लिए लोअर बर्थ कोटा कैसे काम करता है?",
+      "वैकल्पिक स्टेशन से टिकट बुक करके कन्फर्म सीट कैसे मिलती है?",
       "क्या इस रूट का लेओवर खाना खाने के लिए सुरक्षित है?",
       "सीधी ट्रेन के बजाय यह विकल्प क्यों चुना?",
     ],
     te: [
       `రూట్ #${currentRouteNum} వివరాలను నాకు పూర్తిగా వివరించండి`,
-      "ఈ ప్రయాణంలో రైలు నంబర్లు మరియు బయలుదేరే సమయాలు ఏమిటి?",
+      "బస్సులో వృద్ధుల లోయర్ బెర్త్ రిజర్వేషన్ ఎలా పనిచేస్తుంది?",
+      "ఆల్టర్నేట్ స్టేషన్ నుండి బుక్ చేసుకుని కన్ఫర్మ్ సీటు ఎలా పొందవచ్చు?",
       "ఈ రూట్ లేఓవర్ భోజనం చేయడానికి సురక్షితమైనదేనా?",
       "డైరెక్ట్ రైలు కంటే ఈ రూట్ ఎందుకు మంచిది?",
     ],
@@ -248,6 +251,29 @@ function TransitCopilotWidget({
 
   const generateSmartResponse = (userText: string, lang: 'en' | 'hi' | 'te'): string => {
     const lower = userText.toLowerCase();
+
+    // Alternate Station Boarding Hack query
+    if (lower.includes('alternate') || lower.includes('boarding') || lower.includes('unlock') || lower.includes('वैकल्पिक') || lower.includes('ఆల్టర్నేట్')) {
+      if (lang === 'te') {
+        return "💡 **స్మార్ట్ కోటా అన్‌లాక్ & బోర్డింగ్ మార్పు పద్ధతి:**\n\nభారతీయ రైల్వేలో మధ్య స్టేషన్ల కోటా (RLWL) త్వరగా నిండిపోతుంది. అయితే రైలు బయలుదేరే ప్రధాన స్టేషన్ లేదా ముందు స్టేషన్ నుండి సాధారణ కోటా (GNWL) లో సీట్లు ఖాళీగా ఉంటాయి.\n\nమీరు ముందు స్టేషన్ నుండి టికెట్ బుక్ చేసుకుని, IRCTCలో 'Change Boarding Station' ద్వారా మీ స్టేషన్‌లోనే ఎక్కవచ్చు. ఇది 100% లీగల్ మరియు మీకు కన్ఫర్మ్ సీటును అందిస్తుంది!";
+      }
+      if (lang === 'hi') {
+        return "💡 **स्मार्ट कोटा अनलॉक एवं बोर्डिंग स्टेशन बदलाव नियम:**\n\nभारतीय रेलवे में बीच के स्टेशनों पर रिमोट कोटा (RLWL) बहुत जल्दी वेटलिस्ट हो जाता है। लेकिन उसी ट्रेन में शुरुआती मुख्य स्टेशन से जनरल कोटा (GNWL) में सीटें खाली रहती हैं।\n\nआप पहले वाले स्टेशन से टिकट बुक करके IRCTC पर 'Change Boarding Point' चुन सकते हैं और अपने वास्तविक स्टेशन से चढ़ सकते हैं। यह 100% वैध है और आपको कन्फर्म बर्थ दिलाता है!";
+      }
+      return "💡 **Smart Quota Unlock (Boarding Point Change Rule):**\n\nIn Indian Railways, intermediate junctions get small Remote Location Quotas (RLWL) that waitlist fast. However, booking from an upstream major junction accesses the large General Quota (GNWL) with confirmed seats.\n\n**The Strategy:**\n1. Book the ticket from the upstream station (e.g. GNT to KGP).\n2. Select your actual departure junction (e.g. BZA) as the **Official Boarding Point** on IRCTC.\n3. The ticket is 100% legal, confirmed, and your berth is held for you until you board!";
+    }
+
+    // Bus Lower Berth & Senior Quota query
+    if (lower.includes('lower berth') || lower.includes('berth') || lower.includes('quota') || lower.includes('కోటా') || lower.includes('कोटा')) {
+      if (lang === 'te') {
+        return "🚌 **బస్సు లోయర్ బెర్త్ మరియు సీనియర్ సిటిజన్ కోటా:**\n\nస్లీపర్ బస్సులలో ఎగువ డెక్ (Upper Deck) ఎక్కడం వృద్ధులకు కష్టం. కాబట్టి మేము:\n• కింది డెక్ (Lower Deck) సీట్లను వృద్ధులకు ప్రత్యేకంగా కేటాయిస్తాము.\n• ప్రైవేట్ మరియు ఆర్టీసీ బస్సులలో లోయర్ బెర్త్‌లకు వర్తించే 10-12% డిఫరెన్షియల్ ధరను పారదర్శకంగా చూపిస్తాము.\n• సీనియర్ సిటిజన్ మోడ్ ఆన్ చేసినప్పుడు లోయర్ బెర్త్‌లు గల బస్సులకు మొదటి ప్రాధాన్యత ఇస్తాము.";
+      }
+      if (lang === 'hi') {
+        return "🚌 **बस लोअर बर्थ एवं वरिष्ठ नागरिक कोटा नियम:**\n\nस्लीपर बसों में ऊपरी बर्थ (Upper Deck) पर चढ़ना बुजुर्गों के लिए जोखिम भरा होता है। इसलिए OptiTransit में:\n• नीचे की डेक (Deck L) पर वरिष्ठ नागरिकों के लिए 3-4 बर्थ प्राथमिकता से आरक्षित की जाती हैं।\n• लोअर बर्थ पर लगने वाले 10-12% डिफरेंशियल फेयर का पारदर्शी ब्रेकडाउन दिखाया जाता है।\n• सीनियर सिटीजन मोड ऑन करने पर लोअर बर्थ वाली बसों को टॉप पर रैंक किया जाता है।";
+      }
+      return "🚌 **Bus Lower Berth & Senior Citizen Quota:**\n\nClimbing vertical ladders into Upper Sleeper bunks (Deck U) is dangerous for travelers aged 60+. OptiTransit models commercial bus differential pricing:\n\n1. **Deck Separation:** Distinguishes Upper Deck (ladder required) from Lower Deck (walk-in level).\n2. **Differential Pricing:** Reflects the authentic 10–12% convenience premium for ground-level Lower Berths.\n3. **Senior Citizen Quota:** Reserves 3–4 lower deck berths specifically for elders on participating services.";
+    }
+
 
     // 1. Missing Origin / Clarification scenario ("I want to visit my son in Bhopal")
     if (lower.includes('visit my son in bhopal') || (lower.includes('bhopal') && !lower.includes('from') && !lower.includes('chennai'))) {
@@ -336,6 +362,8 @@ function TransitCopilotWidget({
             total_duration_mins: activeRoute.total_duration_mins,
             total_distance_km: activeRoute.total_distance_km,
             interchange_station: activeRoute.interchange_station,
+            senior_friendly: activeRoute.senior_friendly,
+            smart_quota_unlock: activeRoute.smart_quota_unlock,
             legs: (activeRoute.legs || []).map((l: any) => ({
               leg_number: l.leg_number,
               mode: l.mode,
@@ -352,6 +380,8 @@ function TransitCopilotWidget({
               available_seats: l.available_seats,
               price_inr: l.price_inr,
               fare_breakdown: l.fare_breakdown?.breakdown_text,
+              seat_breakdown: l.seat_breakdown,
+              smart_quota_unlock: l.smart_quota_unlock,
             })),
           }
         : null;
@@ -593,6 +623,7 @@ function TestFrontendContent() {
   const [travelDate, setTravelDate] = useState(initialDate);
   const [travelClass, setTravelClass] = useState(initialClass);
   const [requireBus, setRequireBus] = useState(false);
+  const [seniorCitizenMode, setSeniorCitizenMode] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [rawApiData, setRawApiData] = useState<any>(null);
@@ -629,7 +660,7 @@ function TestFrontendContent() {
   const fetchResults = async () => {
     setLoading(true);
     try {
-      const url = `http://127.0.0.1:8000/api/v4/mcraptor/city-search?source_city=${encodeURIComponent(fromLocation)}&dest_city=${encodeURIComponent(toLocation)}&date=${travelDate}&class_code=${travelClass}&top_k=25&require_bus=${requireBus}`;
+      const url = `http://127.0.0.1:8000/api/v4/mcraptor/test-city-search?source_city=${encodeURIComponent(fromLocation)}&dest_city=${encodeURIComponent(toLocation)}&date=${travelDate}&class_code=${travelClass}&top_k=25&require_bus=${requireBus}&senior_citizen_mode=${seniorCitizenMode}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error("Search failed");
       const data = await res.json();
@@ -645,7 +676,7 @@ function TestFrontendContent() {
   useEffect(() => {
     fetchResults();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialFrom, initialTo, initialDate, initialClass]);
+  }, [initialFrom, initialTo, initialDate, initialClass, seniorCitizenMode]);
 
   useEffect(() => {
     if (rawApiData) {
@@ -844,9 +875,18 @@ function TestFrontendContent() {
             <option value="CC">Class: CC (Chair Car)</option>
             <option value="2S">Class: 2S (Second Sitting)</option>
           </select>
-          <label className="flex items-center gap-1.5 text-xs font-bold cursor-pointer ml-2">
+          <label className="flex items-center gap-1.5 text-xs font-bold cursor-pointer ml-1">
             <input type="checkbox" checked={requireBus} onChange={(e) => setRequireBus(e.target.checked)} className="accent-brand-forest w-4 h-4" />
-            Bus Required
+            Bus
+          </label>
+          <label className={`flex items-center gap-1.5 text-xs font-bold cursor-pointer ml-1 px-2.5 py-1 rounded-full border transition-all ${seniorCitizenMode ? 'bg-amber-100 border-amber-400 text-amber-900 shadow-xs' : 'bg-zinc-100 border-zinc-200 text-zinc-600 hover:bg-zinc-200'}`}>
+            <input
+              type="checkbox"
+              checked={seniorCitizenMode}
+              onChange={(e) => setSeniorCitizenMode(e.target.checked)}
+              className="accent-amber-600 w-3.5 h-3.5"
+            />
+            <span>👴 Senior Mode (60+)</span>
           </label>
           <button type="submit" className="ml-2 bg-brand-forest text-white rounded-full px-5 py-1.5 text-sm font-bold hover:bg-black transition-colors shadow-md">
             Update
@@ -940,6 +980,16 @@ function TestFrontendContent() {
                           <span className="bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full ml-2 shadow-xs uppercase tracking-wider inline-flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
                             AI Focus
+                          </span>
+                        )}
+                        {opt.senior_friendly && (
+                          <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-black px-2 py-0.5 rounded-full ml-1.5 shadow-xs uppercase tracking-wider inline-flex items-center gap-1">
+                            👴 Senior Friendly
+                          </span>
+                        )}
+                        {opt.smart_quota_unlock && (
+                          <span className="bg-emerald-100 text-emerald-900 border border-emerald-300 text-[9px] font-black px-2 py-0.5 rounded-full ml-1.5 shadow-xs uppercase tracking-wider inline-flex items-center gap-1">
+                            💡 Quota Unlock (Confirmed)
                           </span>
                         )}
                         {/* Show rating for the primary leg if it's a train or bus */}
@@ -1193,6 +1243,78 @@ function TestFrontendContent() {
                                           {leg.fare_breakdown.breakdown_text}
                                         </span>
                                       )}
+                                    </div>
+                                  )}
+
+                                  {/* Bus Deck & Senior Citizen Quota Breakdown */}
+                                  {leg.mode === 'BUS' && leg.seat_breakdown && (
+                                    <div className="mt-2 p-2.5 bg-amber-50/80 border border-amber-200 rounded-xl text-xs">
+                                      <div className="flex items-center justify-between mb-1.5">
+                                        <span className="font-extrabold text-amber-900 flex items-center gap-1 text-[11px]">
+                                          🚌 Bus Seat Inventory & Deck Breakdown
+                                        </span>
+                                        <span className="text-[10px] font-black text-amber-900 bg-amber-200/80 px-2 py-0.5 rounded-full border border-amber-300">
+                                          {leg.seat_breakdown.berth_type_guaranteed}
+                                        </span>
+                                      </div>
+                                      <div className="flex flex-wrap gap-1.5 text-[10px] font-bold">
+                                        <span className="bg-white border border-amber-200 text-zinc-700 px-2 py-0.5 rounded shadow-2xs">
+                                          🪑 Seater: {leg.seat_breakdown.seater_seats}
+                                        </span>
+                                        <span className="bg-white border border-amber-200 text-zinc-700 px-2 py-0.5 rounded shadow-2xs">
+                                          ⬆️ Upper Deck: {leg.seat_breakdown.sleeper_upper_seats} (₹{leg.seat_breakdown.upper_deck_fare_inr})
+                                        </span>
+                                        <span className="bg-white border border-amber-200 text-emerald-800 px-2 py-0.5 rounded shadow-2xs">
+                                          ⬇️ Lower Deck: {leg.seat_breakdown.sleeper_lower_seats} (₹{leg.seat_breakdown.lower_deck_fare_inr})
+                                        </span>
+                                        <span className="bg-amber-200/90 border border-amber-400 text-amber-950 px-2 py-0.5 rounded font-black flex items-center gap-1 shadow-2xs">
+                                          ⭐ Senior Reserved (Deck L): {leg.seat_breakdown.senior_lower_reserved} Berths (₹{leg.seat_breakdown.senior_berth_fare_inr})
+                                        </span>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Smart Quota Unlock / Alternate Boarding Callout */}
+                                  {leg.smart_quota_unlock && (
+                                    <div className="mt-2.5 p-3 bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 border-2 border-emerald-300 rounded-xl shadow-xs">
+                                      <div className="flex items-start justify-between gap-2">
+                                        <div>
+                                          <div className="flex items-center gap-1.5">
+                                            <span className="text-sm">💡</span>
+                                            <span className="text-xs font-black text-emerald-950 uppercase tracking-wide">
+                                              Smart Quota Unlock (Confirmed Seat via Alternate Boarding)
+                                            </span>
+                                            <span className="bg-emerald-600 text-white text-[9px] font-black px-2 py-0.2 rounded-full">
+                                              AVL {leg.smart_quota_unlock.unlocked_seats} Confirmed
+                                            </span>
+                                          </div>
+                                          <p className="text-[11px] text-zinc-700 font-medium mt-1 leading-snug">
+                                            Direct booking from <strong>{leg.smart_quota_unlock.actual_boarding.name}</strong> is in Waitlist (<strong>{leg.smart_quota_unlock.direct_status_text}</strong>).
+                                            You can legally book from <strong>{leg.smart_quota_unlock.book_from.name} ({leg.smart_quota_unlock.book_from.code})</strong> to <strong>{leg.smart_quota_unlock.book_to.name} ({leg.smart_quota_unlock.book_to.code})</strong> and select <strong>{leg.smart_quota_unlock.actual_boarding.name}</strong> as your official Boarding Point!
+                                          </p>
+                                        </div>
+                                        <div className="text-right shrink-0 bg-white/80 border border-emerald-200 px-2 py-1 rounded-lg">
+                                          <span className="text-[9px] font-bold text-zinc-500 block uppercase">Fare Diff:</span>
+                                          <span className="text-xs font-black text-emerald-800">+₹{leg.smart_quota_unlock.extra_fare_inr}</span>
+                                        </div>
+                                      </div>
+
+                                      <div className="flex flex-wrap items-center gap-2 mt-2 pt-2 border-t border-emerald-200/80">
+                                        <a
+                                          href={`https://www.confirmtkt.com/rbooking/trains/from/${encodeURIComponent(leg.smart_quota_unlock.book_from.code)}/to/${encodeURIComponent(leg.smart_quota_unlock.book_to.code)}/${formatToIndianDate(travelDate)}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="inline-flex items-center gap-1 bg-emerald-700 hover:bg-emerald-800 text-white text-[10px] font-black px-3 py-1 rounded-md shadow-xs transition-colors"
+                                          title="Deep link directly to ConfirmTkt with prefilled origin/destination"
+                                        >
+                                          <span>Book Alternate Station on ConfirmTkt ({leg.smart_quota_unlock.book_from.code} ➔ {leg.smart_quota_unlock.book_to.code})</span>
+                                          <span>↗</span>
+                                        </a>
+                                        <span className="text-[10px] text-emerald-900 font-bold bg-white/70 px-2 py-0.5 rounded border border-emerald-200">
+                                          Official Boarding Point: {leg.smart_quota_unlock.actual_boarding.code}
+                                        </span>
+                                      </div>
                                     </div>
                                   )}
 

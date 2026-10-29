@@ -182,3 +182,44 @@ def search_mcraptor_city_routes(
         "search_time_ms": elapsed_ms,
         "options": routes
     }
+
+
+@app.get("/api/v4/mcraptor/test-city-search", summary="Testing Engine: McRAPTOR with Senior Citizen Quota & Smart Unlock")
+def search_test_mcraptor_city_routes(
+    source_city: str = Query(..., description="Source city name (e.g. Vijayawada)"),
+    dest_city: str = Query(..., description="Destination city name (e.g. Bengaluru)"),
+    date: str = Query("2026-08-01", description="Travel date in YYYY-MM-DD format"),
+    class_code: str = Query("3A", description="Travel class (3A, 2A, SL)"),
+    top_k: int = Query(15, ge=1, le=150, description="Max Pareto routes to return"),
+    require_bus: bool = Query(False, description="If true, only returns routes that contain at least one bus leg"),
+    senior_citizen_mode: bool = Query(False, description="Prioritize lower berths & senior citizen quota")
+):
+    if not mcraptor_timetable:
+        raise HTTPException(status_code=503, detail="Timetable index not initialized.")
+
+    from app.test_mcraptor_city_engine import run_test_mcraptor_city_search
+
+    start_t = time.time()
+    routes = run_test_mcraptor_city_search(
+        timetable=mcraptor_timetable,
+        source_city=source_city,
+        dest_city=dest_city,
+        travel_date_str=date,
+        travel_class=class_code.strip().upper(),
+        top_k=top_k,
+        require_bus=require_bus,
+        senior_citizen_mode=senior_citizen_mode
+    )
+
+    elapsed_ms = round((time.time() - start_t) * 1000, 2)
+
+    return {
+        "source_city": source_city.strip().capitalize(),
+        "destination_city": dest_city.strip().capitalize(),
+        "travel_date": date,
+        "travel_class": class_code,
+        "senior_citizen_mode": senior_citizen_mode,
+        "total_options_found": len(routes),
+        "search_time_ms": elapsed_ms,
+        "options": routes
+    }

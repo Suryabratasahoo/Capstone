@@ -53,6 +53,14 @@ function formatRouteForPrompt(route: any, searchContext?: any): string {
       out += `    • Arrives: ${toName} at ${leg.arrival_time}\n`;
       out += `    • Distance & Fare: ${leg.distance_km || 0} km | ₹${leg.price_inr || 0}\n`;
       out += `    • Seat Status: ${leg.seat_status || 'N/A'}${leg.wl_number ? ` (WL ${leg.wl_number})` : ''}${leg.available_seats ? ` (AVL ${leg.available_seats})` : ''}\n`;
+      
+      if (leg.seat_breakdown) {
+        out += `    • Bus Deck & Senior Breakdown: Seater: ${leg.seat_breakdown.seater_seats}, Upper: ${leg.seat_breakdown.sleeper_upper_seats} (₹${leg.seat_breakdown.upper_deck_fare_inr}), Lower: ${leg.seat_breakdown.sleeper_lower_seats} (₹${leg.seat_breakdown.lower_deck_fare_inr}), Senior Reserved: ${leg.seat_breakdown.senior_lower_reserved} berths (₹${leg.seat_breakdown.senior_berth_fare_inr}). Guaranteed: ${leg.seat_breakdown.berth_type_guaranteed}\n`;
+      }
+
+      if (leg.smart_quota_unlock) {
+        out += `    • 💡 Smart Quota Unlock / Alternate Boarding: Direct is in Waitlist (${leg.smart_quota_unlock.direct_status_text}). Passenger can legally book from ${leg.smart_quota_unlock.book_from.name} (${leg.smart_quota_unlock.book_from.code}) to ${leg.smart_quota_unlock.book_to.name} (${leg.smart_quota_unlock.book_to.code}) for confirmed seat (AVL ${leg.smart_quota_unlock.unlocked_seats}) and board at ${leg.smart_quota_unlock.actual_boarding.name}. Extra fare is ₹${leg.smart_quota_unlock.extra_fare_inr}.\n`;
+      }
     });
   }
 
