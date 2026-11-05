@@ -3,6 +3,7 @@
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from typing import Optional
 import time
 import os
 
@@ -155,7 +156,9 @@ def search_mcraptor_city_routes(
     date: str = Query("2026-08-01", description="Travel date in YYYY-MM-DD format"),
     class_code: str = Query("3A", description="Travel class (3A, 2A, SL)"),
     top_k: int = Query(15, ge=1, le=150, description="Max Pareto routes to return"),
-    require_bus: bool = Query(False, description="If true, only returns routes that contain at least one bus leg")
+    require_bus: bool = Query(False, description="If true, only returns routes that contain at least one bus leg"),
+    senior_citizen_mode: bool = Query(False, description="Prioritize lower berths & senior citizen quota"),
+    target_train: Optional[str] = Query(None, description="Optional target train number to isolate")
 ):
     if not mcraptor_timetable:
         raise HTTPException(status_code=503, detail="Timetable index not initialized.")
@@ -168,7 +171,9 @@ def search_mcraptor_city_routes(
         travel_date_str=date,
         travel_class=class_code.strip().upper(),
         top_k=top_k,
-        require_bus=require_bus
+        require_bus=require_bus,
+        senior_citizen_mode=senior_citizen_mode,
+        target_train=target_train
     )
     
     elapsed_ms = round((time.time() - start_t) * 1000, 2)
@@ -178,6 +183,7 @@ def search_mcraptor_city_routes(
         "destination_city": dest_city.strip().capitalize(),
         "travel_date": date,
         "travel_class": class_code,
+        "senior_citizen_mode": senior_citizen_mode,
         "total_options_found": len(routes),
         "search_time_ms": elapsed_ms,
         "options": routes
@@ -192,7 +198,8 @@ def search_test_mcraptor_city_routes(
     class_code: str = Query("3A", description="Travel class (3A, 2A, SL)"),
     top_k: int = Query(15, ge=1, le=150, description="Max Pareto routes to return"),
     require_bus: bool = Query(False, description="If true, only returns routes that contain at least one bus leg"),
-    senior_citizen_mode: bool = Query(False, description="Prioritize lower berths & senior citizen quota")
+    senior_citizen_mode: bool = Query(False, description="Prioritize lower berths & senior citizen quota"),
+    target_train: Optional[str] = Query(None, description="Optional target train number to isolate")
 ):
     if not mcraptor_timetable:
         raise HTTPException(status_code=503, detail="Timetable index not initialized.")
@@ -208,7 +215,8 @@ def search_test_mcraptor_city_routes(
         travel_class=class_code.strip().upper(),
         top_k=top_k,
         require_bus=require_bus,
-        senior_citizen_mode=senior_citizen_mode
+        senior_citizen_mode=senior_citizen_mode,
+        target_train=target_train
     )
 
     elapsed_ms = round((time.time() - start_t) * 1000, 2)
@@ -222,4 +230,5 @@ def search_test_mcraptor_city_routes(
         "total_options_found": len(routes),
         "search_time_ms": elapsed_ms,
         "options": routes
-    }
+    }
+

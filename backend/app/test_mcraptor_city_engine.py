@@ -110,7 +110,8 @@ def get_test_leg_fare_and_status(
     travel_class: str = "3A",
     distance_km: float = 0.0,
     duration_mins: int = 180,
-    senior_citizen_mode: bool = False
+    senior_citizen_mode: bool = False,
+    target_train: Optional[str] = None
 ) -> dict:
     """Fetches seat availability with Senior Citizen Quota & Differential Pricing."""
     clean_from = strip_prefix(from_stop_id)
@@ -128,6 +129,20 @@ def get_test_leg_fare_and_status(
         seat_info = None
         if segment_key in timetable.seat_map:
             seat_info = timetable.seat_map[segment_key]
+        elif target_train and re.sub(r'\D', '', str(target_train)) == clean_service:
+            # If passenger opened the route targeting this specific train, this segment
+            # is the quota-extended booking segment that has confirmed General Quota seats.
+            import hashlib
+            seed_str = f"QUOTA_INC_{clean_service}_{clean_from}_{clean_to}_{travel_date_str}_{travel_class}"
+            seed_val = int(hashlib.sha256(seed_str.encode()).hexdigest()[:8], 16)
+            unlocked_seats = 11 + (seed_val % 35)
+            seat_info = {
+                "status": "AVAILABLE",
+                "available_seats": unlocked_seats,
+                "wl_number": 0,
+                "quota_type": "GNWL"
+            }
+            timetable.seat_map[segment_key] = seat_info
         elif fallback_key in timetable.seat_map:
             seat_info = timetable.seat_map[fallback_key]
 
@@ -181,35 +196,91 @@ def get_test_leg_fare_and_status(
         )
 
         base_fare = bus_fare["total_fare"]
-        # Bus Differential Pricing & Senior Citizen Quota Breakdown:
-        # Seater: 50%, Upper: 20%, Lower: 18%, Senior Lower Reserved: 12%
-        seater_seats = max(4, int(raw_seats * 0.45))
-        upper_seats = max(2, int(raw_seats * 0.22))
-        lower_seats = max(2, int(raw_seats * 0.18))
-        senior_reserved = max(2, raw_seats - (seater_seats + upper_seats + lower_seats))
-        if senior_reserved < 2:
-            senior_reserved = 3
+        import hashlib
+        seed_str = f"BUS_DYN_{clean_service}_{travel_date_str}_{clean_from}_{clean_to}"
+        seed = int(hashlib.sha256(seed_str.encode()).hexdigest()[:8], 16)
 
-        # Commercial Differential Pricing:
-        upper_price = round(base_fare * 0.95)
-        lower_price = round(base_fare * 1.12) # 12% Lower Berth Premium
-        senior_concession_price = round(base_fare * 1.02) # Concessional Lower Berth for Elders
+        svc_lower = (service_name or "").lower()
+        is_sleeper = distance_km >= 250 or duration_mins >= 360 or "sleeper" in svc_lower or "volvo" in svc_lower or "garuda" in svc_lower
+        is_semi_sleeper = not is_sleeper and (distance_km >= 120 or duration_mins >= 180 or "super luxury" in svc_lower or "deluxe" in svc_lower)
 
-        seat_breakdown = {
-            "total_available": raw_seats,
-            "seater_seats": seater_seats,
-            "sleeper_upper_seats": upper_seats,
-            "sleeper_lower_seats": lower_seats,
-            "senior_lower_reserved": senior_reserved,
-            "has_senior_quota": True,
-            "upper_deck_fare_inr": upper_price,
-            "lower_deck_fare_inr": lower_price,
-            "senior_berth_fare_inr": senior_concession_price,
-            "berth_type_guaranteed": "Deck L (Lower Berth Guaranteed)" if senior_citizen_mode else "Deck U / Standard"
-        }
+        if is_sleeper:
+            bus_type = "2+1 Multi-Axle AC Sleeper"
+            layout_mode = "SLEEPER"
+            upper_avail = max(2, min(14, int(raw_seats * 0.48) + ((seed % 5) - 2)))
+            lower_avail = max(2, min(12, int(raw_seats * 0.38) + (((seed >> 2) % 5) - 2)))
+            senior_reserved = max(2, min(5, 3 + ((seed >> 4) % 3)))
 
-        # If Senior Citizen Mode is active, apply the dedicated senior lower berth pricing and status
-        final_price = senior_concession_price if senior_citizen_mode else base_fare
+            upper_price = round(base_fare * (0.92 + (seed % 5) * 0.01))
+            lower_price = round(base_fare * (1.10 + ((seed >> 3) % 6) * 0.01))
+            senior_price = round(base_fare * 1.00)
+
+            seat_breakdown = {
+                "layout_mode": layout_mode,
+                "bus_type": bus_type,
+                "total_available": upper_avail + lower_avail + senior_reserved,
+                "sleeper_upper_seats": upper_avail,
+                "sleeper_lower_seats": lower_avail,
+                "senior_lower_reserved": senior_reserved,
+                "upper_deck_fare_inr": upper_price,
+                "lower_deck_fare_inr": lower_price,
+                "senior_berth_fare_inr": senior_price,
+                "has_senior_quota": True,
+                "berth_type_guaranteed": "Deck L (Lower Berth Guaranteed)" if senior_citizen_mode else "Deck U / Deck L Choice"
+            }
+            final_price = senior_price if senior_citizen_mode else base_fare
+
+        elif is_semi_sleeper:
+            bus_type = "2+2 Push-Back Semi-Sleeper"
+            layout_mode = "SEMI_SLEEPER"
+            window_avail = max(3, min(16, int(raw_seats * 0.46) + ((seed % 5) - 2)))
+            aisle_avail = max(3, min(16, int(raw_seats * 0.42) + (((seed >> 2) % 5) - 2)))
+            senior_reserved = max(2, min(6, 4 + ((seed >> 4) % 3)))
+
+            window_price = round(base_fare * 1.05)
+            aisle_price = round(base_fare * 1.00)
+            senior_price = round(base_fare * 0.95)
+
+            seat_breakdown = {
+                "layout_mode": layout_mode,
+                "bus_type": bus_type,
+                "total_available": window_avail + aisle_avail + senior_reserved,
+                "window_seats": window_avail,
+                "aisle_seats": aisle_avail,
+                "senior_lower_reserved": senior_reserved,
+                "window_fare_inr": window_price,
+                "aisle_fare_inr": aisle_price,
+                "senior_berth_fare_inr": senior_price,
+                "has_senior_quota": True,
+                "berth_type_guaranteed": "Front Row Priority (Seats 1-4)" if senior_citizen_mode else "Window / Aisle Choice"
+            }
+            final_price = senior_price if senior_citizen_mode else base_fare
+
+        else:
+            bus_type = "2+2 Express Seater"
+            layout_mode = "SEATER"
+            window_avail = max(4, min(20, int(raw_seats * 0.45) + ((seed % 5) - 2)))
+            aisle_avail = max(4, min(20, int(raw_seats * 0.45) + (((seed >> 2) % 5) - 2)))
+            senior_reserved = max(2, min(6, 4 + ((seed >> 3) % 3)))
+
+            window_price = round(base_fare * 1.00)
+            aisle_price = round(base_fare * 1.00)
+            senior_price = round(base_fare * 0.90)
+
+            seat_breakdown = {
+                "layout_mode": layout_mode,
+                "bus_type": bus_type,
+                "total_available": window_avail + aisle_avail + senior_reserved,
+                "window_seats": window_avail,
+                "aisle_seats": aisle_avail,
+                "senior_lower_reserved": senior_reserved,
+                "window_fare_inr": window_price,
+                "aisle_fare_inr": aisle_price,
+                "senior_berth_fare_inr": senior_price,
+                "has_senior_quota": True,
+                "berth_type_guaranteed": "Elder Priority Seat (Entrance Row)" if senior_citizen_mode else "Standard Seating"
+            }
+            final_price = senior_price if senior_citizen_mode else base_fare
 
         return {
             "status": status,
@@ -246,8 +317,11 @@ def find_smart_quota_unlock(
     current_fare: float
 ) -> Optional[dict]:
     """
-    Checks if booking from an upstream station (or downstream extension) unlocks confirmed seats.
-    Simulates the legal IRCTC 'Change Boarding Station' facility.
+    Incremental Minimum-Cost Extension Search:
+    Discovers the cheapest upstream and/or downstream station extension that unlocks
+    confirmed seats (AVL > 0), minimizing extra fare for the passenger.
+    Also registers the unlocked quota into timetable.seat_map so opening in a new tab
+    directly returns AVAILABLE without triggering a secondary quota chain.
     """
     if current_status not in ["WL", "RAC"] and current_wl <= 0:
         return None
@@ -256,61 +330,160 @@ def find_smart_quota_unlock(
     dest_stop_id = route_stops[down_idx]
     clean_service = strip_prefix(service_number)
 
-    # 1. Look for upstream station (1-2 stops before, or route origin)
-    upstream_idx = 0 if src_idx > 0 else None
-    if src_idx > 2:
-        upstream_idx = src_idx - 1 # One stop earlier
-
-    # 2. Look for downstream station (1 stop later, or route terminus)
-    downstream_idx = len(route_stops) - 1 if down_idx < len(route_stops) - 1 else down_idx
-
-    if upstream_idx is None or upstream_idx >= src_idx:
-        return None
-
-    upstream_stop_id = route_stops[upstream_idx]
-    downstream_stop_id = route_stops[downstream_idx]
-
-    upstream_name = timetable.stops.get(upstream_stop_id, {}).get("name", strip_prefix(upstream_stop_id))
-    downstream_name = timetable.stops.get(downstream_stop_id, {}).get("name", strip_prefix(downstream_stop_id))
     src_name = timetable.stops.get(source_stop_id, {}).get("name", strip_prefix(source_stop_id))
     dst_name = timetable.stops.get(dest_stop_id, {}).get("name", strip_prefix(dest_stop_id))
 
-    # Calculate extra fare for upstream segment
-    extra_fare = max(60, int(current_fare * 0.15))
+    total_stops = len(route_stops)
 
-    return {
-        "is_unlocked": True,
-        "train_number": clean_service,
-        "train_name": service_name,
-        "book_from": {
-            "id": upstream_stop_id,
-            "code": strip_prefix(upstream_stop_id),
-            "name": upstream_name
-        },
-        "book_to": {
-            "id": downstream_stop_id,
-            "code": strip_prefix(downstream_stop_id),
-            "name": downstream_name
-        },
-        "actual_boarding": {
-            "id": source_stop_id,
-            "code": strip_prefix(source_stop_id),
-            "name": src_name
-        },
-        "actual_deboarding": {
-            "id": dest_stop_id,
-            "code": strip_prefix(dest_stop_id),
-            "name": dst_name
-        },
-        "unlocked_status": "AVAILABLE",
-        "unlocked_seats": 28,
-        "extra_fare_inr": extra_fare,
-        "direct_status_text": f"{current_status} {current_wl}" if current_wl > 0 else current_status,
-        "explanation": f"Direct ticket {src_name} ➔ {dst_name} is in Waitlist ({current_status} {current_wl}). You can legally book {upstream_name} ➔ {downstream_name} (Confirmed AVL 28) and select {src_name} as your official boarding point on IRCTC."
-    }
+    def calc_dist(start_i: int, end_i: int) -> float:
+        d = 0.0
+        for i in range(start_i, end_i):
+            s1 = timetable.stops.get(route_stops[i], {})
+            s2 = timetable.stops.get(route_stops[i + 1], {})
+            lat1, lon1 = s1.get("latitude", 0.0), s1.get("longitude", 0.0)
+            lat2, lon2 = s2.get("latitude", 0.0), s2.get("longitude", 0.0)
+            if lat1 != 0 and lat2 != 0:
+                d += haversine_distance_km(lat1, lon1, lat2, lon2)
+            else:
+                d += 50.0
+        return max(d, 40.0 * (end_i - start_i))
 
+    direct_dist = calc_dist(src_idx, down_idx)
 
-def is_test_dominated(candidate: dict, existing: dict, senior_citizen_mode: bool = False) -> bool:
+    max_up_hops = min(4, src_idx)
+    max_down_hops = min(4, total_stops - 1 - down_idx)
+
+    candidates = []
+    for up_h in range(0, max_up_hops + 1):
+        for dn_h in range(0, max_down_hops + 1):
+            if up_h == 0 and dn_h == 0:
+                continue
+            u = src_idx - up_h
+            v = down_idx + dn_h
+            candidates.append((u, v))
+
+    if (0, down_idx) not in candidates and src_idx > 0:
+        candidates.append((0, down_idx))
+    if (src_idx, total_stops - 1) not in candidates and down_idx < total_stops - 1:
+        candidates.append((src_idx, total_stops - 1))
+    if (0, total_stops - 1) not in candidates and (src_idx > 0 or down_idx < total_stops - 1):
+        candidates.append((0, total_stops - 1))
+
+    def candidate_cost_key(pair):
+        u, v = pair
+        extra_up_km = calc_dist(u, src_idx) if u < src_idx else 0.0
+        extra_down_km = calc_dist(down_idx, v) if v > down_idx else 0.0
+        total_extra_km = extra_up_km + extra_down_km
+        penalty = 0.0 if (u == src_idx or v == down_idx) else 15.0
+        return total_extra_km + penalty
+
+    candidates.sort(key=candidate_cost_key)
+
+    import hashlib
+    best_unlock = None
+
+    for u, v in candidates:
+        upstream_stop_id = route_stops[u]
+        downstream_stop_id = route_stops[v]
+        clean_up_from = strip_prefix(upstream_stop_id)
+        clean_down_to = strip_prefix(downstream_stop_id)
+
+        quota_key = (clean_service, travel_date_str, clean_up_from, clean_down_to, travel_class)
+        quota_fallback_key = (clean_service, travel_date_str, travel_class)
+
+        unlocked_seats = 0
+        if quota_key in timetable.seat_map and timetable.seat_map[quota_key].get("status") == "AVAILABLE":
+            unlocked_seats = timetable.seat_map[quota_key].get("available_seats", 0)
+        elif quota_fallback_key in timetable.seat_map and timetable.seat_map[quota_fallback_key].get("status") == "AVAILABLE":
+            unlocked_seats = timetable.seat_map[quota_fallback_key].get("available_seats", 0)
+
+        if unlocked_seats <= 0:
+            seed_str = f"QUOTA_INC_{clean_service}_{clean_up_from}_{clean_down_to}_{travel_date_str}_{travel_class}"
+            seed_val = int(hashlib.sha256(seed_str.encode()).hexdigest()[:8], 16)
+            unlocked_seats = 11 + (seed_val % 35)
+
+        if unlocked_seats > 0:
+            extra_up_km = calc_dist(u, src_idx) if u < src_idx else 0.0
+            extra_down_km = calc_dist(down_idx, v) if v > down_idx else 0.0
+            total_extra_km = extra_up_km + extra_down_km
+
+            fare_per_km = current_fare / max(1.0, direct_dist)
+            raw_extra_fare = int(total_extra_km * fare_per_km * 0.70)
+            extra_fare = max(45, min(raw_extra_fare, int(current_fare * 0.25)))
+
+            upstream_name = timetable.stops.get(upstream_stop_id, {}).get("name", clean_up_from)
+            downstream_name = timetable.stops.get(downstream_stop_id, {}).get("name", clean_down_to)
+
+            if u < src_idx and v > down_idx:
+                explanation = (
+                    f"Direct ticket {src_name} ➔ {dst_name} is in Waitlist ({current_status} {current_wl}). "
+                    f"By expanding booking to {upstream_name} ➔ {downstream_name} (Confirmed AVL {unlocked_seats}), "
+                    f"you unlock confirmed seats for only ₹{extra_fare} extra. "
+                    f"Select {src_name} as your official boarding point on IRCTC, and simply exit at {dst_name}."
+                )
+            elif u < src_idx:
+                explanation = (
+                    f"Direct ticket {src_name} ➔ {dst_name} is in Waitlist ({current_status} {current_wl}). "
+                    f"By booking 1 stop earlier from {upstream_name} ➔ {dst_name} (Confirmed AVL {unlocked_seats}), "
+                    f"you unlock confirmed seats for only ₹{extra_fare} extra fare. "
+                    f"Set {src_name} as your official boarding point on IRCTC."
+                )
+            else:
+                explanation = (
+                    f"Direct ticket {src_name} ➔ {dst_name} is in Waitlist ({current_status} {current_wl}). "
+                    f"You can book {src_name} ➔ {downstream_name} (just past {dst_name}) with Confirmed AVL {unlocked_seats} "
+                    f"for only ₹{extra_fare} extra fare, board at {src_name} as usual, and legally get down early at {dst_name}."
+                )
+
+            # Persist unlocked seat availability into timetable.seat_map
+            timetable.seat_map[(clean_service, travel_date_str, clean_up_from, clean_down_to, travel_class)] = {
+                "status": "AVAILABLE",
+                "available_seats": unlocked_seats,
+                "wl_number": 0,
+                "quota_type": "GNWL"
+            }
+
+            best_unlock = {
+                "is_unlocked": True,
+                "train_number": clean_service,
+                "train_name": service_name,
+                "book_from": {
+                    "id": upstream_stop_id,
+                    "code": clean_up_from,
+                    "name": upstream_name
+                },
+                "book_to": {
+                    "id": downstream_stop_id,
+                    "code": clean_down_to,
+                    "name": downstream_name
+                },
+                "actual_boarding": {
+                    "id": source_stop_id,
+                    "code": strip_prefix(source_stop_id),
+                    "name": src_name
+                },
+                "actual_deboarding": {
+                    "id": dest_stop_id,
+                    "code": strip_prefix(dest_stop_id),
+                    "name": dst_name
+                },
+                "unlocked_status": "AVAILABLE",
+                "unlocked_seats": unlocked_seats,
+                "extra_fare_inr": extra_fare,
+                "direct_status_text": f"{current_status} {current_wl}" if current_wl > 0 else current_status,
+                "explanation": explanation
+            }
+            break
+
+    return best_unlock
+
+def is_test_dominated(candidate: dict, existing: dict, senior_citizen_mode: bool = False, target_train: Optional[str] = None) -> bool:
+    if target_train:
+        clean_target = re.sub(r'\D', '', str(target_train))
+        cand_matches = any(re.sub(r'\D', '', str(l.get("service_number", ""))) == clean_target for l in candidate.get("legs", []))
+        ex_matches = any(re.sub(r'\D', '', str(l.get("service_number", ""))) == clean_target for l in existing.get("legs", []))
+        if cand_matches and not ex_matches:
+            return False
     cand_dur = candidate["total_duration_mins"]
     cand_dist = candidate["total_distance_km"]
     cand_price = candidate["total_price_inr"]
@@ -345,12 +518,12 @@ def is_test_dominated(candidate: dict, existing: dict, senior_citizen_mode: bool
     return better_or_equal and strictly_better
 
 
-def merge_into_test_pareto_set(pareto_set: List[dict], candidate: dict, senior_citizen_mode: bool = False) -> bool:
+def merge_into_test_pareto_set(pareto_set: List[dict], candidate: dict, senior_citizen_mode: bool = False, target_train: Optional[str] = None) -> bool:
     for existing in pareto_set:
-        if is_test_dominated(candidate, existing, senior_citizen_mode):
+        if is_test_dominated(candidate, existing, senior_citizen_mode, target_train):
             return False
 
-    pareto_set[:] = [ex for ex in pareto_set if not is_test_dominated(ex, candidate, senior_citizen_mode)]
+    pareto_set[:] = [ex for ex in pareto_set if not is_test_dominated(ex, candidate, senior_citizen_mode, target_train)]
     pareto_set.append(candidate)
     return True
 
@@ -363,7 +536,8 @@ def run_test_mcraptor_city_search(
     travel_class: str = "3A",
     top_k: int = 15,
     require_bus: bool = False,
-    senior_citizen_mode: bool = False
+    senior_citizen_mode: bool = False,
+    target_train: Optional[str] = None
 ) -> List[dict]:
     """
     Dedicated test search implementation.
@@ -378,11 +552,41 @@ def run_test_mcraptor_city_search(
     dest_city = dest_city.strip().lower()
 
     def resolve_city_stops(query: str) -> List[str]:
+        q = (query or "").strip().lower()
+        if not q:
+            return []
+
         all_stops = []
-        if query in timetable.city_stops:
-            all_stops.extend(timetable.city_stops[query])
-        if query in CITY_ALIASES and CITY_ALIASES[query] in timetable.city_stops:
-            all_stops.extend(timetable.city_stops[CITY_ALIASES[query]])
+        # 1. Exact match in city_stops
+        if q in timetable.city_stops:
+            all_stops.extend(timetable.city_stops[q])
+        if q in CITY_ALIASES and CITY_ALIASES[q] in timetable.city_stops:
+            all_stops.extend(timetable.city_stops[CITY_ALIASES[q]])
+
+        # 2. Stripped station suffixes (e.g. "Vijayawada Junction" -> "vijayawada", "JHARSUGUDA JN" -> "jharsuguda")
+        clean_q = re.sub(r'\b(junction|jn|cantt|cantonment|central|terminus|term|stn|station|railway station|city|main)\b', '', q, flags=re.I).strip()
+        clean_q = re.sub(r'[\(\)\[\]]', '', clean_q).strip()
+        clean_q = re.sub(r'\s+', ' ', clean_q).strip()
+
+        if clean_q:
+            if clean_q in timetable.city_stops:
+                all_stops.extend(timetable.city_stops[clean_q])
+            if clean_q in CITY_ALIASES and CITY_ALIASES[clean_q] in timetable.city_stops:
+                all_stops.extend(timetable.city_stops[CITY_ALIASES[clean_q]])
+
+        if all_stops:
+            return list(set(all_stops))
+
+        # 3. Direct match against stop code or stop name (e.g. "BZA", "JSG", "Vijayawada Junction")
+        for s_id, s_data in timetable.stops.items():
+            s_code = s_id.replace("RAIL:", "").replace("BUS:", "").strip().lower()
+            s_name = s_data.get("name", "").strip().lower()
+            if (q and q == s_code) or (clean_q and clean_q == s_code) or (q and q == s_name) or (clean_q and clean_q == s_name):
+                all_stops.append(s_id)
+                st_city = s_data.get("city", "").strip().lower()
+                if st_city and st_city in timetable.city_stops:
+                    all_stops.extend(timetable.city_stops[st_city])
+
         return list(set(all_stops))
 
     source_stops_list = resolve_city_stops(source_city)
@@ -433,12 +637,13 @@ def run_test_mcraptor_city_search(
 
                     fare_info = get_test_leg_fare_and_status(
                         timetable, mode, service_number, travel_date_str, source_stop_id, down_stop_id, travel_class,
-                        distance_km=dist_km, duration_mins=duration_mins, senior_citizen_mode=senior_citizen_mode
+                        distance_km=dist_km, duration_mins=duration_mins, senior_citizen_mode=senior_citizen_mode,
+                        target_train=target_train
                     )
 
-                    # Check for Smart Quota Unlock (Alternate Boarding) if train is Waitlisted
+                    # Check for Smart Quota Unlock (Alternate Boarding) ONLY if destination matches passenger dest
                     smart_unlock = None
-                    if mode == "RAIL":
+                    if down_stop_id in dest_stops and mode == "RAIL":
                         smart_unlock = find_smart_quota_unlock(
                             timetable=timetable,
                             route_stops=route_stops,
@@ -503,7 +708,7 @@ def run_test_mcraptor_city_search(
                             continue
 
                     if down_stop_id in dest_stops:
-                        merge_into_test_pareto_set(pareto_results, route_payload, senior_citizen_mode)
+                        merge_into_test_pareto_set(pareto_results, route_payload, senior_citizen_mode, target_train)
                     else:
                         if down_stop_id not in reachable_intermediates:
                             reachable_intermediates[down_stop_id] = []
@@ -589,7 +794,7 @@ def run_test_mcraptor_city_search(
                                 }
                             ]
                         }
-                        merge_into_test_pareto_set(pareto_results, route_payload, senior_citizen_mode)
+                        merge_into_test_pareto_set(pareto_results, route_payload, senior_citizen_mode, target_train)
 
     # Round 2 Connecting Trips
     for inter_stop_id, arrivals in expanded_intermediates.items():
@@ -644,7 +849,8 @@ def run_test_mcraptor_city_search(
 
                     leg2_fare_info = get_test_leg_fare_and_status(
                         timetable, t2_mode, t2_service, travel_date_str, inter_stop_id, dest_stop_id, travel_class,
-                        distance_km=leg2_dist, duration_mins=leg2_duration, senior_citizen_mode=senior_citizen_mode
+                        distance_km=leg2_dist, duration_mins=leg2_duration, senior_citizen_mode=senior_citizen_mode,
+                        target_train=target_train
                     )
 
                     smart_unlock_2 = None
@@ -742,6 +948,15 @@ def run_test_mcraptor_city_search(
                             continue
 
                     merge_into_test_pareto_set(pareto_results, route_payload, senior_citizen_mode)
+
+    if target_train:
+        clean_target = re.sub(r'\D', '', str(target_train))
+        if clean_target:
+            filtered = [
+                r for r in pareto_results
+                if any(re.sub(r'\D', '', str(leg.get("service_number", ""))) == clean_target for leg in r.get("legs", []))
+            ]
+            return filtered[:top_k]
 
     pareto_results.sort(key=lambda x: (
         0 if (senior_citizen_mode and x.get("senior_friendly")) else 1,

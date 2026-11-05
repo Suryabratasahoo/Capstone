@@ -139,9 +139,15 @@ export default function Hero() {
     }
   };
 
+  const router = useRouter();
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Searching connecting routes from "${source}" to "${destination}" on ${date || "any date"}...`);
+    const fromCity = source.trim() || "Vijayawada";
+    const toCity = destination.trim() || "Sambalpur";
+    const todayStr = new Date().toISOString().split('T')[0];
+    const d = date && date >= todayStr ? date : todayStr;
+    router.push(`/planner?from=${encodeURIComponent(fromCity)}&to=${encodeURIComponent(toCity)}&date=${d}`);
   };
 
   return (
