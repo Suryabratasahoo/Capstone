@@ -416,22 +416,22 @@ def find_smart_quota_unlock(
 
             if u < src_idx and v > down_idx:
                 explanation = (
-                    f"Direct ticket {src_name} ➔ {dst_name} is in Waitlist ({current_status} {current_wl}). "
-                    f"By expanding booking to {upstream_name} ➔ {downstream_name} (Confirmed AVL {unlocked_seats}), "
+                    f"Direct ticket {src_name} -> {dst_name} is in Waitlist ({current_status} {current_wl}). "
+                    f"By expanding booking to {upstream_name} -> {downstream_name} (Confirmed AVL {unlocked_seats}), "
                     f"you unlock confirmed seats for only ₹{extra_fare} extra. "
                     f"Select {src_name} as your official boarding point on IRCTC, and simply exit at {dst_name}."
                 )
             elif u < src_idx:
                 explanation = (
-                    f"Direct ticket {src_name} ➔ {dst_name} is in Waitlist ({current_status} {current_wl}). "
-                    f"By booking 1 stop earlier from {upstream_name} ➔ {dst_name} (Confirmed AVL {unlocked_seats}), "
+                    f"Direct ticket {src_name} -> {dst_name} is in Waitlist ({current_status} {current_wl}). "
+                    f"By booking 1 stop earlier from {upstream_name} -> {dst_name} (Confirmed AVL {unlocked_seats}), "
                     f"you unlock confirmed seats for only ₹{extra_fare} extra fare. "
                     f"Set {src_name} as your official boarding point on IRCTC."
                 )
             else:
                 explanation = (
-                    f"Direct ticket {src_name} ➔ {dst_name} is in Waitlist ({current_status} {current_wl}). "
-                    f"You can book {src_name} ➔ {downstream_name} (just past {dst_name}) with Confirmed AVL {unlocked_seats} "
+                    f"Direct ticket {src_name} -> {dst_name} is in Waitlist ({current_status} {current_wl}). "
+                    f"You can book {src_name} -> {downstream_name} (just past {dst_name}) with Confirmed AVL {unlocked_seats} "
                     f"for only ₹{extra_fare} extra fare, board at {src_name} as usual, and legally get down early at {dst_name}."
                 )
 
@@ -484,6 +484,13 @@ def is_dominated(candidate: dict, existing: dict, senior_citizen_mode: bool = Fa
         ex_matches = any(re.sub(r'\D', '', str(l.get("service_number", ""))) == clean_target for l in existing.get("legs", []))
         if cand_matches and not ex_matches:
             return False
+
+    # Preserve distinct destination terminals within the same city (e.g. Visakhapatnam VSKP vs Duvvada DVD)
+    cand_dest = candidate.get("legs", [])[-1].get("to_stop", {}).get("id", "")
+    ex_dest = existing.get("legs", [])[-1].get("to_stop", {}).get("id", "")
+    if cand_dest and ex_dest and cand_dest != ex_dest:
+        return False
+
     cand_dur = candidate["total_duration_mins"]
     cand_dist = candidate["total_distance_km"]
     cand_price = candidate["total_price_inr"]
@@ -557,6 +564,16 @@ def run_mcraptor_city_search(
             return []
 
         all_stops = []
+
+        # 0. Regional Metro Clusters (e.g. Visakhapatnam includes VSKP, DVD, SCM; Hyderabad includes SC, HYB, KCG; Kolkata includes HWH, SDAH, SRC)
+        try:
+            from app.city_clusters import get_cluster_stop_ids
+            c_stops = get_cluster_stop_ids(q, timetable)
+            if c_stops:
+                all_stops.extend(c_stops)
+        except Exception:
+            pass
+
         # 1. Exact match in city_stops
         if q in timetable.city_stops:
             all_stops.extend(timetable.city_stops[q])
@@ -569,6 +586,13 @@ def run_mcraptor_city_search(
         clean_q = re.sub(r'\s+', ' ', clean_q).strip()
 
         if clean_q:
+            try:
+                from app.city_clusters import get_cluster_stop_ids
+                c_clean_stops = get_cluster_stop_ids(clean_q, timetable)
+                if c_clean_stops:
+                    all_stops.extend(c_clean_stops)
+            except Exception:
+                pass
             if clean_q in timetable.city_stops:
                 all_stops.extend(timetable.city_stops[clean_q])
             if clean_q in CITY_ALIASES and CITY_ALIASES[clean_q] in timetable.city_stops:

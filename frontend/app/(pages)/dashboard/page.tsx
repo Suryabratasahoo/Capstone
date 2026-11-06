@@ -2,96 +2,153 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import FooterSection from '../../components/FooterSection';
 import CityAutocomplete from '../../components/CityAutocomplete';
-
-type TabType = 'buses' | 'flights' | 'trains' | 'hotels';
 
 interface RecentSearch {
   id: string;
   from: string;
   to: string;
   date: string;
-  type: TabType;
+  modeLabel: string;
 }
 
-function useIntersectionObserver(ref: React.RefObject<Element | null>) {
-  const [isIntersecting, setIsIntersecting] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        setIsIntersecting(true);
-        observer.unobserve(el);
-      }
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [ref]);
-
-  return isIntersecting;
+interface Scenario {
+  id: number;
+  tag: string;
+  tagBg: string;
+  title: string;
+  problem: string;
+  solution: string;
+  arrivalText: string;
+  totalTime: string;
+  totalPrice: string;
+  node1: {
+    type: string;
+    title: string;
+    subtitle: string;
+    badge: string;
+  };
+  leg1: {
+    mode: string;
+    type: 'rail' | 'bus';
+    name: string;
+    route: string;
+    status: string;
+    statusColor: string;
+  };
+  transfer: {
+    title: string;
+    location: string;
+    duration: string;
+    details: string;
+    type: 'cab' | 'platform' | 'walk';
+  };
+  leg2: {
+    mode: string;
+    type: 'rail' | 'bus';
+    name: string;
+    route: string;
+    status: string;
+    statusColor: string;
+  };
+  node2: {
+    type: string;
+    title: string;
+    subtitle: string;
+    badge: string;
+  };
 }
 
-const AnimatedCounter = ({ target, suffix = '', decimals = 0, trigger = false }: { target: number; suffix?: string; decimals?: number; trigger: boolean }) => {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    if (!trigger) return;
-    let startTimestamp: number | null = null;
-    const duration = 2000; // 2 seconds
-
-    const step = (timestamp: number) => {
-      if (!startTimestamp) startTimestamp = timestamp;
-      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-      setCount(progress * target);
-      if (progress < 1) {
-        window.requestAnimationFrame(step);
-      }
-    };
-
-    window.requestAnimationFrame(step);
-  }, [target, trigger]);
-
+// Clean SVG Icons for zero-emoji compliance
+function TrainIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
-    <span>
-      {decimals > 0 ? count.toFixed(decimals) : Math.floor(count).toLocaleString()}
-      {suffix}
-    </span>
+    <svg viewBox="0 0 24 24" className={`${className} fill-current`} xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2c-4.42 0-8 .5-8 4v10.5c0 2.15 1.75 3.5 3.5 3.5L6 22v1h12v-1l-1.5-2c1.75 0 3.5-1.35 3.5-3.5V6c0-3.5-3.58-4-8-4zm0 3c2.76 0 5 .22 5 .5S14.76 6 12 6s-5-.22-5-.5.22-.5 5-.5zm5 9c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5.67-1.5 1.5-1.5 1.5.67 1.5 1.5zm-8 0c0 .83-.67 1.5-1.5 1.5S6 14.83 6 14s.67-1.5 1.5-1.5 1.5.67 1.5 1.5zm8-4H7V8h10v2z" />
+    </svg>
   );
-};
+}
+
+function BusIcon({ className = 'w-5 h-5' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={`${className} fill-current`} xmlns="http://www.w3.org/2000/svg">
+      <path d="M4 16c0 .88.39 1.67 1 2.22V20a1 1 0 001 1h1a1 1 0 001-1v-1h8v1a1 1 0 001 1h1a1 1 0 001-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm2-9h12v4H6V7zm1.5 8c-.83 0-1.5-.67-1.5-1.5S6.67 12 7.5 12s1.5.67 1.5 1.5S8.33 15 7.5 15zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
+    </svg>
+  );
+}
+
+function CabIcon({ className = 'w-5 h-5' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={`${className} fill-current`} xmlns="http://www.w3.org/2000/svg">
+      <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.04 3H5.81l1.04-3zM19 17H5v-4.66l.12-.34h13.77l.11.34V17z" />
+      <circle cx="7.5" cy="14.5" r="1.5" />
+      <circle cx="16.5" cy="14.5" r="1.5" />
+    </svg>
+  );
+}
+
+function PinIcon({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={`${className} fill-current`} xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" />
+    </svg>
+  );
+}
+
+function FlagIcon({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={`${className} fill-current`} xmlns="http://www.w3.org/2000/svg">
+      <path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z" />
+    </svg>
+  );
+}
+
+function ClockIcon({ className = 'w-3.5 h-3.5' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={`${className} fill-current`} xmlns="http://www.w3.org/2000/svg">
+      <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+    </svg>
+  );
+}
+
+function ChatIcon({ className = 'w-5 h-5' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={`${className} fill-current`} xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z" />
+    </svg>
+  );
+}
 
 export default function DashboardPage() {
-  // State variables for inputs and active tab
-  const [activeTab, setActiveTab] = useState<TabType>('buses');
-  const [fromLocation, setFromLocation] = useState<string>('Vijayawada');
-  const [toLocation, setToLocation] = useState<string>('Bhubaneswar');
   const router = useRouter();
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!fromLocation.trim() || !toLocation.trim()) {
-      alert("Please enter both source and destination cities.");
-      return;
-    }
-    router.push(`/planner?from=${encodeURIComponent(fromLocation)}&to=${encodeURIComponent(toLocation)}&date=${departureDate}`);
-  };
-
-
-  
-  // Set default departure date to tomorrow (YYYY-MM-DD format)
+  // Search input states
+  const [fromLocation, setFromLocation] = useState<string>('Vijayawada');
+  const [toLocation, setToLocation] = useState<string>('Sambalpur');
   const [departureDate, setDepartureDate] = useState<string>('');
 
-  // Grid expansion states for popular routes
-  const [showAllBuses, setShowAllBuses] = useState(false);
-  const [showAllTrains, setShowAllTrains] = useState(false);
-  const [showAllFlights, setShowAllFlights] = useState(false);
+  // Mode Preference & Senior Citizen switches
+  const [modePreference, setModePreference] = useState<'ALL' | 'RAIL_ONLY' | 'BUS_ONLY'>('ALL');
+  const [seniorCitizenMode, setSeniorCitizenMode] = useState<boolean>(false);
 
-  // Stats ref and viewport trigger hook
-  const statsRef = React.useRef<HTMLDivElement>(null);
-  const statsTrigger = useIntersectionObserver(statsRef);
+  // Mobile menu & navbar scroll visibility
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isNavbarVisible, setIsNavbarVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
+  // Multimodal Scenarios
+  const [activeScenario, setActiveScenario] = useState<number>(0);
+  const [isPlayingTour, setIsPlayingTour] = useState<boolean>(true);
+
+  // FAQ accordion state
+  const [openFaq, setOpenFaq] = useState<string | null>('faq-1');
+
+  // Quick Help Assistant query state
+  const [helpQuery, setHelpQuery] = useState('');
+  const [helpResponse, setHelpResponse] = useState<string | null>(null);
+
+  // Set default departure date to tomorrow
   useEffect(() => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -101,480 +158,192 @@ export default function DashboardPage() {
     setDepartureDate(`${year}-${month}-${day}`);
   }, []);
 
-
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isNavbarVisible, setIsNavbarVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-
+  // Navbar hide/show on scroll
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      
-      // Scrolling down and past threshold (e.g. 100px) -> hide navbar
       if (currentScrollY > lastScrollY && currentScrollY > 100) {
         setIsNavbarVisible(false);
-        setIsMobileMenuOpen(false); // Close mobile menu if open
+        setIsMobileMenuOpen(false);
       } else if (currentScrollY < lastScrollY) {
-        // Scrolling up -> show navbar
         setIsNavbarVisible(true);
       }
       setLastScrollY(currentScrollY);
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
 
-  // Preset background images matching each travel tab
-  const bgImages: Record<TabType, string> = {
-    buses: '/bus_highway.jpg',
-    flights: '/flight_view.jpg',
-    trains: '/train_journey.jpg',
-    hotels: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1200&auto=format&fit=crop',
-  };
-
-  // Prefilled recent searches list
-  const recentSearches: RecentSearch[] = [
+  // Multimodal transit combinations demonstrating how OptiTransit gets you there
+  const scenarios: Scenario[] = [
     {
-      id: 'recent-1',
-      from: 'Vijayawada',
-      to: 'Bhubaneswar',
-      date: '03 Aug 2026',
-      type: 'buses',
+      id: 0,
+      tag: 'TRAIN + BUS BREAK-JOURNEY',
+      tagBg: 'bg-emerald-600',
+      title: 'Direct Train Sold Out? Switch to Express Bus at Hub',
+      problem: 'Direct train is completely waitlisted (WL 48 / REGRET) or not running today.',
+      solution: 'OptiTransit books a Superfast Train halfway to a transit division, includes a cab transfer, and connects you to an overnight sleeper bus.',
+      arrivalText: 'Arrives Tomorrow Morning 06:15 AM',
+      totalTime: '11h 45m',
+      totalPrice: 'INR 1,040',
+      node1: {
+        type: 'ORIGIN',
+        title: 'Vijayawada (BZA)',
+        subtitle: 'Railway Station Platform 1',
+        badge: 'Boarding: 07:45 PM',
+      },
+      leg1: {
+        mode: 'SUPERFAST EXPRESS RAIL',
+        type: 'rail',
+        name: 'Godavari / Coromandel Express',
+        route: 'Vijayawada to Visakhapatnam Jn',
+        status: 'Confirmed Seat Available',
+        statusColor: 'text-emerald-400 bg-emerald-950/80 border-emerald-800',
+      },
+      transfer: {
+        title: 'SMART TRANSFER HUB',
+        location: 'Visakhapatnam (VSKP)',
+        duration: '1h 30m Protected Layover',
+        details: 'Local taxi from Railway Station to APSRTC Bus Complex (12 mins)',
+        type: 'cab',
+      },
+      leg2: {
+        mode: 'MULTI-AXLE AC SLEEPER BUS',
+        type: 'bus',
+        name: 'OSRTC / Private Express Sleeper',
+        route: 'VSKP Bus Complex to Sambalpur',
+        status: 'Guaranteed Lower Berth',
+        statusColor: 'text-[#d2e823] bg-yellow-950/80 border-yellow-800',
+      },
+      node2: {
+        type: 'DESTINATION',
+        title: 'Sambalpur',
+        subtitle: 'Government Bus Stand',
+        badge: 'Arrival: 06:15 AM (Next Day)',
+      },
     },
     {
-      id: 'recent-2',
-      from: 'Mumbai (BOM)',
-      to: 'Delhi (DEL)',
-      date: '04 Aug 2026',
-      type: 'flights',
+      id: 1,
+      tag: '2-TRAIN JUNCTION TRANSFER',
+      tagBg: 'bg-blue-600',
+      title: 'No Direct Train? Use 2 Trains with Platform Interchange',
+      problem: 'No direct train operates between your source and destination on this date.',
+      solution: 'OptiTransit stitches together two fast trains via a major interchange junction with a calibrated 75-minute platform layover.',
+      arrivalText: 'Arrives Same Night 10:30 PM',
+      totalTime: '8h 50m',
+      totalPrice: 'INR 790',
+      node1: {
+        type: 'ORIGIN',
+        title: 'Guntur (GNT)',
+        subtitle: 'Platform 2',
+        badge: 'Departure: 08:15 AM',
+      },
+      leg1: {
+        mode: 'INTERCITY EXPRESS (TRAIN 1)',
+        type: 'rail',
+        name: 'GNT-BZA Intercity (12747)',
+        route: 'Guntur to Vijayawada Jn',
+        status: 'Confirmed 2S / CC Seat',
+        statusColor: 'text-blue-400 bg-blue-950/80 border-blue-800',
+      },
+      transfer: {
+        title: 'RAIL INTERCHANGE JUNCTION',
+        location: 'Vijayawada Jn (BZA)',
+        duration: '1h 15m Platform Switch',
+        details: 'Switch Platform 1 to Platform 6 (Safe connection buffer)',
+        type: 'platform',
+      },
+      leg2: {
+        mode: 'SUPERFAST EXPRESS (TRAIN 2)',
+        type: 'rail',
+        name: 'Prashanti Express (18464)',
+        route: 'Vijayawada to Bhubaneswar',
+        status: 'Confirmed 3A Berth',
+        statusColor: 'text-emerald-400 bg-emerald-950/80 border-emerald-800',
+      },
+      node2: {
+        type: 'DESTINATION',
+        title: 'Bhubaneswar (BBS)',
+        subtitle: 'Platform 3',
+        badge: 'Arrival: 10:30 PM',
+      },
     },
     {
-      id: 'recent-3',
-      from: 'Tokyo (NRT)',
-      to: 'Kyoto (KYO)',
-      date: '08 Aug 2026',
-      type: 'trains',
-    }
+      id: 2,
+      tag: 'BUS + TRAIN FEEDER LINK',
+      tagBg: 'bg-purple-600',
+      title: 'No Rail Station Nearby? Regional Bus Takes You to Express Rail',
+      problem: 'Your town has no direct railway line, requiring manual split bookings.',
+      solution: 'OptiTransit calculates a synchronized regional feeder bus to the nearest rail division, connecting seamlessly with the Superfast Express.',
+      arrivalText: 'Arrives Next Day 07:10 AM',
+      totalTime: '10h 20m',
+      totalPrice: 'INR 860',
+      node1: {
+        type: 'ORIGIN',
+        title: 'Eluru Town Bus Stand',
+        subtitle: 'Regional Bus Bay 4',
+        badge: 'Boarding: 06:30 PM',
+      },
+      leg1: {
+        mode: 'APSRTC EXPRESS BUS',
+        type: 'bus',
+        name: 'APSRTC Super Luxury',
+        route: 'Eluru to Rajahmundry (RJY)',
+        status: 'Seat 14 Window Confirmed',
+        statusColor: 'text-purple-400 bg-purple-950/80 border-purple-800',
+      },
+      transfer: {
+        title: 'STATION FEEDER LINK',
+        location: 'Rajahmundry (RJY)',
+        duration: '50m Connecting Window',
+        details: 'Short walk from Old Bus Stand directly to Railway Platform 1',
+        type: 'walk',
+      },
+      leg2: {
+        mode: 'OVERNIGHT SUPERFAST TRAIN',
+        type: 'rail',
+        name: 'Visakha Express (17016)',
+        route: 'Rajahmundry to Visakhapatnam',
+        status: 'Confirmed Sleeper / 3A',
+        statusColor: 'text-emerald-400 bg-emerald-950/80 border-emerald-800',
+      },
+      node2: {
+        type: 'DESTINATION',
+        title: 'Visakhapatnam (VSKP)',
+        subtitle: 'Central Station',
+        badge: 'Arrival: 07:10 AM',
+      },
+    },
   ];
 
-  // Swapping source & destination
+  // Auto-cycle through multimodal scenarios
+  useEffect(() => {
+    if (!isPlayingTour) return;
+    const interval = setInterval(() => {
+      setActiveScenario((prev) => (prev + 1) % scenarios.length);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [isPlayingTour, scenarios.length]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fromLocation.trim() || !toLocation.trim()) {
+      alert('Please enter both source and destination cities.');
+      return;
+    }
+    const requireBusParam = modePreference === 'BUS_ONLY' ? 'true' : 'false';
+    router.push(
+      `/planner?from=${encodeURIComponent(fromLocation)}&to=${encodeURIComponent(toLocation)}&date=${departureDate}&require_bus=${requireBusParam}&senior_citizen_mode=${seniorCitizenMode}`
+    );
+  };
+
   const swapLocations = () => {
     const temp = fromLocation;
     setFromLocation(toLocation);
     setToLocation(temp);
   };
 
-  // Carousel ref and scroll handler
-  const carouselRef = React.useRef<HTMLDivElement>(null);
-  
-  const scrollCarousel = (direction: 'left' | 'right') => {
-    if (carouselRef.current) {
-      const scrollAmount = 340; // width of card + gap
-      carouselRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  interface TravelOperator {
-    id: string;
-    name: string;
-    image: string;
-    rating: string;
-    amenities: string[];
-  }
-
-  const travelOperators: TravelOperator[] = [
-    {
-      id: 'op-1',
-      name: 'IntrCity SmartBus',
-      image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=600&auto=format&fit=crop',
-      rating: '4.8',
-      amenities: ['AC', 'Wifi', 'Sleeper'],
-    },
-    {
-      id: 'op-2',
-      name: 'NueGo',
-      image: 'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?q=80&w=600&auto=format&fit=crop',
-      rating: '4.7',
-      amenities: ['Electric', 'USB', 'AC'],
-    },
-    {
-      id: 'op-3',
-      name: 'Zingbus',
-      image: 'https://images.unsplash.com/photo-1626847037657-fd3622613ce3?q=80&w=600&auto=format&fit=crop',
-      rating: '4.9',
-      amenities: ['Snacks', 'Wifi', 'AC'],
-    },
-    {
-      id: 'op-4',
-      name: 'Laxmi Holidays',
-      image: 'https://images.unsplash.com/photo-1562620644-85650123f86e?q=80&w=600&auto=format&fit=crop',
-      rating: '4.6',
-      amenities: ['CCTV', 'AC', 'Sleeper'],
-    },
-    {
-      id: 'op-5',
-      name: 'VRL Travels',
-      image: 'https://images.unsplash.com/photo-1557223562-6c77ef16210f?q=80&w=600&auto=format&fit=crop',
-      rating: '4.8',
-      amenities: ['Pillows', 'Water', 'AC'],
-    },
-    {
-      id: 'op-6',
-      name: 'SRS Travels',
-      image: 'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?q=80&w=600&auto=format&fit=crop',
-      rating: '4.5',
-      amenities: ['Blankets', 'AC', 'Sleeper'],
-    }
-  ];
-
-  interface TravelRoute {
-    id: string;
-    name: string;
-    image: string;
-    count: string;
-  }
-
-  const busRoutes: TravelRoute[] = [
-    {
-      id: 'br-1',
-      name: 'Hyderabad to Bangalore',
-      image: 'https://images.unsplash.com/photo-1595855759920-86582396756a?q=80&w=500&auto=format&fit=crop',
-      count: '277 Buses',
-    },
-    {
-      id: 'br-2',
-      name: 'Bangalore to Chennai',
-      image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?q=80&w=500&auto=format&fit=crop',
-      count: '207 Buses',
-    },
-    {
-      id: 'br-3',
-      name: 'Hyderabad to Chennai',
-      image: 'https://images.unsplash.com/photo-1540959733332-eab4deceeaf7?q=80&w=500&auto=format&fit=crop',
-      count: '41 Buses',
-    },
-    {
-      id: 'br-4',
-      name: 'Hyderabad to Vijayawada',
-      image: 'https://images.unsplash.com/photo-1616422285623-13ff0162193c?q=80&w=500&auto=format&fit=crop',
-      count: '489 Buses',
-    },
-    {
-      id: 'br-5',
-      name: 'Hyderabad to Mumbai',
-      image: 'https://images.unsplash.com/photo-1566552881560-0be862a7c445?q=80&w=500&auto=format&fit=crop',
-      count: '69 Buses',
-    },
-    {
-      id: 'br-6',
-      name: 'Bangalore to Hyderabad',
-      image: 'https://images.unsplash.com/photo-1572445271230-a78b5944a659?q=80&w=500&auto=format&fit=crop',
-      count: '280 Buses',
-    },
-    {
-      id: 'br-7',
-      name: 'Bangalore to Mumbai',
-      image: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?q=80&w=500&auto=format&fit=crop',
-      count: '63 Buses',
-    },
-    {
-      id: 'br-8',
-      name: 'Bangalore to Goa',
-      image: 'https://images.unsplash.com/photo-1512100356356-de1b84283e18?q=80&w=500&auto=format&fit=crop',
-      count: '29 Buses',
-    },
-    {
-      id: 'br-9',
-      name: 'Bangalore to Pune',
-      image: 'https://images.unsplash.com/photo-1601999109332-542b18dbec57?q=80&w=500&auto=format&fit=crop',
-      count: '82 Buses',
-    },
-    {
-      id: 'br-10',
-      name: 'Chennai to Bangalore',
-      image: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?q=80&w=500&auto=format&fit=crop',
-      count: '203 Buses',
-    },
-    {
-      id: 'br-11',
-      name: 'Chandigarh to Delhi',
-      image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?q=80&w=500&auto=format&fit=crop',
-      count: '220 Buses',
-    },
-    {
-      id: 'br-12',
-      name: 'Chandigarh to Manali',
-      image: 'https://images.unsplash.com/photo-1598091857921-62d770c1e878?q=80&w=500&auto=format&fit=crop',
-      count: '97 Buses',
-    },
-    {
-      id: 'br-13',
-      name: 'Indore to Bhopal',
-      image: 'https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?q=80&w=500&auto=format&fit=crop',
-      count: '191 Buses',
-    },
-    {
-      id: 'br-14',
-      name: 'Lucknow to Delhi',
-      image: 'https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=500&auto=format&fit=crop',
-      count: '447 Buses',
-    },
-    {
-      id: 'br-15',
-      name: 'Nagpur to Pune',
-      image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=500&auto=format&fit=crop',
-      count: '75 Buses',
-    },
-    {
-      id: 'br-16',
-      name: 'Delhi to Nainital',
-      image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=500&auto=format&fit=crop',
-      count: '75 Buses',
-    },
-    {
-      id: 'br-17',
-      name: 'Hyderabad to Goa',
-      image: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=500&auto=format&fit=crop',
-      count: '18 Buses',
-    },
-    {
-      id: 'br-18',
-      name: 'Bangalore to Pondicherry',
-      image: 'https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=500&auto=format&fit=crop',
-      count: '46 Buses',
-    },
-    {
-      id: 'br-19',
-      name: 'Chennai to Pondicherry',
-      image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=500&auto=format&fit=crop',
-      count: '104 Buses',
-    },
-    {
-      id: 'br-20',
-      name: 'Coimbatore to Bangalore',
-      image: 'https://images.unsplash.com/photo-1449034446853-66c86144b0ad?q=80&w=500&auto=format&fit=crop',
-      count: '227 Buses',
-    }
-  ];
-
-  const trainRoutes: TravelRoute[] = [
-    {
-      id: 'tr-1',
-      name: 'Mumbai to Goa',
-      image: 'https://images.unsplash.com/photo-1512100356356-de1b84283e18?q=80&w=500&auto=format&fit=crop',
-      count: '8 Trains',
-    },
-    {
-      id: 'tr-2',
-      name: 'Delhi to Mumbai',
-      image: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?q=80&w=500&auto=format&fit=crop',
-      count: '12 Trains',
-    },
-    {
-      id: 'tr-3',
-      name: 'Bangalore to Mysore',
-      image: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?q=80&w=500&auto=format&fit=crop',
-      count: '18 Trains',
-    },
-    {
-      id: 'tr-4',
-      name: 'Kalka to Shimla',
-      image: 'https://images.unsplash.com/photo-1598091857921-62d770c1e878?q=80&w=500&auto=format&fit=crop',
-      count: '5 Trains',
-    },
-    {
-      id: 'tr-5',
-      name: 'Mumbai to Pune',
-      image: 'https://images.unsplash.com/photo-1601999109332-542b18dbec57?q=80&w=500&auto=format&fit=crop',
-      count: '14 Trains',
-    },
-    {
-      id: 'tr-6',
-      name: 'Tokyo to Kyoto',
-      image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=500&auto=format&fit=crop',
-      count: '45 Trains',
-    },
-    {
-      id: 'tr-7',
-      name: 'London to Edinburgh',
-      image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=500&auto=format&fit=crop',
-      count: '22 Trains',
-    },
-    {
-      id: 'tr-8',
-      name: 'Paris to Amsterdam',
-      image: 'https://images.unsplash.com/photo-1471623320832-752e8bbf8413?q=80&w=500&auto=format&fit=crop',
-      count: '16 Trains',
-    },
-    {
-      id: 'tr-9',
-      name: 'SFO to Los Angeles',
-      image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=500&auto=format&fit=crop',
-      count: '4 Trains',
-    },
-    {
-      id: 'tr-10',
-      name: 'New York to Boston',
-      image: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=500&auto=format&fit=crop',
-      count: '28 Trains',
-    },
-    {
-      id: 'tr-11',
-      name: 'Rome to Florence',
-      image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=500&auto=format&fit=crop',
-      count: '32 Trains',
-    },
-    {
-      id: 'tr-12',
-      name: 'Venice to Milan',
-      image: 'https://images.unsplash.com/photo-1534113414509-0eec2bfb493f?q=80&w=500&auto=format&fit=crop',
-      count: '24 Trains',
-    },
-    {
-      id: 'tr-13',
-      name: 'Berlin to Munich',
-      image: 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?q=80&w=500&auto=format&fit=crop',
-      count: '19 Trains',
-    },
-    {
-      id: 'tr-14',
-      name: 'Zurich to Zermatt',
-      image: 'https://images.unsplash.com/photo-1502784444187-359ac186c5bb?q=80&w=500&auto=format&fit=crop',
-      count: '6 Trains',
-    },
-    {
-      id: 'tr-15',
-      name: 'Madrid to Barcelona',
-      image: 'https://images.unsplash.com/photo-1543783207-ec64e4d95325?q=80&w=500&auto=format&fit=crop',
-      count: '30 Trains',
-    },
-    {
-      id: 'tr-16',
-      name: 'Sydney to Melbourne',
-      image: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=500&auto=format&fit=crop',
-      count: '3 Trains',
-    },
-    {
-      id: 'tr-17',
-      name: 'Beijing to Shanghai',
-      image: 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?q=80&w=500&auto=format&fit=crop',
-      count: '40 Trains',
-    }
-  ];
-
-  const flightRoutes: TravelRoute[] = [
-    {
-      id: 'fr-1',
-      name: 'Mumbai to Delhi',
-      image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?q=80&w=500&auto=format&fit=crop',
-      count: '85 Flights',
-    },
-    {
-      id: 'fr-2',
-      name: 'SFO to JFK',
-      image: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=500&auto=format&fit=crop',
-      count: '42 Flights',
-    },
-    {
-      id: 'fr-3',
-      name: 'London to Paris',
-      image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=500&auto=format&fit=crop',
-      count: '55 Flights',
-    },
-    {
-      id: 'fr-4',
-      name: 'Tokyo to Osaka',
-      image: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?q=80&w=500&auto=format&fit=crop',
-      count: '64 Flights',
-    },
-    {
-      id: 'fr-5',
-      name: 'Sydney to Melbourne',
-      image: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=500&auto=format&fit=crop',
-      count: '92 Flights',
-    },
-    {
-      id: 'fr-6',
-      name: 'Los Angeles to Las Vegas',
-      image: 'https://images.unsplash.com/photo-1522083165195-342750297f46?q=80&w=500&auto=format&fit=crop',
-      count: '38 Flights',
-    },
-    {
-      id: 'fr-7',
-      name: 'New York to London',
-      image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=500&auto=format&fit=crop',
-      count: '48 Flights',
-    },
-    {
-      id: 'fr-8',
-      name: 'Singapore to Jakarta',
-      image: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?q=80&w=500&auto=format&fit=crop',
-      count: '50 Flights',
-    },
-    {
-      id: 'fr-9',
-      name: 'Dubai to London',
-      image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=500&auto=format&fit=crop',
-      count: '34 Flights',
-    },
-    {
-      id: 'fr-10',
-      name: 'Hong Kong to Taipei',
-      image: 'https://images.unsplash.com/photo-1540959733332-eab4deceeaf7?q=80&w=500&auto=format&fit=crop',
-      count: '72 Flights',
-    },
-    {
-      id: 'fr-11',
-      name: 'Seoul to Jeju',
-      image: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=500&auto=format&fit=crop',
-      count: '120 Flights',
-    },
-    {
-      id: 'fr-12',
-      name: 'Chicago to New York',
-      image: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=500&auto=format&fit=crop',
-      count: '45 Flights',
-    },
-    {
-      id: 'fr-13',
-      name: 'Atlanta to Orlando',
-      image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=500&auto=format&fit=crop',
-      count: '32 Flights',
-    },
-    {
-      id: 'fr-14',
-      name: 'Boston to Washington',
-      image: 'https://images.unsplash.com/photo-1555529669-e69e7aa0dba9?q=80&w=500&auto=format&fit=crop',
-      count: '28 Flights',
-    },
-    {
-      id: 'fr-15',
-      name: 'Paris to Nice',
-      image: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=500&auto=format&fit=crop',
-      count: '26 Flights',
-    },
-    {
-      id: 'fr-16',
-      name: 'SFO to Seattle',
-      image: 'https://images.unsplash.com/photo-1502175353174-a7a70e73b362?q=80&w=500&auto=format&fit=crop',
-      count: '24 Flights',
-    }
-  ];
-
-  // Helper to format date display (DD-MM-YYYY)
-  const formatDateDisplay = (dateStr: string) => {
-    if (!dateStr) return '';
-    const parts = dateStr.split('-');
-    if (parts.length !== 3) return dateStr;
-    const [year, month, day] = parts;
-    return `${day}-${month}-${year}`;
-  };
-
-  // Helper date pills selectors
   const setTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -592,55 +361,121 @@ export default function DashboardPage() {
     setDepartureDate(`${year}-${month}-${day}`);
   };
 
-  // Large Vector icons for each tab category
-  const renderTabIcon = (type: TabType, isActive: boolean) => {
-    const fillClass = isActive ? 'text-[#254f1a]' : 'text-[#254f1a] group-hover:text-[#254f1a]';
-    
-    switch (type) {
-      case 'buses':
-        return (
-          <svg viewBox="0 0 24 24" className={`w-9 h-9 ${fillClass} transition-colors fill-current`} xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 16c0 .88.39 1.67 1 2.22V20a1 1 0 001 1h1a1 1 0 001-1v-1h8v1a1 1 0 001 1h1a1 1 0 001-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm2-9h12v4H6V7zm1.5 8c-.83 0-1.5-.67-1.5-1.5S6.67 12 7.5 12s1.5.67 1.5 1.5S8.33 15 7.5 15zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
-          </svg>
-        );
-      case 'flights':
-        return (
-          <svg viewBox="0 0 24 24" className={`w-9 h-9 ${fillClass} transition-colors fill-current rotate-45`} xmlns="http://www.w3.org/2000/svg">
-            <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L14 19v-5.5l7 2.5z" />
-          </svg>
-        );
-      case 'trains':
-        return (
-          <svg viewBox="0 0 24 24" className={`w-9 h-9 ${fillClass} transition-colors fill-current`} xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2c-4.42 0-8 .5-8 4v10.5c0 2.15 1.75 3.5 3.5 3.5L6 22v1h12v-1l-1.5-2c1.75 0 3.5-1.35 3.5-3.5V6c0-3.5-3.58-4-8-4zm0 3c2.76 0 5 .22 5 .5S14.76 6 12 6s-5-.22-5-.5.22-.5 5-.5zm5 9c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5.67-1.5 1.5-1.5 1.5.67 1.5 1.5zm-8 0c0 .83-.67 1.5-1.5 1.5S6 14.83 6 14s.67-1.5 1.5-1.5 1.5.67 1.5 1.5zm8-4H7V8h10v2z" />
-          </svg>
-        );
-      case 'hotels':
-        return (
-          <svg viewBox="0 0 24 24" className={`w-9 h-9 ${fillClass} transition-colors fill-current`} xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 15v-3c0-2.21-1.79-4-4-4h-6c-2.21 0-4 1.79-4 4v3c-1.1 0-2 .9-2 2v3h1.5v-2h17v2H21v-3c0-1.1-.9-2-2-2zm-9-4c0-.83.67-1.5 1.5-1.5S13 10.17 13 11s-.67 1.5-1.5 1.5S10 11.83 10 11zm-5 1c0-1.1.9-2 2-2h3v4H7c-1.1 0-2-.9-2-2zm12 2h-3v-4h3c1.1 0 2 .9 2 2c0 1.1-.9 2-2 2z" />
-          </svg>
-        );
+  // Quick Preset Routes for 1-Click Exploration
+  const quickRoutes = [
+    { from: 'Vijayawada', to: 'Sambalpur', label: 'Vijayawada to Sambalpur (Rail + Bus)', mode: 'ALL' as const },
+    { from: 'Hyderabad', to: 'Visakhapatnam', label: 'Hyderabad to Visakhapatnam (Express Rail)', mode: 'RAIL_ONLY' as const },
+    { from: 'Guntur', to: 'Bhubaneswar', label: 'Guntur to Bhubaneswar (2-Train Transfer)', mode: 'RAIL_ONLY' as const },
+    { from: 'Bangalore', to: 'Goa', label: 'Bangalore to Goa (Express Bus)', mode: 'BUS_ONLY' as const },
+  ];
+
+  const applyQuickRoute = (r: typeof quickRoutes[0]) => {
+    setFromLocation(r.from);
+    setToLocation(r.to);
+    setModePreference(r.mode);
+  };
+
+  // Recent multimodal searches
+  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([
+    {
+      id: 'recent-1',
+      from: 'Vijayawada',
+      to: 'Sambalpur',
+      date: 'Tomorrow',
+      modeLabel: 'Rail + Bus Combo',
+    },
+    {
+      id: 'recent-2',
+      from: 'Guntur',
+      to: 'Bhubaneswar',
+      date: 'This Weekend',
+      modeLabel: '2-Train Transfer',
+    },
+    {
+      id: 'recent-3',
+      from: 'Eluru',
+      to: 'Visakhapatnam',
+      date: 'Friday',
+      modeLabel: 'Bus + Rail Feeder',
+    },
+  ]);
+
+  const applyRecentSearch = (search: RecentSearch) => {
+    setFromLocation(search.from);
+    setToLocation(search.to);
+    router.push(
+      `/planner?from=${encodeURIComponent(search.from)}&to=${encodeURIComponent(search.to)}&date=${departureDate}`
+    );
+  };
+
+  // FAQs focusing on multimodal transit and transfers
+  const faqs = [
+    {
+      id: 'faq-1',
+      question: 'What is the main purpose of OptiTransit?',
+      answer:
+        'OptiTransit is built to get you to your destination when direct trains are fully booked or do not exist. Instead of reporting "No tickets available", our engine stitches together split journeys: Train + Bus combos, 2-Train transfers across railway junctions, or regional buses connecting to high-speed trains to ensure you always have a viable path.',
+    },
+    {
+      id: 'faq-2',
+      question: 'What happens during a layover between a train and a bus?',
+      answer:
+        'OptiTransit calculates a mandatory safe buffer (typically 60 to 90 minutes) between connecting services. This accounts for local transit time (via auto or cab) between railway stations and bus terminals so you never miss a connection.',
+    },
+    {
+      id: 'faq-3',
+      question: 'Can I choose a 2-Train transfer instead of taking a bus?',
+      answer:
+        'Yes. On the Planner results page, you can use the Mode Filter chips (e.g. "Direct Only", "All Modes", or "Trains Only") to view 2-train routes that switch at major interchange junctions (such as Vijayawada, Secunderabad, or Visakhapatnam).',
+    },
+    {
+      id: 'faq-4',
+      question: 'How does Smart Quota Unlocking help during the journey?',
+      answer:
+        'When your train leg has a waitlist (RLWL), OptiTransit also evaluates upstream stations to unlock available General Quota (GNWL) seats. You still board at your selected station, but your seat is legally confirmed for a few extra rupees.',
+    },
+  ];
+
+  const handleHelpSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!helpQuery.trim()) return;
+
+    const q = helpQuery.toLowerCase();
+    if (q.includes('bus') && q.includes('train')) {
+      setHelpResponse(
+        'Train + Bus is our flagship combination. If direct trains are full, we book you on a train to a major junction, allow 1h 30m for a local cab to the bus terminal, and connect you to an express sleeper bus.'
+      );
+    } else if (q.includes('transfer') || q.includes('layover') || q.includes('miss') || q.includes('delay')) {
+      setHelpResponse(
+        'Every transfer has calibrated safe buffers (60–90 mins) covering station-to-bus terminal cab rides so delays do not cause missed connections.'
+      );
+    } else if (q.includes('2 train') || q.includes('two train')) {
+      setHelpResponse(
+        'Yes. We compute 2-Train transfers switching platforms at major hubs (e.g. BZA, VSKP, SC) so you reach your destination even without a direct train.'
+      );
+    } else {
+      setHelpResponse(
+        `For "${helpQuery}": OptiTransit computes multi-modal combinations (Train + Bus, 2-Train transfers) in <30 ms. Click "Search" above to view all Pareto route options.`
+      );
     }
   };
 
+  const curr = scenarios[activeScenario];
+
   return (
     <div className="w-full min-h-screen bg-[#f1fffa] font-sans antialiased text-zinc-900 pb-20 select-none">
-      
       {/* 1. CUSTOM DASHBOARD NAVIGATION HEADER */}
       <header
         className="fixed top-6 left-1/2 w-[calc(100%-2rem)] max-w-7xl mx-auto z-50 px-2 sm:px-4 md:px-8 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] select-none"
         style={{
-          transform: isNavbarVisible ? "translateX(-50%) translateY(0)" : "translateX(-50%) translateY(-140px)",
-          opacity: isNavbarVisible ? 1 : 0
+          transform: isNavbarVisible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(-140px)',
+          opacity: isNavbarVisible ? 1 : 0,
         }}
       >
-        <nav className="relative flex items-center justify-between rounded-full bg-white px-8 py-7 shadow-lg border border-zinc-100/30">
-          
+        <nav className="relative flex items-center justify-between rounded-full bg-white px-8 py-5 shadow-lg border border-zinc-100/30">
           {/* Left: Logo */}
           <div className="flex items-center gap-10">
-            <div className="flex items-center gap-2.5 group cursor-pointer">
-              {/* Custom SVG Transit Connection Logo Mark in brand red */}
+            <Link href="/dashboard" className="flex items-center gap-2.5 group cursor-pointer">
               <div className="flex items-center justify-center w-9 h-9 rounded-full bg-[#254f1a] text-white transition-transform group-hover:scale-105">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -661,35 +496,40 @@ export default function DashboardPage() {
               <span className="font-extrabold text-2xl tracking-tight text-zinc-800">
                 opti<span className="text-[#254f1a]">transit</span>
               </span>
-            </div>
+            </Link>
 
-            {/* Desktop Nav Links */}
-            <div className="hidden md:flex items-center gap-2">
-              <span className="text-zinc-900 bg-zinc-50 border border-zinc-200/40 px-4 py-2 rounded-xl text-base font-black transition-all cursor-pointer flex items-center gap-1.5">
+            {/* Desktop Nav Links: Dashboard, Need Help?, Classic */}
+            <div className="hidden md:flex items-center gap-3">
+              <Link
+                href="/dashboard"
+                className="text-zinc-900 bg-zinc-100/90 border border-zinc-200/50 px-4 py-2 rounded-xl text-sm font-black transition-all cursor-pointer flex items-center gap-1.5"
+              >
                 <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[#254f1a]" xmlns="http://www.w3.org/2000/svg">
                   <path d="M12.65 2.12a.98.98 0 00-1.3 0L3.7 9.07a1 1 0 00-.3.73v10.7a1.5 1.5 0 001.5 1.5h14.2a1.5 1.5 0 001.5-1.5v-10.7a1 1 0 00-.3-.73l-7.65-6.95z" />
                 </svg>
                 Dashboard
-              </span>
-              <span className="text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50 px-4 py-2 rounded-xl text-base font-bold transition-all cursor-pointer">
-                Offers
-              </span>
-              <span className="text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50 px-4 py-2 rounded-xl text-base font-bold transition-all cursor-pointer">
-                Track Ticket
-              </span>
-              <span className="text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50 px-4 py-2 rounded-xl text-base font-bold transition-all cursor-pointer">
-                Need Help?
-              </span>
+              </Link>
+              <a
+                href="#need-help"
+                className="text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50 px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <span>Need Help?</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              </a>
+              <Link
+                href="/"
+                className="text-[#254f1a] hover:bg-emerald-50 border border-emerald-200/60 px-4 py-2 rounded-xl text-sm font-extrabold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                title="Switch to the Classic Landing & Planner Interface"
+              >
+                <span>Classic</span>
+                <span className="text-xs">&rarr;</span>
+              </Link>
             </div>
           </div>
 
-          {/* Right: User profile / Account */}
+          {/* Right: User Profile */}
           <div className="hidden md:flex items-center gap-4">
-            <button className="hidden sm:inline-flex items-center gap-2 bg-zinc-100 hover:bg-zinc-200 transition-colors rounded-full px-4 py-2 text-xs font-black text-zinc-800 cursor-pointer">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              Agent Portal
-            </button>
-            <div className="flex items-center gap-2.5 bg-zinc-900 text-white rounded-full p-3 pl-5 border border-zinc-800 shadow-md cursor-pointer hover:bg-zinc-800 transition-colors">
+            <div className="flex items-center gap-2.5 bg-zinc-900 text-white rounded-full p-2.5 pl-4 border border-zinc-800 shadow-md">
               <span className="text-xs font-black select-none tracking-wide">Suryabrata</span>
               <div className="w-7 h-7 rounded-full bg-[#d9c8f0] text-zinc-900 flex items-center justify-center font-black text-xs">
                 S
@@ -702,7 +542,6 @@ export default function DashboardPage() {
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="md:hidden p-2 text-zinc-600 hover:text-zinc-950 focus:outline-none"
             aria-label="Toggle Menu"
-            id="mobile-menu-btn"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -723,43 +562,36 @@ export default function DashboardPage() {
           {/* Mobile Menu Dropdown */}
           {isMobileMenuOpen && (
             <div className="absolute top-[calc(100%+12px)] left-0 right-0 bg-white rounded-3xl p-6 shadow-xl border border-zinc-100 flex flex-col gap-4 z-50 md:hidden animate-in fade-in slide-in-from-top-4 duration-200">
-              <span
+              <Link
+                href="/dashboard"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="text-zinc-900 hover:text-zinc-950 font-extrabold py-2 border-b border-zinc-50 cursor-pointer flex items-center gap-2"
+                className="text-zinc-900 font-extrabold py-2 border-b border-zinc-50 cursor-pointer flex items-center gap-2"
               >
                 <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[#254f1a]" xmlns="http://www.w3.org/2000/svg">
                   <path d="M12.65 2.12a.98.98 0 00-1.3 0L3.7 9.07a1 1 0 00-.3.73v10.7a1.5 1.5 0 001.5 1.5h14.2a1.5 1.5 0 001.5-1.5v-10.7a1 1 0 00-.3-.73l-7.65-6.95z" />
                 </svg>
                 Dashboard
-              </span>
-              <span
+              </Link>
+              <a
+                href="#need-help"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="text-zinc-600 hover:text-zinc-950 font-semibold py-2 border-b border-zinc-50 cursor-pointer"
+                className="text-zinc-600 hover:text-zinc-950 font-bold py-2 border-b border-zinc-50 cursor-pointer flex items-center justify-between"
               >
-                Offers
-              </span>
-              <span
+                <span>Need Help?</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              </a>
+              <Link
+                href="/"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="text-zinc-600 hover:text-zinc-950 font-semibold py-2 border-b border-zinc-50 cursor-pointer"
+                className="text-[#254f1a] font-extrabold py-2 border-b border-zinc-50 cursor-pointer flex items-center justify-between"
               >
-                Track Ticket
-              </span>
-              <span
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="text-zinc-600 hover:text-zinc-950 font-semibold py-2 border-b border-zinc-50 cursor-pointer"
-              >
-                Need Help?
-              </span>
-              <div className="flex flex-col gap-3 pt-4 border-t border-zinc-100">
-                <button className="w-full flex items-center justify-center gap-2 bg-zinc-100 hover:bg-zinc-200 py-3 rounded-full text-xs font-black text-zinc-800">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Agent Portal
-                </button>
-                <div className="w-full flex items-center justify-between bg-zinc-900 text-white rounded-full px-5 py-2.5 border border-zinc-800 shadow-md">
-                  <span className="text-sm font-black">Suryabrata</span>
-                  <div className="w-8 h-8 rounded-full bg-[#d9c8f0] text-zinc-900 flex items-center justify-center font-black text-sm">
-                    S
-                  </div>
+                <span>Classic</span>
+                <span>&rarr;</span>
+              </Link>
+              <div className="flex items-center justify-between bg-zinc-900 text-white rounded-2xl px-4 py-3 mt-2">
+                <span className="text-sm font-black">Suryabrata</span>
+                <div className="w-7 h-7 rounded-full bg-[#d9c8f0] text-zinc-900 flex items-center justify-center font-black text-xs">
+                  S
                 </div>
               </div>
             </div>
@@ -767,90 +599,114 @@ export default function DashboardPage() {
         </nav>
       </header>
 
-      {/* 2. DYNAMIC HERO SCENIC BANNER */}
-      {/* Increased bottom margin across screen sizes to accommodate the floating card height */}
-      <div className="relative w-full h-[580px] bg-zinc-900 flex flex-col justify-center items-center px-4 select-none mb-[380px] sm:mb-[300px] lg:mb-48">
-        
-        {/* Scenic Background Images Wrapper with overflow-hidden */}
+      {/* 2. DYNAMIC HERO BANNER */}
+      <div className="relative w-full h-[540px] bg-zinc-900 flex flex-col justify-center items-center px-4 select-none mb-[360px] sm:mb-[300px] lg:mb-48">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Animated transition background images */}
-          {Object.entries(bgImages).map(([key, url]) => (
-            <div
-              key={key}
-              className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out`}
-              style={{
-                backgroundImage: `url('${url}')`,
-                opacity: activeTab === key ? 0.55 : 0,
-              }}
-            />
-          ))}
-
-          {/* Dark radial fade blend overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-zinc-900/10" />
-          <div 
-            className="absolute inset-0"
-            style={{
-              WebkitMaskImage: "radial-gradient(circle at center, black 40%, transparent 95%)",
-              maskImage: "radial-gradient(circle at center, black 40%, transparent 95%)",
-              backgroundColor: "rgba(9, 9, 11, 0.1)"
-            }}
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-45"
+            style={{ backgroundImage: "url('/bus_highway.jpg')" }}
           />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-zinc-900/95" />
         </div>
 
-        {/* Header content inside the Hero (Large bold typography) */}
-        <div className="relative z-10 text-center max-w-4xl px-4 flex flex-col items-center gap-3.5 mb-14">
-          <span className="text-[#d2e823] font-black uppercase tracking-[0.3em] text-xs sm:text-xs mt-5">
-            OptiTransit Engine
+        {/* Header Content */}
+        <div className="relative z-10 text-center max-w-4xl px-4 flex flex-col items-center gap-3 mb-10">
+          <span className="text-[#d2e823] font-black uppercase tracking-[0.3em] text-xs mt-3">
+            Multi-Modal Transit Optimizer
           </span>
-          <h1 className="text-white font-black tracking-tight text-2xl sm:text-lg md:text-3xl lg:text-5xl leading-[0.95] select-none">
-            An Urgent Plan? Make it Efficient
+          <h1 className="text-white font-black tracking-tight text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-[1.05] select-none">
+            Get to Your Destination Somehow.
           </h1>
-          {/* <p className="text-white/80 font-medium text-sm sm:text-base md:text-lg max-w-xl leading-relaxed mt-2">
-            Build your travel path, find instant bookings, and sync tickets on your link in bio.
-          </p> */}
+          <p className="text-white/80 font-medium text-sm sm:text-base max-w-xl leading-relaxed">
+            When direct trains are full or unavailable, OptiTransit combines Trains, Buses, and Transfers so you never get stranded.
+          </p>
         </div>
 
         {/* 3. FLOATING TICKET SEARCH CARD */}
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 z-20 w-full max-w-7xl px-6">
-          <div className="w-full bg-white/95 backdrop-blur-md rounded-[3rem] shadow-2xl p-6 sm:p-8 flex flex-col gap-6 border border-white/20 select-none">
+          <div className="w-full bg-white/95 backdrop-blur-md rounded-[2.5rem] shadow-2xl p-6 sm:p-8 flex flex-col gap-5 border border-white/40 select-none">
             
-            {/* Card Tab Bar */}
-            <div className="w-full flex flex-col md:flex-row md:items-center justify-between border-b border-zinc-200/60 pb-2 gap-4">
-              <div className='text-2xl font-bold'>
-                Find Your Routes Suited For You.
+            {/* Top Bar: Title & Preference Toggles */}
+            <div className="w-full flex flex-col md:flex-row md:items-center justify-between border-b border-zinc-100 pb-3 gap-3">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-zinc-900">
+                  Search Multi-Modal Routes (Train + Bus + Transfer)
+                </h2>
+                <p className="text-xs text-zinc-500 font-semibold mt-0.5">
+                  Pareto optimization across Indian Railways, state and private buses, and local connections
+                </p>
+              </div>
+
+              {/* Mode Selection Control */}
+              <div className="flex items-center gap-1.5 bg-zinc-100 p-1 rounded-xl self-start md:self-auto border border-zinc-200">
+                <button
+                  type="button"
+                  onClick={() => setModePreference('ALL')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                    modePreference === 'ALL'
+                      ? 'bg-[#254f1a] text-white shadow-xs'
+                      : 'text-zinc-600 hover:text-zinc-950'
+                  }`}
+                >
+                  All Combinations
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModePreference('RAIL_ONLY')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                    modePreference === 'RAIL_ONLY'
+                      ? 'bg-[#254f1a] text-white shadow-xs'
+                      : 'text-zinc-600 hover:text-zinc-950'
+                  }`}
+                >
+                  Rail Only
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModePreference('BUS_ONLY')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                    modePreference === 'BUS_ONLY'
+                      ? 'bg-[#254f1a] text-white shadow-xs'
+                      : 'text-zinc-600 hover:text-zinc-950'
+                  }`}
+                >
+                  Bus Only
+                </button>
               </div>
             </div>
 
             {/* Travel Form Fields Inputs */}
-            <form onSubmit={handleSearch} className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch relative">
-              
+            <form onSubmit={handleSearch} className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch relative">
               {/* FROM (Source) Input */}
-              <div className="lg:col-span-3 bg-zinc-100/80 rounded-2xl px-5 py-4 border border-zinc-200/50 hover:border-zinc-300/80 transition-colors flex items-center gap-4 relative">
+              <div className="lg:col-span-3 bg-zinc-100/90 rounded-2xl px-5 py-3.5 border border-zinc-200/60 hover:border-zinc-300 transition-colors flex items-center gap-3 relative">
                 <div className="text-[#254f1a] shrink-0">
-                  <svg viewBox="0 0 24 24" className="w-7 h-7 fill-current" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" />
-                  </svg>
+                  <PinIcon className="w-6 h-6" />
                 </div>
                 <CityAutocomplete
                   value={fromLocation}
                   onChange={setFromLocation}
                   label="From City"
-                  inputClassName="bg-transparent outline-none border-none text-zinc-900 font-black text-xl placeholder-zinc-400 w-full mt-0.5"
+                  inputClassName="bg-transparent outline-none border-none text-zinc-900 font-black text-lg placeholder-zinc-400 w-full mt-0.5"
                   labelClassName="text-[10px] font-black text-zinc-400 uppercase tracking-widest"
                 />
               </div>
 
-              {/* Swap Button (Absolute/Relative floating arrow capsule) */}
-              <div className="absolute left-1/2 lg:left-[25%] top-[90px] lg:top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+              {/* Swap Button */}
+              <div className="absolute left-1/2 lg:left-[25%] top-[80px] lg:top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
                 <button
                   type="button"
                   onClick={swapLocations}
-                  className="w-12 h-12 rounded-full bg-white border border-zinc-200 shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all text-[#254f1a] hover:text-zinc-900 cursor-pointer"
+                  className="w-10 h-10 rounded-full bg-white border border-zinc-200 shadow-md flex items-center justify-center hover:scale-110 active:scale-95 transition-all text-[#254f1a] hover:text-zinc-900 cursor-pointer"
                   title="Swap Locations"
                 >
-                  <svg viewBox="0 0 24 24" className="w-6 h-6 fill-none stroke-current stroke-[2.5]" xmlns="http://www.w3.org/2000/svg" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="w-5 h-5 fill-none stroke-current stroke-[2.5]"
+                    xmlns="http://www.w3.org/2000/svg"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="M17 3L21 7L17 11" />
-                    <path d="M3 17L7 21L3 25" className="hidden" />
                     <path d="M21 7H9" />
                     <path d="M7 21L3 17L7 13" />
                     <path d="M3 17H15" />
@@ -859,39 +715,33 @@ export default function DashboardPage() {
               </div>
 
               {/* TO (Destination) Input */}
-              <div className="lg:col-span-3 bg-zinc-100/80 rounded-2xl px-5 py-4 border border-zinc-200/50 hover:border-zinc-300/80 transition-colors flex items-center gap-4">
+              <div className="lg:col-span-3 bg-zinc-100/90 rounded-2xl px-5 py-3.5 border border-zinc-200/60 hover:border-zinc-300 transition-colors flex items-center gap-3">
                 <div className="text-[#254f1a] shrink-0">
-                  <svg viewBox="0 0 24 24" className="w-7 h-7 fill-current" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" />
-                  </svg>
+                  <FlagIcon className="w-5 h-5" />
                 </div>
                 <CityAutocomplete
                   value={toLocation}
                   onChange={setToLocation}
                   label="To City"
-                  inputClassName="bg-transparent outline-none border-none text-zinc-900 font-black text-xl placeholder-zinc-400 w-full mt-0.5"
+                  inputClassName="bg-transparent outline-none border-none text-zinc-900 font-black text-lg placeholder-zinc-400 w-full mt-0.5"
                   labelClassName="text-[10px] font-black text-zinc-400 uppercase tracking-widest"
                 />
               </div>
 
               {/* DATE Picker Input */}
-              <div 
-                className="lg:col-span-2 bg-zinc-100/80 rounded-2xl px-5 py-4 border border-zinc-200/50 hover:border-zinc-300/80 transition-colors flex items-center gap-3 relative cursor-pointer focus-within:ring-2 focus-within:ring-brand-forest/50"
-              >
+              <div className="lg:col-span-2 bg-zinc-100/90 rounded-2xl px-4 py-3.5 border border-zinc-200/60 hover:border-zinc-300 transition-colors flex items-center gap-2.5">
                 <div className="text-[#254f1a] shrink-0">
-                  <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 002 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm-7-7H7v2h5v-2z" />
-                  </svg>
+                  <ClockIcon className="w-5 h-5" />
                 </div>
                 <div className="flex flex-col flex-1 min-w-0">
                   <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">
-                    Departure Date
+                    Travel Date
                   </span>
                   <input
                     type="date"
                     value={departureDate}
                     onChange={(e) => setDepartureDate(e.target.value)}
-                    className="bg-transparent text-lg font-black text-zinc-900 focus:outline-none border-none p-0 mt-0.5 cursor-pointer w-full"
+                    className="bg-transparent text-sm font-black text-zinc-900 focus:outline-none border-none p-0 mt-0.5 cursor-pointer w-full"
                   />
                 </div>
               </div>
@@ -901,481 +751,506 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   onClick={setTodayDate}
-                  className="flex-1 bg-zinc-100 hover:bg-zinc-200 active:scale-95 transition-all py-3.5 rounded-2xl text-center text-xs font-black text-zinc-700 cursor-pointer"
+                  className="flex-1 bg-zinc-100 hover:bg-zinc-200 active:scale-95 transition-all py-2 rounded-xl text-center text-xs font-black text-zinc-700 cursor-pointer"
                 >
                   Today
                 </button>
                 <button
                   type="button"
                   onClick={setTomorrowDate}
-                  className="flex-1 bg-zinc-100 hover:bg-zinc-200 active:scale-95 transition-all py-3.5 rounded-2xl text-center text-xs font-black text-zinc-700 cursor-pointer"
+                  className="flex-1 bg-zinc-100 hover:bg-zinc-200 active:scale-95 transition-all py-2 rounded-xl text-center text-xs font-black text-zinc-700 cursor-pointer"
                 >
                   Tomorrow
                 </button>
               </div>
 
-              {/* Big Search button */}
+              {/* Big Search Button */}
               <div className="lg:col-span-2 flex items-stretch">
-                <button 
+                <button
                   type="submit"
-                  className="w-full bg-[#254f1a] hover:bg-[#214116] text-white rounded-2xl py-4 lg:py-0 flex items-center justify-center gap-2 font-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg cursor-pointer"
+                  className="w-full bg-[#254f1a] hover:bg-[#1d3d14] text-white rounded-2xl py-4 lg:py-0 flex items-center justify-center gap-2 font-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg cursor-pointer"
                 >
                   <span>Search</span>
-                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-current stroke-[3]" xmlns="http://www.w3.org/2000/svg" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="w-5 h-5 fill-none stroke-current stroke-[3]"
+                    xmlns="http://www.w3.org/2000/svg"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="M5 12H19" />
                     <path d="M12 5L19 12L12 19" />
                   </svg>
                 </button>
               </div>
-
             </form>
+
+            {/* Bottom Row: Senior Citizen Checkbox & Quick Preset Chips */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-zinc-100">
+              {/* Senior Citizen Checkbox */}
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={seniorCitizenMode}
+                  onChange={(e) => setSeniorCitizenMode(e.target.checked)}
+                  className="w-4 h-4 rounded text-emerald-700 focus:ring-emerald-600 border-zinc-300"
+                />
+                <span className="text-xs font-black text-zinc-800">
+                  Senior Citizen Mode
+                </span>
+                <span className="text-[10px] text-zinc-500 font-semibold hidden sm:inline">
+                  (Prioritizes lower berths on rail and ground floor bus seats)
+                </span>
+              </label>
+
+              {/* Quick Preset Route Pills */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
+                  Quick Pairs:
+                </span>
+                {quickRoutes.map((qr, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => applyQuickRoute(qr)}
+                    className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-zinc-100 hover:bg-emerald-50 hover:text-emerald-900 border border-zinc-200 transition-colors"
+                  >
+                    {qr.from} &rarr; {qr.to}
+                  </button>
+                ))}
+              </div>
+            </div>
 
           </div>
         </div>
-
       </div>
 
-      {/* 4. RECENT SEARCHES / SAVED PATHS SECTION */}
-      {/* Added pt-12 to ensure proper separation from the floating search bar */}
-      <div className="w-full max-w-7xl mx-auto px-6 pt-12 sm:pt-16 select-none">
-        
-        <div className="flex flex-col gap-6">
-          
+      {/* 4. RECENT SEARCHES */}
+      <div className="w-full max-w-7xl mx-auto px-6 pt-10 sm:pt-14 select-none">
+        <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-zinc-900 font-black text-3xl sm:text-4xl md:text-5xl tracking-tight flex items-center gap-3">
-              <span className="w-3 h-8 sm:h-9 md:h-10 rounded-full bg-[#254f1a] shrink-0"></span>
+            <h2 className="text-zinc-900 font-black text-2xl sm:text-3xl tracking-tight flex items-center gap-3">
+              <span className="w-2.5 h-7 rounded-full bg-[#254f1a] shrink-0"></span>
               Recent Searches
             </h2>
-            <button className="text-zinc-400 hover:text-zinc-900 font-bold text-xs uppercase tracking-widest transition-colors cursor-pointer">
-              Clear All
+            <button
+              onClick={() => setRecentSearches([])}
+              className="text-zinc-400 hover:text-zinc-900 font-bold text-xs uppercase tracking-widest transition-colors cursor-pointer"
+            >
+              Clear
             </button>
           </div>
 
-          {/* Recent Search Badges Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {recentSearches.map((search) => (
               <div
                 key={search.id}
-                className="bg-white rounded-3xl p-5 border border-zinc-200/60 shadow-sm hover:shadow-md hover:scale-[1.01] transition-all cursor-pointer flex flex-col gap-4 group"
+                onClick={() => applyRecentSearch(search)}
+                className="bg-white rounded-2xl p-4 border border-zinc-200/70 shadow-2xs hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer flex flex-col gap-3 group"
               >
-                
-                {/* Badge Header: Location swap visualization */}
-                <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-                  
-                  {/* Transit Icon Badge */}
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-[#254f1a]">
-                      {search.type === 'buses' && (
-                        <span className="text-lg">🚌</span>
-                      )}
-                      {search.type === 'flights' && (
-                        <span className="text-lg rotate-45 inline-block">✈️</span>
-                      )}
-                      {search.type === 'trains' && (
-                        <span className="text-lg">🚆</span>
-                      )}
-                    </div>
-                    <span className="text-zinc-400 font-bold text-[10px] uppercase tracking-widest">
-                      {search.type}
-                    </span>
-                  </div>
-
-                  <span className="text-zinc-500 font-black text-xs">
-                    {search.date}
+                <div className="flex items-center justify-between border-b border-zinc-100 pb-2.5">
+                  <span className="text-zinc-700 font-black text-xs">
+                    {search.modeLabel}
                   </span>
-
+                  <span className="text-zinc-400 font-bold text-xs">{search.date}</span>
                 </div>
 
-                {/* Cities Connection visual */}
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider">Origin</span>
-                    <span className="text-zinc-800 font-black text-lg group-hover:text-[#254f1a] transition-colors truncate max-w-[120px]">
-                      {search.from}
-                    </span>
-                  </div>
-
-                  {/* Flow Arrow */}
-                  <div className="flex-1 flex items-center justify-center px-2">
-                    <div className="w-full h-[2px] bg-zinc-200 relative flex items-center justify-end">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#254f1a] absolute left-0" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#254f1a]" />
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-zinc-900 font-extrabold text-base group-hover:text-[#254f1a] transition-colors truncate">
+                    {search.from}
+                  </span>
+                  <div className="flex-1 flex items-center justify-center px-1">
+                    <div className="w-full h-[1.5px] bg-zinc-200 relative flex items-center justify-end">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#254f1a]" />
                     </div>
                   </div>
+                  <span className="text-zinc-900 font-extrabold text-base group-hover:text-[#254f1a] transition-colors truncate text-right">
+                    {search.to}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
-                  <div className="flex flex-col text-right">
-                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider">Destination</span>
-                    <span className="text-zinc-800 font-black text-lg group-hover:text-[#254f1a] transition-colors truncate max-w-[120px]">
-                      {search.to}
+      {/* 5. MULTIMODAL ROUTING IN ACTION (CONNECTED SVG TRACK ANIMATION) */}
+      <section id="how-it-works" className="w-full max-w-7xl mx-auto px-6 mt-20 select-none scroll-mt-28">
+        <div className="w-full bg-white rounded-[2.5rem] p-6 sm:p-10 md:p-12 border border-zinc-200/80 shadow-xl relative overflow-hidden">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-[#254f1a] text-xs font-black uppercase tracking-wider mb-2">
+                <span className="w-2 h-2 rounded-full bg-[#254f1a] animate-pulse"></span>
+                The Core Multi-Modal Engine
+              </div>
+              <h2 className="text-zinc-900 font-black text-3xl sm:text-4xl tracking-tight">
+                No Direct Route? OptiTransit Gets You There.
+              </h2>
+              <p className="text-zinc-600 font-medium text-sm sm:text-base mt-1 max-w-2xl">
+                When direct trains are fully booked or do not exist, our algorithm stitches together Train + Bus combos, 2-Train transfers, and protected connections.
+              </p>
+            </div>
+
+            {/* Play/Pause Animation Toggle */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setIsPlayingTour(!isPlayingTour)}
+                className="px-4 py-2 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-black transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              >
+                <span>{isPlayingTour ? 'Pause Auto-Tour' : 'Play Auto-Tour'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Scenario Tab Selectors */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+            {scenarios.map((sc, idx) => {
+              const isSelected = activeScenario === idx;
+              return (
+                <button
+                  key={sc.id}
+                  onClick={() => {
+                    setActiveScenario(idx);
+                    setIsPlayingTour(false);
+                  }}
+                  className={`p-4 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
+                    isSelected
+                      ? 'bg-[#254f1a] text-white border-[#254f1a] shadow-md scale-[1.01]'
+                      : 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full mb-2">
+                    <span
+                      className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                        isSelected ? 'bg-white/20 text-[#d2e823]' : 'bg-zinc-200 text-zinc-600'
+                      }`}
+                    >
+                      Scenario 0{idx + 1}
                     </span>
+                    {isSelected && <span className="w-2 h-2 rounded-full bg-[#d2e823] animate-pulse"></span>}
+                  </div>
+                  <div className="font-extrabold text-sm">{sc.tag}</div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Connected SVG Multi-Modal Route Track Card */}
+          <div className="w-full bg-zinc-950 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-inner mb-8">
+            {/* Ambient Background Grid */}
+            <div
+              className="absolute inset-0 opacity-10 pointer-events-none"
+              style={{
+                backgroundImage:
+                  'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.2) 1px, transparent 0)',
+                backgroundSize: '24px 24px',
+              }}
+            />
+
+            {/* Scenario Status Bar */}
+            <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-zinc-800">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase text-white ${curr.tagBg}`}>
+                    {curr.tag}
+                  </span>
+                  <span className="text-sm font-black text-white">{curr.title}</span>
+                </div>
+                <div className="text-xs text-rose-300 font-semibold flex items-center gap-2 mt-0.5">
+                  <span className="px-1.5 py-0.2 rounded bg-rose-950/80 border border-rose-800 text-[10px] uppercase font-mono">
+                    Direct Booking Problem
+                  </span>
+                  <span>{curr.problem}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 text-xs font-mono">
+                <div className="text-right">
+                  <span className="text-zinc-400 block text-[10px] uppercase">Journey Time</span>
+                  <span className="text-[#d2e823] font-black text-sm">{curr.totalTime}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-zinc-400 block text-[10px] uppercase">Combined Fare</span>
+                  <span className="text-emerald-400 font-black text-sm">{curr.totalPrice}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Connected Route Diagram */}
+            <div className="relative z-10 py-2">
+              
+              {/* Connected Visual Pipeline */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 relative">
+                
+                {/* Node 1: Origin */}
+                <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-700/80 shadow-md flex flex-col justify-between relative">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest">{curr.node1.type}</span>
+                      <PinIcon className="w-4 h-4 text-emerald-400" />
+                    </div>
+                    <div className="font-black text-lg text-white leading-tight">{curr.node1.title}</div>
+                    <div className="text-xs text-zinc-400 mt-1">{curr.node1.subtitle}</div>
+                  </div>
+                  <div className="mt-4 pt-2 border-t border-zinc-800 text-[11px] font-bold text-emerald-400 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    <span>{curr.node1.badge}</span>
+                  </div>
+                </div>
+
+                {/* Leg 1 */}
+                <div className="p-4 rounded-2xl bg-zinc-900/90 border border-emerald-500/70 shadow-lg flex flex-col justify-between relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-wider">LEG 1</span>
+                      {curr.leg1.type === 'rail' ? (
+                        <TrainIcon className="w-5 h-5 text-emerald-400" />
+                      ) : (
+                        <BusIcon className="w-5 h-5 text-purple-400" />
+                      )}
+                    </div>
+                    <div className="font-black text-base text-white">{curr.leg1.name}</div>
+                    <div className="text-xs text-zinc-300 font-medium mt-1">{curr.leg1.route}</div>
+                  </div>
+                  <div className={`mt-3 p-1.5 rounded-lg border text-[11px] font-bold text-center ${curr.leg1.statusColor}`}>
+                    {curr.leg1.status}
+                  </div>
+                </div>
+
+                {/* Transfer Hub */}
+                <div className="p-4 rounded-2xl bg-zinc-900/90 border border-blue-500/70 shadow-lg flex flex-col justify-between relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 rounded-full blur-xl pointer-events-none" />
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-mono text-blue-400 uppercase tracking-wider">{curr.transfer.title}</span>
+                      {curr.transfer.type === 'cab' ? (
+                        <CabIcon className="w-5 h-5 text-blue-400" />
+                      ) : curr.transfer.type === 'platform' ? (
+                        <TrainIcon className="w-5 h-5 text-blue-400" />
+                      ) : (
+                        <PinIcon className="w-5 h-5 text-blue-400" />
+                      )}
+                    </div>
+                    <div className="font-black text-base text-white">{curr.transfer.location}</div>
+                    <div className="text-xs text-blue-200/90 mt-1">{curr.transfer.details}</div>
+                  </div>
+                  <div className="mt-3 p-1.5 rounded-lg bg-blue-950/80 border border-blue-800 text-[11px] font-bold text-blue-300 text-center flex items-center justify-center gap-1.5">
+                    <ClockIcon className="w-3.5 h-3.5" />
+                    <span>{curr.transfer.duration}</span>
+                  </div>
+                </div>
+
+                {/* Leg 2 & Destination */}
+                <div className="p-4 rounded-2xl bg-zinc-900/90 border border-yellow-500/70 shadow-lg flex flex-col justify-between relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-yellow-500/10 rounded-full blur-xl pointer-events-none" />
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-mono text-[#d2e823] uppercase tracking-wider">LEG 2 (FINAL)</span>
+                      {curr.leg2.type === 'rail' ? (
+                        <TrainIcon className="w-5 h-5 text-[#d2e823]" />
+                      ) : (
+                        <BusIcon className="w-5 h-5 text-[#d2e823]" />
+                      )}
+                    </div>
+                    <div className="font-black text-base text-white">{curr.leg2.name}</div>
+                    <div className="text-xs text-zinc-300 font-medium mt-1">{curr.leg2.route}</div>
+                  </div>
+                  <div className={`mt-3 p-1.5 rounded-lg border text-[11px] font-bold text-center ${curr.leg2.statusColor}`}>
+                    {curr.leg2.status}
                   </div>
                 </div>
 
               </div>
-            ))}
-          </div>
 
-        </div>
-
-      </div>
-
-      {/* 5. TOP PRIVATE TRAVELS CAROUSEL SECTION */}
-      <div className="w-full max-w-7xl mx-auto px-6 mt-24 select-none relative group/carousel pb-20">
-        
-        {/* Title and Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-zinc-900 font-black text-3xl sm:text-4xl md:text-5xl tracking-tight flex items-center gap-3">
-            <span className="w-3 h-8 sm:h-9 md:h-10 rounded-full bg-[#254f1a] shrink-0"></span>
-            Top Private Travels
-          </h2>
-          
-          {/* Navigation Arrows for desktop (top right) */}
-          <div className="hidden sm:flex items-center gap-2">
-            <button
-              onClick={() => scrollCarousel('left')}
-              className="w-10 h-10 rounded-full bg-white border border-zinc-200/80 shadow-sm flex items-center justify-center text-[#254f1a] hover:text-zinc-950 hover:bg-zinc-50 active:scale-95 transition-all cursor-pointer"
-            >
-              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-current stroke-[2.5]" xmlns="http://www.w3.org/2000/svg" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              onClick={() => scrollCarousel('right')}
-              className="w-10 h-10 rounded-full bg-white border border-zinc-200/80 shadow-sm flex items-center justify-center text-[#254f1a] hover:text-zinc-950 hover:bg-zinc-50 active:scale-95 transition-all cursor-pointer"
-            >
-              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-current stroke-[2.5]" xmlns="http://www.w3.org/2000/svg" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Carousel Scroller Container */}
-        <div className="relative w-full">
-          
-          {/* Floating Right Arrow Button (Overlay right side of list) */}
-          <button
-            onClick={() => scrollCarousel('right')}
-            className="absolute -right-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-white border border-zinc-200 shadow-lg flex items-center justify-center text-[#254f1a] hover:text-zinc-950 hover:scale-110 active:scale-95 transition-all cursor-pointer"
-            title="Next"
-          >
-            <svg viewBox="0 0 24 24" className="w-6 h-6 fill-none stroke-current stroke-[3]" xmlns="http://www.w3.org/2000/svg" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-
-          {/* Floating Left Arrow Button */}
-          <button
-            onClick={() => scrollCarousel('left')}
-            className="absolute -left-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-white border border-zinc-200 shadow-lg flex items-center justify-center text-[#254f1a] hover:text-zinc-950 hover:scale-110 active:scale-95 transition-all cursor-pointer"
-            title="Previous"
-          >
-            <svg viewBox="0 0 24 24" className="w-6 h-6 fill-none stroke-current stroke-[3]" xmlns="http://www.w3.org/2000/svg" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-
-          {/* Horizontally scrolling track with hidden scrollbars */}
-          <div
-            ref={carouselRef}
-            className="w-full flex gap-6 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] py-4 px-2 snap-x snap-mandatory scroll-smooth"
-          >
-            {travelOperators.map((operator) => (
-              <div
-                key={operator.id}
-                className="snap-start shrink-0 w-[285px] sm:w-[310px] bg-white rounded-3xl border border-zinc-200/50 shadow-sm hover:shadow-md hover:scale-[1.03] transition-all duration-300 flex flex-col overflow-hidden group/card cursor-pointer"
-              >
-                
-                {/* Card Top: Scenic vehicle image */}
-                <div className="relative aspect-[16/10] overflow-hidden bg-zinc-100 shrink-0">
-                  <img
-                    src={operator.image}
-                    alt={operator.name}
-                    className="w-full h-full object-cover select-none pointer-events-none group-hover/card:scale-105 transition-transform duration-500"
+              {/* Animated Continuous Transit Line Overlay */}
+              <div className="relative mt-6 px-2">
+                <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden relative">
+                  <div
+                    className="h-full bg-gradient-to-r from-emerald-500 via-blue-500 to-[#d2e823] transition-all duration-700 ease-out"
+                    style={{ width: `${((activeScenario + 1) / 3) * 100}%` }}
                   />
-                  {/* Rating star overlay badge */}
-                  <div className="absolute top-3.5 right-3.5 bg-black/60 backdrop-blur-md text-[#f59e0b] font-black text-xs px-2.5 py-1 rounded-full flex items-center gap-1 select-none pointer-events-none">
-                    <span>★</span>
-                    <span className="text-white">{operator.rating}</span>
-                  </div>
                 </div>
+              </div>
 
-                {/* Card Bottom: Metadata and details */}
-                <div className="flex flex-col gap-3 p-5 bg-zinc-50 border-t border-zinc-200/40 rounded-b-3xl flex-1 justify-between">
-                  <span className="text-zinc-900 font-black text-lg group-hover/card:text-[#254f1a] transition-colors truncate">
-                    {operator.name}
+              {/* Solved Banner */}
+              <div className="mt-6 p-4 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded bg-emerald-900 text-emerald-200 font-mono text-[10px] uppercase font-bold">
+                    OptiTransit Solved
                   </span>
-                  
-                  {/* Amenities pills */}
-                  <div className="flex flex-wrap gap-1.5 mt-1">
-                    {operator.amenities.map((amenity, index) => (
-                      <span
-                        key={index}
-                        className="bg-white px-2.5 py-1 border border-zinc-200/50 rounded-lg text-[10px] font-black text-zinc-500 uppercase tracking-wide select-none"
-                      >
-                        {amenity}
-                      </span>
-                    ))}
-                  </div>
+                  <span className="text-emerald-100 font-medium">{curr.solution}</span>
                 </div>
-
+                <span className="px-3 py-1 rounded-full bg-emerald-500 text-zinc-950 font-black text-xs shrink-0">
+                  {curr.arrivalText}
+                </span>
               </div>
-            ))}
+            </div>
           </div>
 
-        </div>
-
-      </div>
-
-      {/* 5B. ANIMATED STATS COUNTER SECTION */}
-      <div 
-        ref={statsRef}
-        className="w-full max-w-7xl mx-auto px-6 mt-20 select-none relative"
-      >
-        <div className="w-full bg-[#254f1a] rounded-[3rem] p-10 sm:p-14 relative overflow-hidden shadow-2xl flex items-center justify-center border border-white/10">
-          
-          {/* Overlapping corner design circles */}
-          {/* Top-Left */}
-          <div className="absolute -top-12 -left-12 w-28 h-28 rounded-full bg-[#dec8eb]/10 pointer-events-none" />
-          <div className="absolute -top-6 -left-16 w-28 h-28 rounded-full bg-[#2d5f3d]/20 pointer-events-none" />
-
-          {/* Bottom-Right */}
-          <div className="absolute -bottom-12 -right-12 w-28 h-28 rounded-full bg-[#dec8eb]/10 pointer-events-none" />
-          <div className="absolute -bottom-6 -right-16 w-28 h-28 rounded-full bg-[#2d5f3d]/20 pointer-events-none" />
-
-          {/* Stats Counter Grid */}
-          <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12 relative z-10 text-center">
-            
-            {/* Stat 1 */}
-            <div className="flex flex-col items-center justify-center">
-              <span className="text-[#dec8eb] font-black text-xs uppercase tracking-[0.2em] select-none text-center leading-relaxed">
-                Bus routes across india
-              </span>
-              <span className="text-white font-black text-4xl sm:text-5xl md:text-6xl mt-3 tracking-tight select-none">
-                <AnimatedCounter target={6.5} suffix="L+" decimals={1} trigger={statsTrigger} />
-              </span>
+          {/* 3 Core Multi-Modal Tenets */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200/80 flex flex-col justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-[#254f1a] flex items-center justify-center text-xs font-black mb-3">
+                  RAIL + BUS
+                </div>
+                <h3 className="font-black text-base text-zinc-900 mb-1">Cross-Modal Synthesis</h3>
+                <p className="text-xs text-zinc-600 font-medium leading-relaxed">
+                  Stitches trains and state/private buses into a single verified journey so you reach your town even if direct trains are booked for weeks.
+                </p>
+              </div>
             </div>
 
-            {/* Stat 2 */}
-            <div className="flex flex-col items-center justify-center">
-              <span className="text-[#dec8eb] font-black text-xs uppercase tracking-[0.2em] select-none text-center leading-relaxed">
-                Bus partners
-              </span>
-              <span className="text-white font-black text-4xl sm:text-5xl md:text-6xl mt-3 tracking-tight select-none">
-                <AnimatedCounter target={6200} suffix="+" decimals={0} trigger={statsTrigger} />
-              </span>
+            <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200/80 flex flex-col justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-900 flex items-center justify-center text-xs font-black mb-3">
+                  BUFFER
+                </div>
+                <h3 className="font-black text-base text-zinc-900 mb-1">Protected Layover Buffers</h3>
+                <p className="text-xs text-zinc-600 font-medium leading-relaxed">
+                  Every connection accounts for station-to-bus stand cab travel times with calibrated 60–90 minute windows so minor delays never strand you.
+                </p>
+              </div>
             </div>
 
-            {/* Stat 3 */}
-            <div className="flex flex-col items-center justify-center">
-              <span className="text-[#dec8eb] font-black text-xs uppercase tracking-[0.2em] select-none text-center leading-relaxed">
-                Trusted travellers
-              </span>
-              <span className="text-white font-black text-4xl sm:text-5xl md:text-6xl mt-3 tracking-tight select-none">
-                <AnimatedCounter target={5} suffix="Cr+" decimals={0} trigger={statsTrigger} />
-              </span>
+            <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200/80 flex flex-col justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-yellow-100 text-yellow-900 flex items-center justify-center text-xs font-black mb-3">
+                  &lt;30 ms
+                </div>
+                <h3 className="font-black text-base text-zinc-900 mb-1">Pareto-Optimal in &lt;30 ms</h3>
+                <p className="text-xs text-zinc-600 font-medium leading-relaxed">
+                  Our RAM-based McRAPTOR algorithm simultaneously balances speed, cost, and number of transfers to present the best 1-transfer routes.
+                </p>
+              </div>
             </div>
-
-            {/* Stat 4 */}
-            <div className="flex flex-col items-center justify-center">
-              <span className="text-[#dec8eb] font-black text-xs uppercase tracking-[0.2em] select-none text-center leading-relaxed">
-                Buses with discounts
-              </span>
-              <span className="text-white font-black text-4xl sm:text-5xl md:text-6xl mt-3 tracking-tight select-none">
-                <AnimatedCounter target={1} suffix="L+" decimals={0} trigger={statsTrigger} />
-              </span>
-            </div>
-
           </div>
-
         </div>
-      </div>
+      </section>
 
-      {/* 6. POPULAR BUS ROUTES GRID SECTION */}
-      <div className="w-full max-w-7xl mx-auto px-6 mt-20 select-none">
-        
-        {/* Section Title */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-zinc-900 font-black text-3xl sm:text-4xl md:text-5xl tracking-tight flex items-center gap-3">
-            <span className="w-3 h-8 sm:h-9 md:h-10 rounded-full bg-[#254f1a] shrink-0"></span>
-            Popular Bus Routes
-          </h2>
-        </div>
-
-        {/* Routes Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {(showAllBuses ? busRoutes : busRoutes.slice(0, 10)).map((route) => (
-            <div
-              key={route.id}
-              className="relative aspect-[4/3] rounded-[2rem] overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group cursor-pointer border border-zinc-200/20"
-            >
-              <img
-                src={route.image}
-                alt={route.name}
-                className="w-full h-full object-cover select-none pointer-events-none transition-transform duration-500 group-hover:scale-105"
-              />
-              {/* Dark Gradient Text Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-5">
-                <span className="text-white font-black text-lg leading-tight truncate">{route.name}</span>
-                <span className="text-white/70 text-[10px] font-black mt-1.5 uppercase tracking-widest">{route.count}</span>
-              </div>
-              
-              {/* Hover arrow badge */}
-              <div className="absolute bottom-4.5 right-4.5 w-8 h-8 rounded-full bg-white/20 group-hover:bg-white/45 backdrop-blur-md flex items-center justify-center text-white transition-colors cursor-pointer select-none">
-                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-[2.5]" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M7 17L17 7M17 7H7M17 7V17" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
+      {/* 6. NEED HELP SECTION */}
+      <section id="need-help" className="w-full max-w-7xl mx-auto px-6 mt-20 select-none scroll-mt-28">
+        <div className="w-full bg-white rounded-[2.5rem] p-6 sm:p-10 md:p-12 border border-zinc-200/80 shadow-xl">
+          {/* Header */}
+          <div className="mb-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-[#254f1a] text-xs font-black uppercase tracking-wider mb-2">
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z" />
+              </svg>
+              Passenger Support
             </div>
-          ))}
-        </div>
-
-        {/* View More button */}
-        <div className="w-full flex items-center justify-center mt-10">
-          <button
-            onClick={() => setShowAllBuses(!showAllBuses)}
-            className="border border-[#254f1a]/40 hover:border-[#254f1a] text-[#254f1a] hover:bg-[#254f1a] hover:text-white rounded-full px-8 py-3 font-black text-xs uppercase tracking-widest transition-all duration-300 active:scale-95 cursor-pointer shadow-sm"
-          >
-            {showAllBuses ? 'View Less' : 'View More'}
-          </button>
-        </div>
-
-      </div>
-
-      {/* 7. FAMOUS TRAIN ROUTES GRID SECTION */}
-      <div className="w-full max-w-7xl mx-auto px-6 mt-20 select-none">
-        
-        {/* Section Title */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-zinc-900 font-black text-3xl sm:text-4xl md:text-5xl tracking-tight flex items-center gap-3">
-            <span className="w-3 h-8 sm:h-9 md:h-10 rounded-full bg-[#254f1a] shrink-0"></span>
-            Famous Train Routes
-          </h2>
-        </div>
-
-        {/* Routes Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {(showAllTrains ? trainRoutes : trainRoutes.slice(0, 10)).map((route) => (
-            <div
-              key={route.id}
-              className="relative aspect-[4/3] rounded-[2rem] overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group cursor-pointer border border-zinc-200/20"
-            >
-              <img
-                src={route.image}
-                alt={route.name}
-                className="w-full h-full object-cover select-none pointer-events-none transition-transform duration-500 group-hover:scale-105"
-              />
-              {/* Dark Gradient Text Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-5">
-                <span className="text-white font-black text-lg leading-tight truncate">{route.name}</span>
-                <span className="text-white/70 text-[10px] font-black mt-1.5 uppercase tracking-widest">{route.count}</span>
-              </div>
-              
-              {/* Hover arrow badge */}
-              <div className="absolute bottom-4.5 right-4.5 w-8 h-8 rounded-full bg-white/20 group-hover:bg-white/45 backdrop-blur-md flex items-center justify-center text-white transition-colors cursor-pointer select-none">
-                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-[2.5]" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M7 17L17 7M17 7H7M17 7V17" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* View More button */}
-        <div className="w-full flex items-center justify-center mt-10">
-          <button
-            onClick={() => setShowAllTrains(!showAllTrains)}
-            className="border border-[#254f1a]/40 hover:border-[#254f1a] text-[#254f1a] hover:bg-[#254f1a] hover:text-white rounded-full px-8 py-3 font-black text-xs uppercase tracking-widest transition-all duration-300 active:scale-95 cursor-pointer shadow-sm"
-          >
-            {showAllTrains ? 'View Less' : 'View More'}
-          </button>
-        </div>
-
-      </div>
-
-      {/* 8. FAMOUS FLIGHT ROUTES GRID SECTION */}
-      <div className="w-full max-w-7xl mx-auto px-6 mt-20 select-none pb-24">
-        
-        {/* Section Title */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-zinc-900 font-black text-3xl sm:text-4xl md:text-5xl tracking-tight flex items-center gap-3">
-            <span className="w-3 h-8 sm:h-9 md:h-10 rounded-full bg-[#254f1a] shrink-0"></span>
-            Famous Flight Routes
-          </h2>
-        </div>
-
-        {/* Routes Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {(showAllFlights ? flightRoutes : flightRoutes.slice(0, 10)).map((route) => (
-            <div
-              key={route.id}
-              className="relative aspect-[4/3] rounded-[2rem] overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group cursor-pointer border border-zinc-200/20"
-            >
-              <img
-                src={route.image}
-                alt={route.name}
-                className="w-full h-full object-cover select-none pointer-events-none transition-transform duration-500 group-hover:scale-105"
-              />
-              {/* Dark Gradient Text Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-5">
-                <span className="text-white font-black text-lg leading-tight truncate">{route.name}</span>
-                <span className="text-white/70 text-[10px] font-black mt-1.5 uppercase tracking-widest">{route.count}</span>
-              </div>
-              
-              {/* Hover arrow badge */}
-              <div className="absolute bottom-4.5 right-4.5 w-8 h-8 rounded-full bg-white/20 group-hover:bg-white/45 backdrop-blur-md flex items-center justify-center text-white transition-colors cursor-pointer select-none">
-                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-[2.5]" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M7 17L17 7M17 7H7M17 7V17" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* View More button */}
-        <div className="w-full flex items-center justify-center mt-10">
-          <button
-            onClick={() => setShowAllFlights(!showAllFlights)}
-            className="border border-[#254f1a]/40 hover:border-[#254f1a] text-[#254f1a] hover:bg-[#254f1a] hover:text-white rounded-full px-8 py-3 font-black text-xs uppercase tracking-widest transition-all duration-300 active:scale-95 cursor-pointer shadow-sm"
-          >
-            {showAllFlights ? 'View Less' : 'View More'}
-          </button>
-        </div>
-
-      </div>
-
-      {/* 9. CONNECTED TRAVEL PROMO BANNER SECTION */}
-      <div className="w-full max-w-7xl mx-auto px-6 mt-20 select-none pb-28">
-        <div className="w-full bg-gradient-to-r from-[#d37064] via-[#e4a297] to-[#f4ad9d] rounded-[2.5rem] p-8 sm:p-12 md:p-14 shadow-xl border border-white/10 relative overflow-hidden flex flex-col lg:flex-row items-center justify-between gap-10">
-          
-          {/* Decorative background dust particles */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent pointer-events-none opacity-60 z-0" />
-
-          {/* Left Column: Text Information */}
-          <div className="flex flex-col gap-5 lg:w-[62%] relative z-10 text-white">
-            <h2 className="font-black text-3xl sm:text-4xl tracking-tight leading-tight">
-              Connected Travel Made Simple
+            <h2 className="text-zinc-900 font-black text-3xl sm:text-4xl tracking-tight">
+              Need Help With Your Route?
             </h2>
-            <p className="font-medium text-sm sm:text-base leading-relaxed text-white/90">
-              Travellers can find exclusive <span className="underline font-black cursor-pointer hover:text-zinc-950 transition-colors">multimodal travel offers</span>, discount coupons, cashback, and connection protection on OptiTransit. You can book synchronized train, bus, and flight tickets at the lowest prices to any destination. Choose from budget-friendly regional routes to high-speed premium express paths. Check for real-time schedule comparisons, select your preferred transit combinations, apply promo codes, and save money on your journeys today!
+            <p className="text-zinc-600 font-medium text-sm sm:text-base mt-1 max-w-2xl">
+              Instant answers about multi-modal combinations, bus-to-train transfers, safe buffers, and switching between views.
             </p>
           </div>
 
-          {/* Right Column: 3D Travel Graphic */}
-          <div className="flex items-center justify-center lg:w-[33%] relative z-10">
-            <img
-              src="/promo_artwork.png"
-              className="w-72 sm:w-80 md:w-96 h-auto object-contain hover:scale-[1.05] hover:-translate-y-2.5 transition-all duration-500 select-none pointer-events-none drop-shadow-xl"
-              alt="OptiTransit Travel Promo"
-            />
-          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Left: Interactive FAQ Accordion */}
+            <div className="lg:col-span-7 flex flex-col gap-3">
+              {faqs.map((faq) => {
+                const isOpen = openFaq === faq.id;
+                return (
+                  <div
+                    key={faq.id}
+                    className="border border-zinc-200/80 rounded-2xl overflow-hidden transition-all bg-zinc-50/50 hover:bg-zinc-50"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setOpenFaq(isOpen ? null : faq.id)}
+                      className="w-full p-5 text-left font-extrabold text-base text-zinc-900 flex items-center justify-between gap-4 cursor-pointer"
+                    >
+                      <span>{faq.question}</span>
+                      <span
+                        className={`w-7 h-7 rounded-full flex items-center justify-center bg-white border border-zinc-200 text-zinc-600 shrink-0 transition-transform ${
+                          isOpen ? 'rotate-180 bg-[#254f1a] text-white border-transparent' : ''
+                        }`}
+                      >
+                        v
+                      </span>
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-5 text-sm font-medium text-zinc-600 leading-relaxed border-t border-zinc-100 pt-3 bg-white">
+                        {faq.answer}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
 
+            {/* Right: Quick Assistance Box */}
+            <div className="lg:col-span-5 flex flex-col gap-5">
+              <div className="bg-[#254f1a] text-white rounded-3xl p-6 shadow-lg relative overflow-hidden flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-black uppercase tracking-wider text-[#d2e823]">
+                      Route Copilot
+                    </span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                  </div>
+                  <h3 className="text-xl font-black mb-1">Ask Any Transit Question</h3>
+                  <p className="text-xs text-white/80 mb-4 leading-relaxed">
+                    Doubts about bus-to-train transfers, layovers, or 2-train junctions? Type below:
+                  </p>
+
+                  <form onSubmit={handleHelpSubmit} className="flex gap-2">
+                    <input
+                      type="text"
+                      value={helpQuery}
+                      onChange={(e) => setHelpQuery(e.target.value)}
+                      placeholder="e.g. Can I take a train and a bus?"
+                      className="flex-1 bg-white/10 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-white/50 focus:outline-none focus:bg-white/20 font-medium"
+                    />
+                    <button
+                      type="submit"
+                      className="bg-[#d2e823] text-zinc-900 font-black px-4 py-2.5 rounded-xl text-xs hover:bg-yellow-300 transition-colors shrink-0 cursor-pointer"
+                    >
+                      Ask
+                    </button>
+                  </form>
+
+                  {helpResponse && (
+                    <div className="mt-4 p-3.5 rounded-xl bg-white/10 border border-white/20 text-xs font-medium leading-relaxed text-emerald-100 animate-in fade-in duration-300">
+                      {helpResponse}
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-[11px] text-white/70">
+                  <span>Instant Multi-Modal Route Discovery</span>
+                  <Link href="/planner" className="text-[#d2e823] font-bold hover:underline">
+                    Open Full Planner &rarr;
+                  </Link>
+                </div>
+              </div>
+
+              {/* 24/7 Helpline Card */}
+              <div className="bg-zinc-100/80 border border-zinc-200/80 rounded-3xl p-6 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block mb-1">
+                    Emergency Transit Assist
+                  </span>
+                  <div className="text-base font-black text-zinc-900">24/7 Journey Support</div>
+                  <p className="text-xs text-zinc-500 font-medium mt-0.5">
+                    Missed transfers, platform switches, or rerouting support
+                  </p>
+                </div>
+                <div className="w-12 h-12 rounded-2xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-700 shrink-0 shadow-2xs">
+                  <ChatIcon className="w-5 h-5 text-zinc-700" />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* Footer Section */}
       <FooterSection />
-
     </div>
   );
 }

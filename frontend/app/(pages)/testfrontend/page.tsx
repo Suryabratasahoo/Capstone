@@ -112,7 +112,7 @@ function ServiceRatingBadge({ serviceNumber, mode }: { serviceNumber: string, mo
   return (
     <div className="inline-flex items-center gap-1.5 ml-1.5 group/badge relative">
       <span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-md text-[10px] font-black border border-amber-200 shadow-sm flex items-center cursor-help">
-        <span className="mr-0.5 text-amber-500">★</span> {ratingData.rating.toFixed(1)}/5
+        <span className="mr-0.5 text-amber-500">*</span> {ratingData.rating.toFixed(1)}/5
       </span>
       {ratingData.highlights.length > 0 && (
         <div className="absolute top-full mt-1.5 left-0 opacity-0 group-hover/badge:opacity-100 transition-opacity bg-zinc-900/95 backdrop-blur-sm text-white text-[10px] py-1.5 px-2.5 rounded-lg shadow-xl max-w-xs overflow-y-auto z-50 pointer-events-none border border-zinc-700/50">
@@ -308,12 +308,12 @@ function TransitCopilotWidgetInner({
     // 2. Layover & Dining Constraint scenario ("2 hour is not enough... i will eat")
     if (lower.includes('2 hour') || lower.includes('2 hours') || lower.includes('eat') || lower.includes('enough') || lower.includes('భోజనం') || lower.includes('खाना')) {
       if (lang === 'te') {
-        return "మీరు చెప్పింది 100% నిజం సర్. విజయవాడ రైల్వే స్టేషన్ నుండి పండిట్ నెహ్రూ బస్ టెర్మినల్ 2.2 కి.మీ దూరంలో ఉంది. లగేజీతో ఆటో ఎక్కడం మరియు విశ్రాంతిగా భోజనం చేయడానికి 2 గంటల సమయం వృద్ధులకు చాలా తక్కువ.\n\n💡 నా సిఫార్సు: మీకు కనీసం 3.5 నుండి 4 గంటల లేఓవర్ ఉండే మార్గాన్ని ఎంచుకోవడం మంచిది. దీనివల్ల స్టేషన్ దగ్గర ఉన్న భోజనశాలలో హాయిగా తిని, తీరిగ్గా బస్సు చేరుకోవచ్చు.";
+        return "మీరు చెప్పింది 100% నిజం సర్. విజయవాడ రైల్వే స్టేషన్ నుండి పండిట్ నెహ్రూ బస్ టెర్మినల్ 2.2 కి.మీ దూరంలో ఉంది. లగేజీతో ఆటో ఎక్కడం మరియు విశ్రాంతిగా భోజనం చేయడానికి 2 గంటల సమయం వృద్ధులకు చాలా తక్కువ.\n\nనా సిఫార్సు: మీకు కనీసం 3.5 నుండి 4 గంటల లేఓవర్ ఉండే మార్గాన్ని ఎంచుకోవడం మంచిది. దీనివల్ల స్టేషన్ దగ్గర ఉన్న భోజనశాలలో హాయిగా తిని, తీరిగ్గా బస్సు చేరుకోవచ్చు.";
       }
       if (lang === 'hi') {
-        return "आपकी बात बिल्कुल सही है। विजयवाड़ा रेलवे स्टेशन से बस स्टैंड लगभग 2.2 किमी दूर है। सामान के साथ ऑटो लेना और शांति से भोजन करने के लिए 2 घंटे का समय एक बुजुर्ग यात्री के लिए बहुत कम है।\n\n💡 मेरा सुझाव: कम से कम 3.5 से 4 घंटे के बफर वाला रूट चुनें। इससे आप स्टेशन पर आराम से खाना खा सकेंगे और बिना किसी हड़बड़ी के बस तक पहुँच सकेंगे।";
+        return "आपकी बात बिल्कुल सही है। विजयवाड़ा रेलवे स्टेशन से बस स्टैंड लगभग 2.2 किमी दूर है। सामान के साथ ऑटो लेना और शांति से भोजन करने के लिए 2 घंटे का समय एक बुजुर्ग यात्री के लिए बहुत कम है।\n\nमेरा सुझाव: कम से कम 3.5 से 4 घंटे के बफर वाला रूट चुनें। इससे आप स्टेशन पर आराम से खाना खा सकेंगे और बिना किसी हड़बड़ी के बस तक पहुँच सकेंगे।";
       }
-      return "You are completely right, sir. At 75, a 2-hour window between Vijayawada Railway Station and the Pandit Nehru Bus Stand (2.2 km away) is far too tight if you plan to eat. Taking an auto with luggage takes ~25 minutes, and a relaxed sit-down meal takes 45–60 minutes.\n\n💡 Recommendation: I advise choosing an option with at least a 3.5 to 4-hour layover buffer. This guarantees you have time for a relaxed hot meal without the stress of missing your bus.";
+      return "You are completely right, sir. At 75, a 2-hour window between Vijayawada Railway Station and the Pandit Nehru Bus Stand (2.2 km away) is far too tight if you plan to eat. Taking an auto with luggage takes ~25 minutes, and a relaxed sit-down meal takes 45–60 minutes.\n\nRecommendation: I advise choosing an option with at least a 3.5 to 4-hour layover buffer. This guarantees you have time for a relaxed hot meal without the stress of missing your bus.";
     }
 
     // 3. Explainable AI: "Why this route over direct?"
@@ -467,7 +467,7 @@ function TransitCopilotWidgetInner({
                 {selectedLang.toUpperCase()}
               </span>
             </div>
-            <div className="text-[10px] text-emerald-100/80 font-medium">⚡ Groq LPU Powered</div>
+            <div className="text-[10px] text-emerald-100/80 font-medium">Groq LPU Powered</div>
           </div>
         </button>
       )}
@@ -485,7 +485,7 @@ function TransitCopilotWidgetInner({
                 <h3 className="text-xs font-black tracking-wide flex items-center gap-1.5">
                   OptiTransit Copilot
                   <span className="text-[9px] bg-emerald-400/20 text-emerald-200 px-1 py-0.2 rounded border border-emerald-400/30">
-                    ⚡ Groq 120B
+                    Groq 120B
                   </span>
                 </h3>
                 <p className="text-[10px] text-zinc-300 font-medium">Senior & Multi-Modal Travel Advisor</p>
@@ -519,7 +519,7 @@ function TransitCopilotWidgetInner({
                 className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-zinc-300 hover:text-white text-xs font-bold transition-colors"
                 title="Minimize chat"
               >
-                ✕
+                &times;
               </button>
             </div>
           </div>
@@ -1304,7 +1304,9 @@ function TestFrontendContent() {
       {formError && (
         <div className="bg-rose-100 border-b border-rose-300 text-rose-900 px-6 py-2.5 text-xs font-bold flex items-center justify-between z-30 shadow-xs animate-in slide-in-from-top-2">
           <div className="flex items-center gap-2">
-            <span className="text-base">⚠️</span>
+            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-rose-600 shrink-0" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L1 21h22L12 2zm0 3.5l8.5 14.5H3.5L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z" />
+            </svg>
             <span>{formError}</span>
           </div>
           <button
@@ -1312,7 +1314,7 @@ function TestFrontendContent() {
             className="text-rose-700 hover:text-black font-extrabold text-sm ml-4 px-2 py-0.5 rounded hover:bg-rose-200 transition-colors"
             title="Dismiss error"
           >
-            ✕
+            &times;
           </button>
         </div>
       )}
@@ -1934,7 +1936,7 @@ function TestFrontendContent() {
                   className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-black flex items-center justify-center font-bold text-sm transition-colors shrink-0"
                   title="Close window"
                 >
-                  ✕
+                  &times;
                 </button>
                 </div>
               </div>

@@ -128,8 +128,11 @@ def search_mcraptor_routes(
         "search_time_ms": elapsed_ms,
         "options": routes
     }
-@app.get("/api/v4/cities/autocomplete", summary="City Name Autocomplete")
-def autocomplete_cities(q: str = Query("", description="Search query")):
+@app.get("/api/v4/cities/autocomplete", summary="City Name Autocomplete with Cluster Station Summaries")
+def autocomplete_cities(
+    q: str = Query("", description="Search query"),
+    raw_strings: bool = Query(False, description="If true, returns only city name strings")
+):
     if not mcraptor_timetable:
         return []
     
@@ -137,17 +140,48 @@ def autocomplete_cities(q: str = Query("", description="Search query")):
     if len(q) < 2:
         return []
         
-    matches = set()
+    from app.city_clusters import METRO_CLUSTERS, get_city_stations_summary, get_cluster_for_query
+    from app.city_aliases import CITY_ALIASES
+
+    matched_cities = set()
+
+    # 1. Match in metro clusters
+    for cluster_key, cluster in METRO_CLUSTERS.items():
+        if q in cluster_key or q in cluster["canonical_name"].lower() or any(q in alias for alias in cluster["aliases"]):
+            matched_cities.add(cluster["canonical_name"])
+
+    # 2. Match in timetable city_stops
     for city in mcraptor_timetable.city_stops.keys():
         if q in city:
-            matches.add(city.title())
-            
-    from app.city_aliases import CITY_ALIASES
-    for alias in CITY_ALIASES.keys():
+            matched_cities.add(city.title())
+
+    # 3. Match in aliases
+    for alias, parent in CITY_ALIASES.items():
         if q in alias:
-            matches.add(alias.title())
-            
-    return sorted(list(matches))[:10]
+            matched_cities.add(alias.title())
+            if parent:
+                matched_cities.add(parent.title())
+
+    def sort_key(name: str):
+        low = name.lower()
+        starts = 0 if low.startswith(q) else 1
+        is_metro = 0 if get_cluster_for_query(low) else 1
+        return (starts, is_metro, name)
+
+    sorted_cities = sorted(list(matched_cities), key=sort_key)[:10]
+
+    if raw_strings:
+        return sorted_cities
+
+    results = []
+    for city_name in sorted_cities:
+        summary = get_city_stations_summary(city_name, mcraptor_timetable)
+        results.append({
+            "city": city_name,
+            "summary": summary
+        })
+
+    return results
 
 @app.get("/api/v4/mcraptor/city-search", summary="McRAPTOR City-to-City Routing API")
 def search_mcraptor_city_routes(
