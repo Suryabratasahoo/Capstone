@@ -1,0 +1,37 @@
+CONNEXLINK ROUTING PERFORMANCE BENCHMARK REPORT
+============================================================
+
+
+[1/5] Hardware & Environment Specifications:
+  operating_system            : Windows-11-10.0.26300-SP0
+  python_version              : 3.13.7
+  cpu_architecture            : AMD64
+  cpu_count_logical           : 8
+  cpu_count_physical          : 4
+  total_physical_ram_gb       : 15.91
+  process_initial_memory_mb   : 558.04
+
+[2/5] Loading Timetable into In-Memory RAM Arrays...
+  Timetable Loaded in:      1.890 seconds
+  Total Process Memory:     880.31 MB
+  Incremental Timetable RAM:322.27 MB
+  Generated 60 benchmark stop pairs.
+
+[3/5] Executing 15 Warm-Up Runs to Prime CPU Caches & JIT...
+  Warm-up completed.
+
+[4/5] Running High-Resolution Benchmarks Across 60 Queries...
+
+[5/5] BENCHMARK LATENCY SUMMARY (Measured over identical query set):
+----------------------------------------------------------------------
+Algorithm                 | Mean (ms)  | Median   | P95 (ms)   | P99 (ms)   | StdDev  
+----------------------------------------------------------------------
+Time-Expanded Dijkstra    |      26.50 |    24.03 |      51.43 |      66.31 |    15.63
+Standard RAPTOR (1-Obj)   |      76.33 |    70.24 |     117.01 |     128.88 |    18.76
+ConnexLink McRAPTOR (4D)  |     288.98 |   138.17 |     805.98 |    1118.83 |   288.19
+----------------------------------------------------------------------
+Peak Process Memory Consumption: 880.32 MB
+Incremental Timetable Memory:     322.27 MB
+
+[OK] Saved evaluation/results\latency_summary.json
+[OK] Saved evaluation/results\latency_results.csv

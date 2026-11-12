@@ -1,0 +1,97 @@
+{
+  "textblob_benchmark_metrics": {
+    "num_annotated_samples": 50,
+    "accuracy_percent": 66.0,
+    "precision_percent": 77.08,
+    "recall_percent": 66.0,
+    "f1_score_percent": 69.4,
+    "confusion_matrix": [
+      [
+        20,
+        1,
+        3
+      ],
+      [
+        2,
+        11,
+        8
+      ],
+      [
+        2,
+        1,
+        2
+      ]
+    ]
+  },
+  "sentence_transformers": {
+    "model_name": "all-MiniLM-L6-v2",
+    "embedding_dimension": 384,
+    "semantic_retrieval_samples": [
+      {
+        "query": "clean hygienic coaches with spotless washrooms",
+        "top_match_text": "Extremely dirty coaches, cockroaches everywhere and toilets stinking terribly.",
+        "similarity": 0.582
+      },
+      {
+        "query": "punctual superfast express on-time arrival",
+        "top_match_text": "Superfast express running at high speed and reached destination on right time.",
+        "similarity": 0.712
+      },
+      {
+        "query": "delicious pantry food and hot tea meals",
+        "top_match_text": "Pantry food was absolutely delicious and served hot. Attendants were very polite.",
+        "similarity": 0.495
+      },
+      {
+        "query": "ac cooling broken suffocating hot weather",
+        "top_match_text": "AC not working for the entire 12 hour journey. Suffocating and unbearable heat.",
+        "similarity": 0.616
+      }
+    ]
+  },
+  "deterministic_hash_fallback": {
+    "formula": "2.8 + (MD5(operator_id) % 180) / 100.0",
+    "bounds": [
+      2.8,
+      4.6
+    ],
+    "all_within_bounds": true,
+    "test_operators": [
+      {
+        "operator_id": "APSRTC_VOLVO_401",
+        "hash_int_mod_180": 131,
+        "calculated_rating": 4.11,
+        "within_bounds": true
+      },
+      {
+        "operator_id": "KSRTC_AIRAVAT_902",
+        "hash_int_mod_180": 173,
+        "calculated_rating": 4.53,
+        "within_bounds": true
+      },
+      {
+        "operator_id": "PRIVATE_VRL_105",
+        "hash_int_mod_180": 27,
+        "calculated_rating": 3.07,
+        "within_bounds": true
+      },
+      {
+        "operator_id": "SRS_TRAVELS_88",
+        "hash_int_mod_180": 45,
+        "calculated_rating": 3.25,
+        "within_bounds": true
+      },
+      {
+        "operator_id": "INTERCITY_BUS_12",
+        "hash_int_mod_180": 112,
+        "calculated_rating": 3.92,
+        "within_bounds": true
+      }
+    ]
+  },
+  "absa_classification_status": {
+    "is_trained_neural_absa": false,
+    "mechanism": "Regex Lexicon Pattern Matching + TextBlob Lexicon Polarity",
+    "limitation": "Cannot resolve intra-sentence mixed sentiment across conflicting aspects"
+  }
+}

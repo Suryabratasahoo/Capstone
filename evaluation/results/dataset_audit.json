@@ -1,0 +1,80 @@
+{
+  "manuscript_claims": {
+    "reported_transit_stops": 15420,
+    "reported_active_trips": 42180,
+    "reported_stop_times": 280000,
+    "reported_train_reviews": 12500
+  },
+  "actual_database_measurements": {
+    "total_stops": 3856,
+    "unique_stops": 3856,
+    "rail_stops": 1604,
+    "bus_stops": 2252,
+    "stops_missing_coordinates": 0,
+    "total_routes": 1810,
+    "rail_routes": 809,
+    "bus_routes": 1000,
+    "total_trips": 1810,
+    "unique_trips": 1810,
+    "rail_trips": 809,
+    "bus_trips": 1001,
+    "total_stop_times": 32780,
+    "train_stops_count": 24413,
+    "bus_route_stops_count": 8365,
+    "missing_time_records": 0,
+    "invalid_trip_references": 0,
+    "invalid_stop_references": 0,
+    "duplicate_stop_time_sequences": 0,
+    "total_transfers": 6914,
+    "transfers_by_mode": {
+      "AUTO_CAB": 6290,
+      "WALK": 624
+    },
+    "total_seat_availability_records": 436860,
+    "seat_status_distribution": {
+      "AVAILABLE": 218300,
+      "RAC": 65299,
+      "WL": 153261
+    },
+    "trains_with_seat_records": 809,
+    "distinct_travel_dates": 60,
+    "total_bus_fares": 7366,
+    "train_reviews_count": 10163,
+    "bus_reviews_count": 358,
+    "total_reviews": 10521
+  },
+  "genuine_vs_synthetic": {
+    "genuine_rail_stops": 1604,
+    "synthetic_bus_stops": 2252,
+    "genuine_rail_trips": 809,
+    "synthetic_bus_trips": 1001,
+    "seat_availability_type": "Synthetic / Simulated Monte Carlo (Aug 2026)",
+    "bus_routes_type": "Simulated Regional Network (simulated_bus_routes_1000.csv)"
+  },
+  "verification_discrepancies": {
+    "stops_discrepancy": {
+      "manuscript": 15420,
+      "actual": 3856,
+      "difference": -11564,
+      "verified": false
+    },
+    "trips_discrepancy": {
+      "manuscript": 42180,
+      "actual": 1810,
+      "difference": -40370,
+      "verified": false
+    },
+    "stop_times_discrepancy": {
+      "manuscript": 280000,
+      "actual": 32780,
+      "difference": -247220,
+      "verified": false
+    },
+    "train_reviews_discrepancy": {
+      "manuscript": 12500,
+      "actual": 10163,
+      "difference": -2337,
+      "verified": false
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "evaluation_parameters": {
+    "total_queries_tested": 50,
+    "travel_date": "2026-08-01",
+    "travel_class": "3A",
+    "timetable_load_time_sec": 1.912
+  },
+  "formal_metrics": {
+    "route_discovery_success_rate": {
+      "percentage": 86.0,
+      "numerator": 43,
+      "denominator": 50,
+      "manuscript_claim": "96.0%"
+    },
+    "confirmed_journey_rate": {
+      "percentage": 86.0,
+      "numerator": 43,
+      "denominator": 50
+    },
+    "waitlist_escape_rate": {
+      "percentage": 87.5,
+      "numerator": 14,
+      "denominator": 16,
+      "manuscript_claim": "84.3%"
+    }
+  },
+  "quality_metrics": {
+    "average_itineraries_per_query": 13.74,
+    "average_transfers_per_journey": 0.5,
+    "average_duration_mins": 657.9,
+    "average_distance_km": 589.5,
+    "average_fare_inr": 1050.5
+  },
+  "booking_certainty_distribution": {
+    "total_itineraries": 591,
+    "confirmed_count": 342,
+    "rac_count": 91,
+    "waitlist_count": 158,
+    "unknown_count": 0
+  }
+}

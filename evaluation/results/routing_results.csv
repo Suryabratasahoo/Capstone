@@ -1,0 +1,51 @@
+query_idx,source_city,dest_city,routes_found,latency_ms,has_fully_confirmed,direct_rail_status,escaped_waitlist
+1,Vijayawada,Visakhapatnam,15,2337.0,True,AVAILABLE,False
+2,Hyderabad,Visakhapatnam,15,1418.78,True,RAC,True
+3,Visakhapatnam,Bengaluru,15,1335.65,True,WL,True
+4,Vijayawada,Sambalpur,14,861.14,True,WL,True
+5,Hyderabad,Bengaluru,15,857.37,True,AVAILABLE,False
+6,Bengaluru,Chennai,15,1723.31,True,AVAILABLE,False
+7,Howrah,Visakhapatnam,15,1432.1,True,AVAILABLE,False
+8,Kolkata,Bhubaneswar,15,1858.43,True,AVAILABLE,False
+9,Vijayawada,Chennai,15,1397.95,True,WL,True
+10,Hyderabad,Tirupati,11,1003.7,True,AVAILABLE,False
+11,Bhubaneswar,Sambalpur,15,450.9,True,WL,True
+12,Cuttack,Visakhapatnam,15,1243.57,True,AVAILABLE,False
+13,Guntur,Visakhapatnam,15,808.48,True,AVAILABLE,False
+14,Vijayawada,Tirupati,5,1477.65,True,AVAILABLE,False
+15,Visakhapatnam,Kolkata,15,1084.61,True,AVAILABLE,False
+16,Nellore,Hyderabad,15,1954.25,True,AVAILABLE,False
+17,Jharsuguda,Bhubaneswar,15,255.94,True,AVAILABLE,False
+18,Sambalpur,Howrah,15,242.32,True,NO_DIRECT_RAIL,False
+19,Tirupati,Bengaluru,15,1160.89,True,AVAILABLE,False
+20,Hyderabad,Vijayawada,15,4396.99,True,WL,True
+21,Guntur,Bengaluru,15,532.85,True,AVAILABLE,False
+22,Nellore,Visakhapatnam,15,1797.84,True,RAC,True
+23,Cuttack,Sambalpur,7,349.37,True,AVAILABLE,False
+24,Jharsuguda,Visakhapatnam,13,281.8,True,AVAILABLE,False
+25,Srikakulam,Hyderabad,15,1162.33,True,AVAILABLE,False
+26,Anakapalle,Bengaluru,15,540.85,True,WL,True
+27,Eluru,Visakhapatnam,15,1422.87,True,AVAILABLE,False
+28,Rajahmundry,Bengaluru,15,972.46,True,WL,True
+29,Samalkot,Hyderabad,15,2140.42,True,WL,False
+30,Bhimavaram,Visakhapatnam,15,522.86,True,WL,False
+31,Khammam,Visakhapatnam,15,529.29,True,RAC,True
+32,Warangal,Visakhapatnam,15,670.22,True,RAC,True
+33,Kazipet,Bengaluru,15,879.17,True,AVAILABLE,False
+34,Ongole,Hyderabad,15,1686.3,True,AVAILABLE,False
+35,Chirala,Visakhapatnam,15,1096.23,True,RAC,True
+36,Tenali,Visakhapatnam,15,1439.46,True,AVAILABLE,False
+37,Duvvada,Hyderabad,15,1858.66,True,AVAILABLE,False
+38,Simhachalam,Bengaluru,15,1121.35,True,RAC,True
+39,Secunderabad,Visakhapatnam,15,1826.5,True,RAC,True
+40,Bhubaneswar,Hyderabad,15,1936.1,True,AVAILABLE,False
+41,Anchuthengu,Sh123,5,27.89,True,NO_DIRECT_RAIL,False
+42,Aduthurai,Pavoorchatram,10,9.76,True,NO_DIRECT_RAIL,False
+43,Haveri Taluku,Tandur Mandal,0,30.38,False,NO_DIRECT_RAIL,False
+44,Tanur,Parkal Mandal,0,33.78,False,NO_DIRECT_RAIL,False
+45,Pimparkhed,Pipariya Tahsil,0,4.2,False,NO_DIRECT_RAIL,False
+46,Satara,Sonothi,1,84.92,True,AVAILABLE,False
+47,Maluru Taluk,Gurramkonda,0,30.37,False,NO_DIRECT_RAIL,False
+48,Kankipadu,Erandol,0,0.14,False,NO_DIRECT_RAIL,False
+49,Kukshi Tahsil,Chagalamarri,0,0.06,False,NO_DIRECT_RAIL,False
+50,Hosadurga Taluku,Warora,0,0.05,False,NO_DIRECT_RAIL,False

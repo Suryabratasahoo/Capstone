@@ -1,0 +1,19 @@
+CONNEXLINK ITINERARY DISCOVERY COMPARISON REPORT
+============================================================
+
+
+[1/3] Loading Timetable...
+  Evaluating 50 identical queries across 3 routing paradigms...
+
+[2/3] COMPARISON RESULTS ACROSS 100 QUERIES:
+  1. Single-Mode Rail:     86.00% success (43/50) | Avg Options: 12.84
+  2. Single-Mode Bus:      16.00% success (8/50) | Avg Options: 4.88
+  3. ConnexLink Multi-Modal: 86.00% success (43/50) | Avg Options: 13.74
+
+[3/3] MANUSCRIPT CLAIMS VERIFICATION:
+  Rail Claim:       42.0%  | Actual Measured: 86.00%  (Diff: +44.00%)
+  Bus Claim:        58.0%  | Actual Measured: 16.00%  (Diff: -42.00%)
+  ConnexLink Claim: 96.0%  | Actual Measured: 86.00%  (Diff: -10.00%)
+
+[OK] Saved evaluation/results\comparison_summary.json
+[OK] Saved evaluation/results\comparison_results.csv

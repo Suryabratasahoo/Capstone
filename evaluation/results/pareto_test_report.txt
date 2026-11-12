@@ -1,0 +1,35 @@
+CONNEXLINK 4D PARETO DOMINANCE VERIFICATION REPORT
+============================================================
+
+
+--- TEST 1: Faster Waitlisted vs Slower Confirmed (Waitlist Bypass) ---
+Result: PASS
+  J1 (WL) dominated by J2 (AVAILABLE): False (Expected False)
+  J2 (AVAILABLE) dominated by J1 (WL): False (Expected False)
+  Pareto Bag Retained Options: 2/2
+
+--- TEST 2: Cheaper Dominates More Expensive ---
+Result: PASS
+  Cheap dominates Expensive: True (Expected True)
+  Expensive dominates Cheap: False (Expected False)
+  Retained itinerary: J_CHEAP
+
+--- TEST 3: Strictly Inferior in All 4 Dimensions Pruned ---
+Result: PASS
+  Inferior dominated: True (Expected True)
+  Inferior rejected from bag: True (Expected True)
+
+--- TEST 4: Equal Journeys Consistency ---
+Result: PASS
+  Neither equal itinerary dominates the other: True
+
+--- TEST 5: Stress Test Against Exhaustive O(N^2) Ground Truth ---
+Result: PASS
+  Total Evaluated Itineraries: 5000
+  Ground-Truth Pareto Frontier Size: 61
+  Production McRAPTOR Bag Size: 61
+  Dominated False Positives in Bag: 0 (Must be 0)
+
+[OK] Saved evaluation/results\pareto_test_results.json
+
+FINAL STATUS: ALL TESTS PASSED (100% MATHEMATICAL REPRODUCIBILITY)

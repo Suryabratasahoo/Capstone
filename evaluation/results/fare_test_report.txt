@@ -1,0 +1,60 @@
+CONNEXLINK IRCTC & BUS FARE ENGINE VERIFICATION REPORT
+============================================================
+
+
+--- TEST 1: Minimum Base Fare Enforcement on Short Distances (10 km) ---
+  Class 1A: Base Fare = 1005 INR (Expected Min = 1005 INR) -> PASS
+  Class 2A: Base Fare = 610 INR (Expected Min = 610 INR) -> PASS
+  Class 3A: Base Fare = 445 INR (Expected Min = 445 INR) -> PASS
+  Class CC: Base Fare = 265 INR (Expected Min = 265 INR) -> PASS
+  Class SL: Base Fare = 125 INR (Expected Min = 125 INR) -> PASS
+  Class 2S: Base Fare = 45 INR (Expected Min = 45 INR) -> PASS
+
+--- TEST 2: Reservation Fee Rule Verification ---
+  Class 1A: Res Fee = 60 INR (Expected = 60 INR) -> PASS
+  Class 2A: Res Fee = 50 INR (Expected = 50 INR) -> PASS
+  Class 3A: Res Fee = 40 INR (Expected = 40 INR) -> PASS
+  Class CC: Res Fee = 40 INR (Expected = 40 INR) -> PASS
+  Class SL: Res Fee = 20 INR (Expected = 20 INR) -> PASS
+  Class 2S: Res Fee = 15 INR (Expected = 15 INR) -> PASS
+
+--- TEST 3: Superfast Surcharge Application ---
+  Class 1A: SF Charge = 75 INR (Expected = 75 INR) -> PASS
+  Class 2A: SF Charge = 45 INR (Expected = 45 INR) -> PASS
+  Class 3A: SF Charge = 45 INR (Expected = 45 INR) -> PASS
+  Class CC: SF Charge = 45 INR (Expected = 45 INR) -> PASS
+  Class SL: SF Charge = 30 INR (Expected = 30 INR) -> PASS
+  Class 2S: SF Charge = 15 INR (Expected = 15 INR) -> PASS
+
+--- TEST 4: 5% GST Exemption & Application ---
+  Class 1A: Subtotal = 2025 INR, GST = 101 INR -> PASS
+  Class 2A: Subtotal = 1210 INR, GST = 60 INR -> PASS
+  Class 3A: Subtotal = 850 INR, GST = 42 INR -> PASS
+  Class CC: Subtotal = 732 INR, GST = 37 INR -> PASS
+  Class SL: Subtotal = 278 INR, GST = 0 INR -> PASS
+  Class 2S: Subtotal = 144 INR, GST = 0 INR -> PASS
+
+--- TEST 5: Official IRCTC Nearest 5 INR Rounding Rule ---
+  Distance 45 km: Total Fare = 555 INR (Multiple of 5: True)
+  Distance 120 km: Total Fare = 555 INR (Multiple of 5: True)
+  Distance 235 km: Total Fare = 555 INR (Multiple of 5: True)
+  Distance 388 km: Total Fare = 650 INR (Multiple of 5: True)
+  Distance 512 km: Total Fare = 800 INR (Multiple of 5: True)
+  Distance 743 km: Total Fare = 1045 INR (Multiple of 5: True)
+  Distance 999 km: Total Fare = 1310 INR (Multiple of 5: True)
+  Distance 1422 km: Total Fare = 1700 INR (Multiple of 5: True)
+
+--- TEST 6: Multi-Leg Fare Additivity (Train + Bus Transfer) ---
+  Leg 1 (Rail 350km 3A): 605 INR
+  Leg 2 (Bus 150km):      245 INR
+  Leg 3 (Transfer Walk): 0 INR
+  Combined Journey Fare: 850 INR -> PASS
+
+--- TEST 7: Bus Pricing Verification ---
+  200km Bus Seater:  230 INR
+  200km Bus Sleeper: 430 INR
+  200km Bus Volvo:   325 INR -> FAIL
+
+[OK] Saved evaluation/results\fare_test_results.json
+
+STATUS: FARE DISCREPANCIES DETECTED

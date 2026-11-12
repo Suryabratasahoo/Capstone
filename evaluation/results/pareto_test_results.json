@@ -1,0 +1,36 @@
+{
+  "test_1_waitlist_bypass": {
+    "passed": true,
+    "fast_wl_dominated_by_slow_avail": false,
+    "slow_avail_dominated_by_fast_wl": false,
+    "bag_size": 2,
+    "expected_bag_size": 2
+  },
+  "test_2_cheaper_dominance": {
+    "passed": true,
+    "expensive_dominated_by_cheap": true,
+    "cheap_dominated_by_expensive": false,
+    "retained_id": "J_CHEAP"
+  },
+  "test_3_inferior_pruned": {
+    "passed": true,
+    "inferior_dominated": true,
+    "inserted_into_bag": false,
+    "bag_size": 1
+  },
+  "test_4_equal_consistency": {
+    "passed": true,
+    "eq1_dominates_eq2": false,
+    "eq2_dominates_eq1": false,
+    "bag_size": 2
+  },
+  "test_5_stress_test": {
+    "passed": true,
+    "total_candidates": 5000,
+    "ground_truth_frontier_size": 61,
+    "production_bag_size": 61,
+    "false_positives_in_bag": 0,
+    "frontier_size_match": true
+  },
+  "all_tests_passed": true
+}

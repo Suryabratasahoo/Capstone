@@ -1,0 +1,78 @@
+{
+  "test_1_haversine_accuracy": {
+    "passed": true,
+    "bza_to_pnbs_km": 1.038,
+    "zero_distance_km": 0.0
+  },
+  "test_2_walking_speed": {
+    "passed": true,
+    "speed_kmh": 4.5,
+    "duration_1km_sec": 800,
+    "duration_1km_mins": 13.333333333333334
+  },
+  "test_3_layover_boundaries": {
+    "passed": true,
+    "min_bound_mins": 30,
+    "max_bound_mins": 360,
+    "details": [
+      {
+        "case": "29 mins (Sub-threshold)",
+        "layover_sec": 1740,
+        "is_valid": false,
+        "expected_valid": false,
+        "passed": true
+      },
+      {
+        "case": "30 mins (Exact Min Boundary)",
+        "layover_sec": 1800,
+        "is_valid": true,
+        "expected_valid": true,
+        "passed": true
+      },
+      {
+        "case": "45 mins (Standard Safe Connection)",
+        "layover_sec": 2700,
+        "is_valid": true,
+        "expected_valid": true,
+        "passed": true
+      },
+      {
+        "case": "180 mins (3 Hours)",
+        "layover_sec": 10800,
+        "is_valid": true,
+        "expected_valid": true,
+        "passed": true
+      },
+      {
+        "case": "360 mins (Exact Max Boundary)",
+        "layover_sec": 21600,
+        "is_valid": true,
+        "expected_valid": true,
+        "passed": true
+      },
+      {
+        "case": "361 mins (Exceeded Max Boundary)",
+        "layover_sec": 21660,
+        "is_valid": false,
+        "expected_valid": false,
+        "passed": true
+      }
+    ]
+  },
+  "test_4_overnight_rollover": {
+    "passed": true,
+    "leg1_arrival": "23:45 (Day 1)",
+    "leg2_departure": "00:30 (Day 2)",
+    "layover_minutes": 45
+  },
+  "test_5_transfer_segmentation": {
+    "passed": true,
+    "walk_edges": 624,
+    "invalid_walk_edges": 0,
+    "auto_cab_edges": 6290,
+    "invalid_auto_cab_edges": 0,
+    "rail_to_bus_edges": 3457,
+    "bus_to_rail_edges": 3457
+  },
+  "all_transfer_tests_passed": true
+}

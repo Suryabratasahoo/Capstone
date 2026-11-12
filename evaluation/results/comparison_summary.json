@@ -1,0 +1,33 @@
+{
+  "evaluation_parameters": {
+    "total_queries": 50,
+    "travel_date": "2026-08-01",
+    "travel_class": "3A"
+  },
+  "measured_discovery_rates": {
+    "single_mode_rail": {
+      "success_rate_percent": 86.0,
+      "successful_queries": 43,
+      "total_queries": 50,
+      "avg_options_when_found": 12.84,
+      "manuscript_claimed_rate": 42.0,
+      "verified": false
+    },
+    "single_mode_bus": {
+      "success_rate_percent": 16.0,
+      "successful_queries": 8,
+      "total_queries": 50,
+      "avg_options_when_found": 4.88,
+      "manuscript_claimed_rate": 58.0,
+      "verified": false
+    },
+    "connexlink_multimodal": {
+      "success_rate_percent": 86.0,
+      "successful_queries": 43,
+      "total_queries": 50,
+      "avg_options_when_found": 13.74,
+      "manuscript_claimed_rate": 96.0,
+      "verified": false
+    }
+  }
+}

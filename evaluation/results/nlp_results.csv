@@ -1,0 +1,51 @@
+text,aspect,ground_truth,textblob_polarity,predicted,correct
+"Train was very clean, punctual and arrived 15 mins before time. Excellent journey!",punctuality,positive,0.738,positive,True
+"Extremely dirty coaches, cockroaches everywhere and toilets stinking terribly.",cleanliness,negative,-0.8,negative,True
+Pantry food was absolutely delicious and served hot. Attendants were very polite.,catering,positive,0.483,positive,True
+"Terrible food, gave me severe food poisoning. Stale, cold and unhygienic.",catering,negative,-0.7,negative,True
+"AC was chilling properly, berths were wide and peaceful overnight journey.",ac_comfort,positive,-0.087,neutral,False
+AC not working for the entire 12 hour journey. Suffocating and unbearable heat.,ac_comfort,negative,-0.25,negative,True
+Train delayed by over 6 hours without any explanation or announcement.,punctuality,negative,0.0,neutral,False
+Superfast express running at high speed and reached destination on right time.,punctuality,positive,0.223,positive,True
+Charging points were functional and water was available in washrooms throughout.,water_charging,positive,0.4,positive,True
+"No water in taps, charging sockets completely broken. Pathetic maintenance.",water_charging,negative,-0.7,negative,True
+TTE was extremely polite and helped my elderly parents find their lower berths.,staff_safety,positive,-0.125,negative,False
+"Staff was rude, demanding extra bribes for seats. Worst customer service.",staff_safety,negative,-0.433,negative,True
+"Average train, nothing special. Left on time, reached 30 minutes late.",punctuality,neutral,-0.023,neutral,True
+Bedrolls provided were fresh and neatly sealed in plastic covers.,cleanliness,positive,0.3,positive,True
+Dirty torn blankets smelling of diesel and dust. Completely unhygienic.,cleanliness,negative,-0.25,negative,True
+"Vande Bharat experience was top notch. Fast, quiet and spotless coaches.",cleanliness,positive,0.233,positive,True
+Catering tea was cold and breakfast omelette tasted rubbery.,catering,negative,-0.6,negative,True
+Clean toilets with soap dispensers full. Pleasant surprise for Indian Railways.,cleanliness,positive,0.483,positive,True
+Crowded sleeper coach with unreserved passengers blocking passageways and doors.,staff_safety,negative,0.0,neutral,False
+RPF security patrolling regularly. Felt very safe traveling solo as a woman.,staff_safety,positive,0.325,positive,True
+Train halted at outer signal for 2 hours just outside destination station.,punctuality,negative,0.0,neutral,False
+Smooth and steady run. Very comfortable for senior citizens.,ac_comfort,positive,0.362,positive,True
+Coach floor was wet and garbage overflowing near the washbasins.,cleanliness,negative,0.0,neutral,False
+Pantry staff served fresh vegetable biryani with curd and pickle. Tasty.,catering,positive,0.3,positive,True
+Charging socket had loose wiring and almost sparked while charging laptop.,water_charging,negative,-0.077,neutral,False
+"Decent journey, coaches were cleaned once at an intermediate junction.",cleanliness,positive,0.167,positive,True
+Train had standard ICF coaches. Typical squeaking noises and normal travel.,ac_comfort,neutral,-0.006,neutral,True
+LHB coach ride was very smooth with minimal jerks and good sound insulation.,ac_comfort,positive,0.38,positive,True
+Windows were opaque from outside dust and dirt. Could not view the scenery.,cleanliness,negative,0.0,neutral,False
+Breakfast poha and upma were fresh and reasonably priced at 40 rupees.,catering,positive,0.25,positive,True
+Severe delay of 8 hours due to fog. Understandable weather circumstances.,punctuality,neutral,-0.125,negative,False
+Cleanest train on this route. Housekeeping staff swept the floor twice.,cleanliness,positive,0.0,neutral,False
+Coach attendant was sleeping and refused to provide bedroll until yelled at.,staff_safety,negative,0.2,positive,False
+Quick turnaround time and prompt departure from every halt.,punctuality,positive,0.333,positive,True
+Broken armrest and non-reclining chair car seat. Very uncomfortable.,ac_comfort,negative,-0.525,negative,True
+"Clean linen, well-mannered staff, on-time arrival. Worth the ticket price.",cleanliness,positive,0.333,positive,True
+Water ran out in the western toilet after just 3 hours into the trip.,water_charging,negative,-0.017,neutral,False
+No catering pantry car attached on this route. Bring your own food.,catering,neutral,0.6,positive,False
+Great speed! Covered 500 km in under 6 hours without any unscheduled stops.,punctuality,positive,1.0,positive,True
+Rats running across the floor in First AC. Unacceptable for premium fare.,cleanliness,negative,0.25,positive,False
+Staff distributed complimentary water bottles promptly upon boarding.,catering,positive,0.3,positive,True
+"Coach was freezing cold, AC cooling could not be regulated by staff.",ac_comfort,negative,-0.6,negative,True
+"Standard second sitting journey, moderately clean and reasonably on time.",punctuality,neutral,0.142,positive,False
+Washroom door latch was broken and could not be locked from inside.,cleanliness,negative,-0.4,negative,True
+"Clean curtains, warm blankets, and spotless charging points. 5 stars.",cleanliness,positive,0.483,positive,True
+Pantry vendor overcharged 20 rupees above MRP on rail neer water bottles.,catering,negative,0.0,neutral,False
+"Punctual express, arrived exactly at 07:00 AM as printed on the chart.",punctuality,positive,0.25,positive,True
+Horrible stinking bio-toilets and dry water tanks throughout the night.,cleanliness,negative,-0.533,negative,True
+Cooperative TTE allotted side-lower berth to senior citizen passenger.,staff_safety,positive,0.0,neutral,False
+Overall satisfactory ride. Timely departures with clean bedding.,ac_comfort,positive,0.183,positive,True

@@ -1,0 +1,201 @@
+{
+  "test_1_minimum_base_fare": {
+    "passed": true,
+    "details": {
+      "1A": {
+        "actual_base": 1005,
+        "expected_min": 1005,
+        "total_fare": 1195,
+        "passed": true
+      },
+      "2A": {
+        "actual_base": 610,
+        "expected_min": 610,
+        "total_fare": 740,
+        "passed": true
+      },
+      "3A": {
+        "actual_base": 445,
+        "expected_min": 445,
+        "total_fare": 555,
+        "passed": true
+      },
+      "CC": {
+        "actual_base": 265,
+        "expected_min": 265,
+        "total_fare": 370,
+        "passed": true
+      },
+      "SL": {
+        "actual_base": 125,
+        "expected_min": 125,
+        "total_fare": 175,
+        "passed": true
+      },
+      "2S": {
+        "actual_base": 45,
+        "expected_min": 45,
+        "total_fare": 75,
+        "passed": true
+      }
+    }
+  },
+  "test_2_reservation_fee": {
+    "passed": true,
+    "details": {
+      "1A": {
+        "actual": 60,
+        "expected": 60,
+        "passed": true
+      },
+      "2A": {
+        "actual": 50,
+        "expected": 50,
+        "passed": true
+      },
+      "3A": {
+        "actual": 40,
+        "expected": 40,
+        "passed": true
+      },
+      "CC": {
+        "actual": 40,
+        "expected": 40,
+        "passed": true
+      },
+      "SL": {
+        "actual": 20,
+        "expected": 20,
+        "passed": true
+      },
+      "2S": {
+        "actual": 15,
+        "expected": 15,
+        "passed": true
+      }
+    }
+  },
+  "test_3_superfast_charge": {
+    "passed": true,
+    "details": {
+      "1A": {
+        "actual_sf": 75,
+        "expected_sf": 75,
+        "passed": true
+      },
+      "2A": {
+        "actual_sf": 45,
+        "expected_sf": 45,
+        "passed": true
+      },
+      "3A": {
+        "actual_sf": 45,
+        "expected_sf": 45,
+        "passed": true
+      },
+      "CC": {
+        "actual_sf": 45,
+        "expected_sf": 45,
+        "passed": true
+      },
+      "SL": {
+        "actual_sf": 30,
+        "expected_sf": 30,
+        "passed": true
+      },
+      "2S": {
+        "actual_sf": 15,
+        "expected_sf": 15,
+        "passed": true
+      }
+    }
+  },
+  "test_4_gst_taxation": {
+    "passed": true,
+    "details": {
+      "1A": {
+        "subtotal": 2025,
+        "gst": 101,
+        "passed": true
+      },
+      "2A": {
+        "subtotal": 1210,
+        "gst": 60,
+        "passed": true
+      },
+      "3A": {
+        "subtotal": 850,
+        "gst": 42,
+        "passed": true
+      },
+      "CC": {
+        "subtotal": 732,
+        "gst": 37,
+        "passed": true
+      },
+      "SL": {
+        "subtotal": 278,
+        "gst": 0,
+        "passed": true
+      },
+      "2S": {
+        "subtotal": 144,
+        "gst": 0,
+        "passed": true
+      }
+    }
+  },
+  "test_5_rounding_rule": {
+    "passed": true,
+    "details": [
+      {
+        "distance": 45,
+        "total": 555,
+        "is_mult_of_5": true
+      },
+      {
+        "distance": 120,
+        "total": 555,
+        "is_mult_of_5": true
+      },
+      {
+        "distance": 235,
+        "total": 555,
+        "is_mult_of_5": true
+      },
+      {
+        "distance": 388,
+        "total": 650,
+        "is_mult_of_5": true
+      },
+      {
+        "distance": 512,
+        "total": 800,
+        "is_mult_of_5": true
+      },
+      {
+        "distance": 743,
+        "total": 1045,
+        "is_mult_of_5": true
+      },
+      {
+        "distance": 999,
+        "total": 1310,
+        "is_mult_of_5": true
+      },
+      {
+        "distance": 1422,
+        "total": 1700,
+        "is_mult_of_5": true
+      }
+    ]
+  },
+  "test_6_multi_leg_additivity": {
+    "passed": true,
+    "total_fare": 850
+  },
+  "test_7_bus_pricing": {
+    "passed": false
+  },
+  "all_fare_tests_passed": false
+}

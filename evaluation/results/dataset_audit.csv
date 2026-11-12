@@ -1,0 +1,7 @@
+entity,manuscript_value,actual_value,verified,notes
+Transit Stops,15420,3856,False,"Rail: 1604, Bus: 2252"
+Active Trips,42180,1810,False,"Rail: 809, Bus: 1001"
+Stop-Time Entries,280000+,32780,False,"Rail stops: 24413, Bus stops: 8365"
+Train Reviews,12500,10163,False,reddit reviews_train.csv (10163)
+Seat Availability Records,N/A,436860,True,"Available: 218300, WL: 153261, RAC: 65299"
+Footpaths / Transfers,N/A,6914,True,WALK connections <= 3.0km

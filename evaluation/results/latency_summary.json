@@ -1,0 +1,69 @@
+{
+  "environment": {
+    "operating_system": "Windows-11-10.0.26300-SP0",
+    "python_version": "3.13.7",
+    "cpu_architecture": "AMD64",
+    "cpu_count_logical": 8,
+    "cpu_count_physical": 4,
+    "total_physical_ram_gb": 15.91,
+    "process_initial_memory_mb": 558.04
+  },
+  "memory_footprint": {
+    "initial_process_memory_mb": 558.04,
+    "post_load_process_memory_mb": 880.31,
+    "incremental_timetable_memory_mb": 322.27,
+    "peak_process_memory_mb": 880.32,
+    "measurement_method": "psutil Process.memory_info().rss"
+  },
+  "query_benchmark_metrics": {
+    "num_queries_evaluated": 60,
+    "warmup_runs": 15,
+    "time_expanded_dijkstra": {
+      "mean_ms": 26.5,
+      "median_ms": 24.03,
+      "p95_ms": 51.43,
+      "p99_ms": 66.31,
+      "min_ms": 1.52,
+      "max_ms": 73.77,
+      "std_dev_ms": 15.63
+    },
+    "standard_raptor": {
+      "mean_ms": 76.33,
+      "median_ms": 70.24,
+      "p95_ms": 117.01,
+      "p99_ms": 128.88,
+      "min_ms": 53.73,
+      "max_ms": 137.97,
+      "std_dev_ms": 18.76
+    },
+    "connexlink_mcraptor": {
+      "mean_ms": 288.98,
+      "median_ms": 138.17,
+      "p95_ms": 805.98,
+      "p99_ms": 1118.83,
+      "min_ms": 30.68,
+      "max_ms": 1126.79,
+      "std_dev_ms": 288.19
+    }
+  },
+  "manuscript_claims_comparison": {
+    "dijkstra": {
+      "manuscript_avg_ms": 482.4,
+      "measured_avg_ms": 26.5,
+      "manuscript_p95_ms": 1240.1,
+      "measured_p95_ms": 51.43
+    },
+    "standard_raptor": {
+      "manuscript_avg_ms": 14.2,
+      "measured_avg_ms": 76.33,
+      "manuscript_p95_ms": 28.5,
+      "measured_p95_ms": 117.01
+    },
+    "connexlink_mcraptor": {
+      "manuscript_avg_ms": 34.8,
+      "measured_avg_ms": 288.98,
+      "manuscript_p95_ms": 58.2,
+      "measured_p95_ms": 805.98
+    }
+  }
+}

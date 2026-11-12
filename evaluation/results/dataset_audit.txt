@@ -1,0 +1,41 @@
+CONNEXLINK DATASET AUDIT REPORT
+============================================================
+
+1. MANUSCRIPT CLAIM VS ACTUAL DATABASE MEASUREMENT
+------------------------------------------------------------
+Stops:         Claimed = 15,420     | Actual =   3856  [UNVERIFIED - DISCREPANCY: -11564]
+Trips:         Claimed = 42,180     | Actual =   1810  [UNVERIFIED - DISCREPANCY: -40370]
+Stop-Times:    Claimed = 280,000+   | Actual =  32780  [UNVERIFIED - DISCREPANCY: -247220]
+Train Reviews: Claimed = 12,500     | Actual =  10163  [UNVERIFIED - DISCREPANCY: -2337]
+
+2. COMPONENT BREAKDOWN
+------------------------------------------------------------
+Railway Stations:       1604
+Bus Stops:              2252
+Total Unique Stops:     3856
+Missing Coordinates:       0
+
+Train Services:          809
+Bus Services:           1001
+Total Unique Trips:     1810
+
+Stop Time Records:     32780
+  - Train Stops:       24413
+  - Bus Stops:          8365
+Invalid Trip Refs:         0
+Invalid Stop Refs:         0
+Duplicate Sequences:       0
+
+3. SEAT AVAILABILITY DISTRIBUTION (seat_availability)
+------------------------------------------------------------
+  AVAILABLE   :  218300 (49.97%)
+  RAC         :   65299 (14.95%)
+  WL          :  153261 (35.08%)
+Total Seat Records:  436860
+
+4. GENUINE VS SYNTHETIC AUDIT
+------------------------------------------------------------
+Genuine Rail Network:  1604 stations, 809 train trips (scraped open IR timetables)
+Synthetic Bus Network: 2252 bus stands, 1001 bus trips (from simulated_bus_routes_1000.csv)
+Seat Availability:     Simulated status generator across August 2026 dates
+Reviews Corpus:        10163 train reviews (Reddit) + 358 bus reviews

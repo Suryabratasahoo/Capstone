@@ -1,0 +1,33 @@
+CONNEXLINK TRANSFER & FOOTPATH ENGINE VERIFICATION REPORT
+============================================================
+
+
+--- TEST 1: Haversine Geodesic Distance Benchmarks ---
+  BZA to PNBS Distance: 1.038 km (Benchmark: ~1.04 km) -> PASS
+  Identical Coordinates Distance: 0.000000 km -> PASS
+
+--- TEST 2: Walking Transfer Speed & Duration ---
+  1.0 km Walk Duration at 4.5 km/h: 800 sec (13.3 mins) -> PASS
+
+--- TEST 3: Layover Boundary Value Analysis ---
+  Case: 29 mins (Sub-threshold)             | Valid = False (Expected: False) -> PASS
+  Case: 30 mins (Exact Min Boundary)        | Valid = True  (Expected: True ) -> PASS
+  Case: 45 mins (Standard Safe Connection)  | Valid = True  (Expected: True ) -> PASS
+  Case: 180 mins (3 Hours)                  | Valid = True  (Expected: True ) -> PASS
+  Case: 360 mins (Exact Max Boundary)       | Valid = True  (Expected: True ) -> PASS
+  Case: 361 mins (Exceeded Max Boundary)    | Valid = False (Expected: False) -> PASS
+
+--- TEST 4: Overnight Midnight Rollover Sequencing ---
+  Leg 1 Arrival: 23:45 (Day 1)
+  Leg 2 Departure: 00:30 (Day 2)
+  Continuous Layover: 45 minutes -> Valid: True -> PASS
+
+--- TEST 5: Database Transfer Modal Segmentation ---
+  WALK Edges (<= 1.5km):          624 (Invalid > 1.5km: 0)
+  AUTO_CAB Edges (<= 15.0km):    6290 (Invalid > 15.0km: 0)
+  Rail <-> Bus Inter-Modal Edges:  6914
+  Transfer Segmentation Status: -> PASS
+
+[OK] Saved evaluation/results\transfer_test_results.json
+
+STATUS: ALL TRANSFER CHECKS PASSED (100% PASS)

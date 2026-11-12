@@ -1,0 +1,51 @@
+query_idx,source_city,dest_city,rail_only_success,rail_options_count,best_rail_duration_mins,best_rail_price_inr,bus_only_success,bus_options_count,best_bus_duration_mins,best_bus_price_inr,multimodal_success,multimodal_options_count,best_multimodal_duration_mins,best_multimodal_price_inr
+1,Vijayawada,Visakhapatnam,True,15,270.0,575.0,False,0,,,True,15,270.0,575.0
+2,Hyderabad,Visakhapatnam,True,15,600.0,930.0,False,0,,,True,15,600.0,930.0
+3,Visakhapatnam,Bengaluru,True,15,987.0,1330.0,False,0,,,True,15,987.0,1330.0
+4,Vijayawada,Sambalpur,True,14,890.0,1145.0,False,0,,,True,14,890.0,1145.0
+5,Hyderabad,Bengaluru,True,15,648.0,890.0,False,0,,,True,15,648.0,890.0
+6,Bengaluru,Chennai,True,7,308.0,585.0,True,8,370.0,455.0,True,15,308.0,455.0
+7,Howrah,Visakhapatnam,True,15,753.0,1155.0,False,0,,,True,15,753.0,1155.0
+8,Kolkata,Bhubaneswar,True,15,317.0,665.0,False,0,,,True,15,317.0,665.0
+9,Vijayawada,Chennai,True,15,370.0,700.0,False,0,,,True,15,370.0,700.0
+10,Hyderabad,Tirupati,True,8,615.0,920.0,True,3,818.0,825.0,True,11,615.0,825.0
+11,Bhubaneswar,Sambalpur,True,15,255.0,555.0,False,0,,,True,15,255.0,555.0
+12,Cuttack,Visakhapatnam,True,15,413.0,720.0,False,0,,,True,15,413.0,720.0
+13,Guntur,Visakhapatnam,True,15,335.0,620.0,False,0,,,True,15,335.0,620.0
+14,Vijayawada,Tirupati,True,4,320.0,635.0,True,1,474.0,575.0,True,5,320.0,575.0
+15,Visakhapatnam,Kolkata,True,15,775.0,1160.0,False,0,,,True,15,775.0,1160.0
+16,Nellore,Hyderabad,True,14,460.0,805.0,True,1,647.0,665.0,True,15,460.0,665.0
+17,Jharsuguda,Bhubaneswar,True,15,394.0,560.0,False,0,,,True,15,394.0,560.0
+18,Sambalpur,Howrah,True,15,706.0,1110.0,False,0,,,True,15,706.0,1110.0
+19,Tirupati,Bengaluru,True,13,303.0,560.0,True,2,392.0,445.0,True,15,303.0,445.0
+20,Hyderabad,Vijayawada,True,6,255.0,555.0,True,9,294.0,360.0,True,15,255.0,360.0
+21,Guntur,Bengaluru,True,14,750.0,950.0,True,1,843.0,980.0,True,15,750.0,950.0
+22,Nellore,Visakhapatnam,True,15,543.0,880.0,False,0,,,True,15,543.0,880.0
+23,Cuttack,Sambalpur,True,7,250.0,555.0,False,0,,,True,7,250.0,555.0
+24,Jharsuguda,Visakhapatnam,True,13,605.0,820.0,False,0,,,True,13,605.0,820.0
+25,Srikakulam,Hyderabad,True,15,804.0,1095.0,False,0,,,True,15,804.0,1095.0
+26,Anakapalle,Bengaluru,True,15,1025.0,1335.0,False,0,,,True,15,1025.0,1335.0
+27,Eluru,Visakhapatnam,True,15,250.0,555.0,False,0,,,True,15,250.0,555.0
+28,Rajahmundry,Bengaluru,True,15,849.0,1140.0,False,0,,,True,15,849.0,1140.0
+29,Samalkot,Hyderabad,True,15,535.0,800.0,False,0,,,True,15,535.0,800.0
+30,Bhimavaram,Visakhapatnam,True,15,268.0,555.0,False,0,,,True,15,268.0,555.0
+31,Khammam,Visakhapatnam,True,15,378.0,700.0,False,0,,,True,15,378.0,700.0
+32,Warangal,Visakhapatnam,True,15,476.0,825.0,False,0,,,True,15,476.0,825.0
+33,Kazipet,Bengaluru,True,15,808.0,1035.0,False,0,,,True,15,808.0,1035.0
+34,Ongole,Hyderabad,True,1,373.0,670.0,True,14,361.0,430.0,True,15,361.0,430.0
+35,Chirala,Visakhapatnam,True,15,408.0,695.0,False,0,,,True,15,408.0,695.0
+36,Tenali,Visakhapatnam,True,15,380.0,625.0,False,0,,,True,15,380.0,625.0
+37,Duvvada,Hyderabad,True,15,645.0,955.0,False,0,,,True,15,645.0,955.0
+38,Simhachalam,Bengaluru,True,15,999.0,1360.0,False,0,,,True,15,999.0,1360.0
+39,Secunderabad,Visakhapatnam,True,15,600.0,940.0,False,0,,,True,15,600.0,940.0
+40,Bhubaneswar,Hyderabad,True,15,1105.0,1410.0,False,0,,,True,15,1105.0,1410.0
+41,Anchuthengu,Sh123,True,5,1367.0,1745.0,False,0,,,True,5,1367.0,1745.0
+42,Aduthurai,Pavoorchatram,True,10,532.0,1110.0,False,0,,,True,10,532.0,1110.0
+43,Haveri Taluku,Tandur Mandal,False,0,,,False,0,,,False,0,,
+44,Tanur,Parkal Mandal,False,0,,,False,0,,,False,0,,
+45,Pimparkhed,Pipariya Tahsil,False,0,,,False,0,,,False,0,,
+46,Satara,Sonothi,True,1,733.0,900.0,False,0,,,True,1,733.0,900.0
+47,Maluru Taluk,Gurramkonda,False,0,,,False,0,,,False,0,,
+48,Kankipadu,Erandol,False,0,,,False,0,,,False,0,,
+49,Kukshi Tahsil,Chagalamarri,False,0,,,False,0,,,False,0,,
+50,Hosadurga Taluku,Warora,False,0,,,False,0,,,False,0,,

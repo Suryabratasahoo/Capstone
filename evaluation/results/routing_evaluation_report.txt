@@ -1,0 +1,32 @@
+CONNEXLINK McRAPTOR ROUTING EVALUATION REPORT
+============================================================
+
+
+[1/4] Pre-loading Timetable into RAM...
+  Timetable loaded in 1.912 seconds.
+  Stops: 3856 | Routes: 1810 | Trips: 1810 | Seats: 582480
+
+[2/4] Executing McRAPTOR over 50 Origin-Destination Queries...
+
+[3/4] Routing Metrics Calculation:
+  Total Evaluated Queries:         50
+  Successful Queries:              43
+  Failed Queries:                  7
+  Route Discovery Success Rate:    86.00% (43/50)
+  Confirmed Journey Rate:          86.00% (43/50)
+  Waitlist Escape Rate:            87.50% (14/16)
+  Total Itineraries Returned:      591
+  Average Itineraries / Query:     13.74
+  Average Transfers / Journey:     0.50
+  Average Journey Duration:        657.9 mins (11.0 hours)
+  Average Journey Distance:        589.5 km
+  Average Journey Fare:            1050.5 INR
+
+[4/4] Booking Certainty Breakdown Across All Discovered Itineraries (591):
+  Fully Confirmed (AVAILABLE):     342 (57.9%)
+  Reservation Against Cancellation:91 (15.4%)
+  Waiting List (WL):               158 (26.7%)
+  Unknown Availability:            0
+
+[OK] Saved evaluation/results\routing_evaluation.json
+[OK] Saved evaluation/results\routing_results.csv
