@@ -25,6 +25,86 @@ const createIcon = (color: string) => {
   });
 };
 
+// Cache for offline India vector basemap GeoJSON
+let cachedIndiaBasemapGeoJSON: any = null;
+
+const fetchIndiaBasemapData = async () => {
+  if (cachedIndiaBasemapGeoJSON) return cachedIndiaBasemapGeoJSON;
+  try {
+    const res = await fetch('/india_basemap.json');
+    if (res.ok) {
+      cachedIndiaBasemapGeoJSON = await res.json();
+      return cachedIndiaBasemapGeoJSON;
+    }
+  } catch (err) {
+    console.error('Failed to load /india_basemap.json', err);
+  }
+  return null;
+};
+
+const createOfflineBasemapLayer = (LInstance: any, geoJsonData: any) => {
+  if (!LInstance || !geoJsonData) return null;
+  const canvasRenderer = LInstance.canvas({ padding: 0.5 });
+
+  return LInstance.geoJSON(geoJsonData, {
+    renderer: canvasRenderer,
+    style: (feature: any) => {
+      const type = feature?.properties?.layer_type;
+      if (type === 'national_border') {
+        return {
+          color: '#334155', // clean dark slate sovereign perimeter
+          weight: 2.2,
+          opacity: 0.95,
+        };
+      }
+      if (type === 'rail_grid') {
+        return {
+          color: '#cbd5e1', // subtle light slate railway network
+          weight: 1.0,
+          opacity: 0.75,
+          dashArray: '3, 6',
+        };
+      }
+      // State / Union Territory Boundaries - Clean White Landmass
+      return {
+        fillColor: '#ffffff', // crisp white landmass
+        fillOpacity: 1.0,
+        color: '#cbd5e1', // soft slate state boundary stroke
+        weight: 1.1,
+        opacity: 1.0,
+      };
+    },
+    pointToLayer: (feature: any, latlng: any) => {
+      const marker = LInstance.circleMarker(latlng, {
+        renderer: canvasRenderer,
+        radius: 3.5,
+        fillColor: '#3b82f6',
+        color: '#ffffff',
+        weight: 1.5,
+        opacity: 0.95,
+        fillOpacity: 0.9,
+      });
+      if (feature?.properties?.name) {
+        marker.bindTooltip(feature.properties.name, {
+          permanent: true,
+          direction: 'right',
+          offset: [5, 0],
+          className: 'radar-city-label',
+        });
+      }
+      return marker;
+    },
+    onEachFeature: (feature: any, layer: any) => {
+      if (feature?.properties?.layer_type === 'state_boundary' && feature?.properties?.name) {
+        layer.bindTooltip(feature.properties.name, {
+          sticky: true,
+          className: 'state-name-tooltip',
+        });
+      }
+    },
+  });
+};
+
 // Helper to extract clean Indian Railway station codes (e.g., "RAIL:NZM" -> "NZM")
 const extractStationCode = (stop: any): string => {
   if (!stop) return '';
@@ -82,11 +162,20 @@ function ServiceRatingBadge({ serviceNumber, mode }: { serviceNumber: string, mo
   useEffect(() => {
     if (!serviceNumber) return;
 
+    const cleanMode = (mode || '').toUpperCase();
+    const cleanDigits = (serviceNumber || '').replace(/\D/g, '');
+    const isRail = cleanMode === 'RAIL' || cleanMode === 'TRAIN';
+    const isBus = cleanMode === 'BUS' || (mode || '').toLowerCase().includes('bus');
+
+    const host = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '127.0.0.1';
     let endpoint = "";
-    if ((mode === 'RAIL' || mode === 'TRAIN') && !isNaN(Number(serviceNumber))) {
-      endpoint = `http://127.0.0.1:8001/train/${serviceNumber}`;
-    } else if (mode === 'BUS') {
-      endpoint = `http://127.0.0.1:8001/bus/${encodeURIComponent(serviceNumber)}`;
+
+    if (isRail && cleanDigits) {
+      endpoint = `http://${host}:8001/train/${cleanDigits}`;
+    } else if (isBus) {
+      endpoint = `http://${host}:8001/bus/${encodeURIComponent(serviceNumber)}`;
+    } else if (cleanDigits) {
+      endpoint = `http://${host}:8001/train/${cleanDigits}`;
     } else {
       return;
     }
@@ -111,7 +200,7 @@ function ServiceRatingBadge({ serviceNumber, mode }: { serviceNumber: string, mo
 
   return (
     <div className="inline-flex items-center gap-1.5 ml-1.5 group/badge relative">
-      <span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-md text-[10px] font-black border border-amber-200 shadow-sm flex items-center cursor-help">
+      <span className="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-md text-[10px] font-black border border-amber-300 shadow-xs flex items-center cursor-help">
         <svg viewBox="0 0 24 24" className="w-3 h-3 text-amber-500 fill-current inline-block mr-0.5" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
         </svg>
@@ -273,6 +362,18 @@ function TransitCopilotWidgetInner({
 
   const generateSmartResponse = (userText: string, lang: 'en' | 'hi' | 'te'): string => {
     const lower = userText.toLowerCase();
+
+    // Guardrail Check: Refuse political, world leader, or non-transit questions in fallback mode
+    const isOffTopic = /\b(north\s*korea|kim\s*jong|president|prime\s*minister|election|biden|trump|putin|modi|politics|movie|actor|code|python|solve|derivative|integral)\b/i.test(lower);
+    if (isOffTopic && !lower.includes('train') && !lower.includes('bus') && !lower.includes('station') && !lower.includes('ticket')) {
+      if (lang === 'te') {
+        return "నేను మీ OptiTransit ప్రయాణ కోపైలట్‌ని. నేను భారతీయ రైల్వేలు, బస్సులు, స్టేషన్ బదిలీలు మరియు ప్రయాణ సమాచారానికి మాత్రమే సహాయం అందించగలను. సాధారణ విజ్ఞానం, రాజకీయాలు లేదా ఇతర అంశాలకు సంబంధించిన సమాధానాలను నేను ఇవ్వలేను. దయచేసి మీ ప్రయాణం లేదా రూట్లకు సంబంధించిన ప్రశ్నలను మాత్రమే అడగండి.";
+      }
+      if (lang === 'hi') {
+        return "मैं आपका OptiTransit यात्रा सहायक हूँ। मैं केवल भारतीय रेलवे, बस यात्रा, स्टेशन ट्रांसफर और यात्रा संबंधी सहायता के लिए उपलब्ध हूँ। सामान्य ज्ञान, राजनीति या अन्य बाहरी विषयों पर मैं उत्तर नहीं दे सकता। कृपया अपनी यात्रा, ट्रेन, बस या रूट से संबंधित प्रश्न ही पूछें।";
+      }
+      return "I am your OptiTransit Travel Copilot, specialized exclusively in Indian public transportation, train and bus schedules, station transfers, and travel assistance. I cannot answer general knowledge, political, or off-topic questions. Please ask me about your journey, routes, train/bus bookings, or station facilities!";
+    }
 
     // Alternate Station Boarding Hack query
     if (lower.includes('alternate') || lower.includes('boarding') || lower.includes('unlock') || lower.includes('वैकल्पिक') || lower.includes('ఆల్టర్నేట్')) {
@@ -657,9 +758,13 @@ function PlannerContent() {
   const [travelDate, setTravelDate] = useState(initialDate);
   const [travelClass, setTravelClass] = useState(initialClass);
   const initialTrain = searchParams.get('train') || '';
+  const initialIsolate = searchParams.get('isolate') === 'true' || searchParams.get('isolate_route') === 'true';
   const [trainFilter, setTrainFilter] = useState(initialTrain);
-  const [requireBus, setRequireBus] = useState(false);
-  const [seniorCitizenMode, setSeniorCitizenMode] = useState(false);
+  const [isolateRoute, setIsolateRoute] = useState(initialIsolate);
+  const initialRequireBus = searchParams.get('bus') === 'true' || searchParams.get('require_bus') === 'true';
+  const initialSenior = searchParams.get('senior') === 'true';
+  const [requireBus, setRequireBus] = useState(initialRequireBus);
+  const [seniorCitizenMode, setSeniorCitizenMode] = useState(initialSenior);
   const [formError, setFormError] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
@@ -676,6 +781,34 @@ function PlannerContent() {
   const mapInstance = useRef<any>(null);
   const polylineGroup = useRef<any>(null);
 
+  const [mapMode, setMapMode] = useState<'OFFLINE' | 'ONLINE'>('OFFLINE');
+  const mapModeRef = useRef<'OFFLINE' | 'ONLINE'>('OFFLINE');
+  const offlineBasemapLayerRef = useRef<any>(null);
+  const tileLayerRef = useRef<any>(null);
+
+  const switchMapMode = (mode: 'OFFLINE' | 'ONLINE') => {
+    mapModeRef.current = mode;
+    setMapMode(mode);
+
+    if (!mapInstance.current) return;
+
+    if (mode === 'OFFLINE') {
+      if (tileLayerRef.current && mapInstance.current.hasLayer(tileLayerRef.current)) {
+        mapInstance.current.removeLayer(tileLayerRef.current);
+      }
+      if (offlineBasemapLayerRef.current && !mapInstance.current.hasLayer(offlineBasemapLayerRef.current)) {
+        offlineBasemapLayerRef.current.addTo(mapInstance.current);
+      }
+    } else {
+      if (offlineBasemapLayerRef.current && mapInstance.current.hasLayer(offlineBasemapLayerRef.current)) {
+        mapInstance.current.removeLayer(offlineBasemapLayerRef.current);
+      }
+      if (tileLayerRef.current && !mapInstance.current.hasLayer(tileLayerRef.current)) {
+        tileLayerRef.current.addTo(mapInstance.current);
+      }
+    }
+  };
+
   const modalMapRef = useRef<HTMLDivElement>(null);
   const modalMapInstance = useRef<any>(null);
   const modalPolylineGroup = useRef<any>(null);
@@ -690,13 +823,42 @@ function PlannerContent() {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && mapRef.current && !mapInstance.current && L) {
-      mapInstance.current = L.map(mapRef.current).setView([24.0, 82.0], 5);
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      const indiaBounds = L.latLngBounds([[6.0, 68.0], [37.5, 98.0]]);
+
+      const map = L.map(mapRef.current, {
+        center: [23.0, 82.0],
+        zoom: 5,
+        minZoom: 4,
+        maxZoom: 14,
+        maxBounds: indiaBounds,
+        maxBoundsViscosity: 0.85,
+      });
+      mapInstance.current = map;
+
+      const tileLyr = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
         maxZoom: 18,
-        className: 'dark-tiles'
-      }).addTo(mapInstance.current);
-      polylineGroup.current = L.layerGroup().addTo(mapInstance.current);
+      });
+      tileLayerRef.current = tileLyr;
+
+      tileLyr.on('tileerror', () => {
+        if (mapModeRef.current === 'ONLINE') {
+          console.warn('OSM tile error detected. Falling back to Offline India Radar.');
+          switchMapMode('OFFLINE');
+        }
+      });
+
+      // Load offline vector basemap
+      fetchIndiaBasemapData().then((data) => {
+        if (!data || !mapInstance.current) return;
+        const offlineLayer = createOfflineBasemapLayer(L, data);
+        offlineBasemapLayerRef.current = offlineLayer;
+        if (mapModeRef.current === 'OFFLINE' && offlineLayer) {
+          offlineLayer.addTo(mapInstance.current);
+        }
+      });
+
+      polylineGroup.current = L.layerGroup().addTo(map);
     }
   }, []);
 
@@ -707,15 +869,33 @@ function PlannerContent() {
     let mapInst: any = null;
     let group: any = null;
 
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       if (!modalMapRef.current) return;
       try {
-        mapInst = L.map(modalMapRef.current).setView([24.0, 82.0], 5);
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; OpenStreetMap contributors',
-          maxZoom: 18,
-          className: 'dark-tiles',
-        }).addTo(mapInst);
+        const indiaBounds = L.latLngBounds([[6.0, 68.0], [37.5, 98.0]]);
+        mapInst = L.map(modalMapRef.current, {
+          center: [23.0, 82.0],
+          zoom: 5,
+          minZoom: 4,
+          maxZoom: 14,
+          maxBounds: indiaBounds,
+          maxBoundsViscosity: 0.85,
+        });
+
+        // Modal map loads offline vector basemap
+        const data = await fetchIndiaBasemapData();
+        if (data) {
+          const offlineLayer = createOfflineBasemapLayer(L, data);
+          if (offlineLayer) {
+            offlineLayer.addTo(mapInst);
+          }
+        } else {
+          L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 18,
+          }).addTo(mapInst);
+        }
+
         group = L.layerGroup().addTo(mapInst);
         modalMapInstance.current = mapInst;
         modalPolylineGroup.current = group;
@@ -742,9 +922,26 @@ function PlannerContent() {
     setModalUnlockData(null);
   };
 
-  const fetchResults = async (overrideTrain?: string) => {
+  const fetchResults = async (
+    overrideFrom?: string,
+    overrideTo?: string,
+    overrideDate?: string,
+    overrideClass?: string,
+    overrideTrain?: string,
+    overrideSenior?: boolean,
+    overrideBus?: boolean,
+    overrideIsolate?: boolean
+  ) => {
+    const src = overrideFrom ?? fromLocation;
+    const dst = overrideTo ?? toLocation;
+    const dt = overrideDate ?? travelDate;
+    const cls = overrideClass ?? travelClass;
     const activeTrain = overrideTrain !== undefined ? overrideTrain : trainFilter;
-    if (fromLocation.trim().toLowerCase() === toLocation.trim().toLowerCase()) {
+    const isSenior = overrideSenior !== undefined ? overrideSenior : seniorCitizenMode;
+    const isBus = overrideBus !== undefined ? overrideBus : requireBus;
+    const isIsolated = overrideIsolate !== undefined ? overrideIsolate : isolateRoute;
+
+    if (!src || !dst || src.trim().toLowerCase() === dst.trim().toLowerCase()) {
       setFormError("Source and Destination cannot be the same city. Please select different locations.");
       setRawApiData({ options: [], total_options_found: 0, search_time_ms: 0 });
       setLoading(false);
@@ -753,9 +950,12 @@ function PlannerContent() {
     setFormError(null);
     setLoading(true);
     try {
-      let url = `http://127.0.0.1:8000/api/v4/mcraptor/city-search?source_city=${encodeURIComponent(fromLocation)}&dest_city=${encodeURIComponent(toLocation)}&date=${travelDate}&class_code=${travelClass}&top_k=25&require_bus=${requireBus}&senior_citizen_mode=${seniorCitizenMode}`;
+      let url = `http://127.0.0.1:8000/api/v4/mcraptor/city-search?source_city=${encodeURIComponent(src.trim())}&dest_city=${encodeURIComponent(dst.trim())}&date=${dt}&class_code=${cls}&top_k=25&require_bus=${isBus}&senior_citizen_mode=${isSenior}`;
       if (activeTrain && activeTrain.trim()) {
         url += `&target_train=${encodeURIComponent(activeTrain.trim())}`;
+      }
+      if (isIsolated) {
+        url += `&isolate_route=true`;
       }
       const res = await fetch(url);
       if (!res.ok) throw new Error("Search failed");
@@ -770,16 +970,24 @@ function PlannerContent() {
   };
 
   useEffect(() => {
-    fetchResults();
+    setFromLocation(initialFrom);
+    setToLocation(initialTo);
+    setTravelDate(initialDate);
+    setTravelClass(initialClass);
+    setTrainFilter(initialTrain);
+    setIsolateRoute(initialIsolate);
+    setRequireBus(initialRequireBus);
+    setSeniorCitizenMode(initialSenior);
+    fetchResults(initialFrom, initialTo, initialDate, initialClass, initialTrain, initialSenior, initialRequireBus, initialIsolate);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialFrom, initialTo, initialDate, initialClass, seniorCitizenMode, trainFilter]);
+  }, [initialFrom, initialTo, initialDate, initialClass, initialTrain, initialSenior, initialRequireBus, initialIsolate]);
 
   useEffect(() => {
     if (rawApiData) {
       applyFiltersAndSort();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rawApiData, filterType, sortCriterion]);
+  }, [rawApiData, filterType, sortCriterion, isolateRoute]);
 
   const applyFiltersAndSort = () => {
     if (!rawApiData) return;
@@ -793,6 +1001,22 @@ function PlannerContent() {
           return (cleanTarget && legNum === cleanTarget) || (leg.service_number || '').toLowerCase().includes(trainFilter.trim().toLowerCase());
         })
       );
+    }
+
+    if (isolateRoute || initialIsolate) {
+      // Strictly show ONLY the single target direct route
+      const cleanTarget = (trainFilter || initialTrain || '').replace(/\D/g, '');
+      const directMatches = processed.filter(opt =>
+        opt.transfers === 0 && opt.legs.some((leg: any) => {
+          const legNum = (leg.service_number || '').replace(/\D/g, '');
+          return cleanTarget ? legNum === cleanTarget : true;
+        })
+      );
+      if (directMatches.length > 0) {
+        processed = [directMatches[0]];
+      } else if (processed.length > 0) {
+        processed = [processed[0]];
+      }
     }
 
     if (filterType === "DIRECT") {
@@ -892,15 +1116,20 @@ function PlannerContent() {
           coordsWithData.slice(1, -1).forEach((pt: any) => {
             const dot = L.circleMarker([pt.latitude, pt.longitude], {
               radius: 3.5,
-              fillColor: '#1e1e1e',
+              fillColor: '#ffffff',
               color: color,
               weight: 2,
-              opacity: 0.9,
+              opacity: 0.95,
               fillOpacity: 1
             }).addTo(polylineGroup.current);
 
             if (pt.name) {
-              dot.bindTooltip(pt.name, { className: 'bg-zinc-900 text-white border-zinc-700 text-xs font-bold px-2 py-1', direction: 'top', opacity: 0.9 });
+              dot.bindTooltip(pt.name, {
+                permanent: true,
+                direction: 'top',
+                offset: [0, -4],
+                className: 'route-intermediate-label',
+              });
             }
           });
         }
@@ -908,12 +1137,24 @@ function PlannerContent() {
         const startPt = coords[0];
         const endPt = coords[coords.length - 1];
 
-        L.marker(startPt, { icon: createIcon(isWalk ? '#d946ef' : '#10b981') })
+        L.marker(startPt, { icon: createIcon(isWalk ? '#d946ef' : '#059669') })
           .bindPopup(`<b>${leg.from_stop.name}</b><br>${isWalk ? 'Transfer Start' : 'Dep: ' + leg.departure_time}`)
+          .bindTooltip(`<b>${leg.from_stop.name}</b>${isWalk ? ' (Transfer)' : ' (Dep: ' + leg.departure_time + ')'}`, {
+            permanent: true,
+            direction: 'bottom',
+            offset: [0, 8],
+            className: 'route-terminal-label origin',
+          })
           .addTo(polylineGroup.current);
 
-        L.marker(endPt, { icon: createIcon(isWalk ? '#d946ef' : '#ef4444') })
+        L.marker(endPt, { icon: createIcon(isWalk ? '#d946ef' : '#dc2626') })
           .bindPopup(`<b>${leg.to_stop.name}</b><br>${isWalk ? 'Transfer End' : 'Arr: ' + leg.arrival_time}`)
+          .bindTooltip(`<b>${leg.to_stop.name}</b>${isWalk ? ' (Transfer)' : ' (Arr: ' + leg.arrival_time + ')'}`, {
+            permanent: true,
+            direction: 'top',
+            offset: [0, -8],
+            className: 'route-terminal-label dest',
+          })
           .addTo(polylineGroup.current);
       }
     });
@@ -1054,7 +1295,7 @@ function PlannerContent() {
           }),
         })
           .bindPopup(`<b>Ticket Reservation Origin</b><br/>${unlock.book_from.name} (${unlock.book_from.code})<br/><span style="color:#64748b;font-size:10px;">Seat reserved from here to access General Quota</span>`)
-          .bindTooltip(`Ticket Reservation Origin: ${unlock.book_from.name} (${unlock.book_from.code})`, { className: 'bg-zinc-900 text-white text-[10px] font-bold px-2 py-1 rounded', direction: 'top' })
+          .bindTooltip(`Ticket Reservation: ${unlock.book_from.name} (${unlock.book_from.code})`, { permanent: true, className: 'route-stop-label', direction: 'top', offset: [0, -6] })
           .addTo(targetGroup);
       }
 
@@ -1070,7 +1311,7 @@ function PlannerContent() {
           }),
         })
           .bindPopup(`<b>Your Boarding Station</b><br/>${unlock.actual_boarding.name} (${unlock.actual_boarding.code})<br/><span style="color:#059669;font-weight:700;font-size:10px;">Official Boarding Point — you board here</span>`)
-          .bindTooltip(`Your Boarding Station: ${unlock.actual_boarding.name} (${unlock.actual_boarding.code})`, { className: 'bg-emerald-900 text-white text-[10px] font-bold px-2 py-1 rounded', direction: 'top' })
+          .bindTooltip(`Boarding: ${unlock.actual_boarding.name} (${unlock.actual_boarding.code})`, { permanent: true, className: 'route-terminal-label origin', direction: 'bottom', offset: [0, 8] })
           .addTo(targetGroup);
       }
 
@@ -1080,13 +1321,13 @@ function PlannerContent() {
         L.marker([pt.latitude, pt.longitude], {
           icon: L.divIcon({
             className: '',
-            html: `<div style="background:#e11d48;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 0 8px rgba(225,29,72,0.7);"></div>`,
+            html: `<div style="background:#dc2626;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 0 8px rgba(220,38,38,0.7);"></div>`,
             iconSize: [16, 16],
             iconAnchor: [8, 8],
           }),
         })
-          .bindPopup(`<b>Your Deboarding Station</b><br/>${unlock.actual_deboarding.name} (${unlock.actual_deboarding.code})<br/><span style="color:#e11d48;font-weight:700;font-size:10px;">Your exit point — you deboard here</span>`)
-          .bindTooltip(`Your Deboarding Station: ${unlock.actual_deboarding.name} (${unlock.actual_deboarding.code})`, { className: 'bg-rose-900 text-white text-[10px] font-bold px-2 py-1 rounded', direction: 'top' })
+          .bindPopup(`<b>Your Deboarding Station</b><br/>${unlock.actual_deboarding.name} (${unlock.actual_deboarding.code})<br/><span style="color:#dc2626;font-weight:700;font-size:10px;">Your exit point — you deboard here</span>`)
+          .bindTooltip(`Deboarding: ${unlock.actual_deboarding.name} (${unlock.actual_deboarding.code})`, { permanent: true, className: 'route-terminal-label dest', direction: 'top', offset: [0, -8] })
           .addTo(targetGroup);
       }
 
@@ -1102,7 +1343,7 @@ function PlannerContent() {
           }),
         })
           .bindPopup(`<b>Ticket Reservation Destination</b><br/>${unlock.book_to.name} (${unlock.book_to.code})<br/><span style="color:#64748b;font-size:10px;">Ticket extended here to secure confirmed seat</span>`)
-          .bindTooltip(`Ticket Reservation Destination: ${unlock.book_to.name} (${unlock.book_to.code})`, { className: 'bg-zinc-900 text-white text-[10px] font-bold px-2 py-1 rounded', direction: 'top' })
+          .bindTooltip(`Ticket Dest: ${unlock.book_to.name} (${unlock.book_to.code})`, { permanent: true, className: 'route-stop-label', direction: 'top', offset: [0, -6] })
           .addTo(targetGroup);
       }
     }
@@ -1308,10 +1549,12 @@ function PlannerContent() {
           <div className="p-4 border-b border-zinc-100 bg-gradient-to-b from-brand-cream/40 to-transparent">
             <div className="flex justify-between items-center mb-3">
               <div>
-                <h2 className="text-sm font-black text-brand-forest tracking-tight">Optimal Multi-Transit Routes</h2>
+                <h2 className="text-sm font-black text-brand-forest tracking-tight">
+                  {isolateRoute ? 'Alternate Route Focus' : 'Optimal Multi-Transit Routes'}
+                </h2>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="bg-emerald-100/80 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-md border border-emerald-300/80">
-                    {loading ? 'Searching Pareto routes...' : `${processedOptions.length} Routes • ${rawApiData?.search_time_ms || 0}ms`}
+                    {loading ? 'Searching Pareto routes...' : (isolateRoute ? '1 Route (Target Isolated)' : `${processedOptions.length} Routes • ${rawApiData?.search_time_ms || 0}ms`)}
                   </span>
                   <span className="text-[10px] font-medium text-zinc-400">McRAPTOR Engine</span>
                 </div>
@@ -1324,36 +1567,44 @@ function PlannerContent() {
 
             {/* 1-Click Filter Chips & Quick Sort Strip */}
             <div className="space-y-2">
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                <button
-                  type="button"
-                  onClick={() => setFilterType('ALL')}
-                  className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${filterType === 'ALL' ? 'bg-zinc-900 text-white shadow-xs' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'}`}
-                >
-                  All ({rawApiData?.total_options_found || 0})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFilterType('DIRECT')}
-                  className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${filterType === 'DIRECT' ? 'bg-brand-forest text-white shadow-xs' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'}`}
-                >
-                  Direct (0 Transfers)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFilterType('AVAILABLE_ONLY')}
-                  className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${filterType === 'AVAILABLE_ONLY' ? 'bg-emerald-700 text-white shadow-xs' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'}`}
-                >
-                  Confirmed (AVL)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFilterType('ONE_TRANSFER')}
-                  className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${filterType === 'ONE_TRANSFER' ? 'bg-indigo-700 text-white shadow-xs' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'}`}
-                >
-                  1-Transfer
-                </button>
-              </div>
+              {isolateRoute ? (
+                <div className="flex items-center gap-1.5">
+                  <span className="bg-zinc-900 text-white px-2.5 py-1 rounded-lg text-[10px] font-extrabold shadow-xs">
+                    Target Alternate Route (1)
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                  <button
+                    type="button"
+                    onClick={() => setFilterType('ALL')}
+                    className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${filterType === 'ALL' ? 'bg-zinc-900 text-white shadow-xs' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'}`}
+                  >
+                    All ({rawApiData?.total_options_found || 0})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilterType('DIRECT')}
+                    className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${filterType === 'DIRECT' ? 'bg-brand-forest text-white shadow-xs' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'}`}
+                  >
+                    Direct (0 Transfers)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilterType('AVAILABLE_ONLY')}
+                    className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${filterType === 'AVAILABLE_ONLY' ? 'bg-emerald-700 text-white shadow-xs' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'}`}
+                  >
+                    Confirmed (AVL)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilterType('ONE_TRANSFER')}
+                    className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${filterType === 'ONE_TRANSFER' ? 'bg-indigo-700 text-white shadow-xs' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'}`}
+                  >
+                    1-Transfer
+                  </button>
+                </div>
+              )}
 
               <div className="flex items-center justify-between pt-1 border-t border-zinc-100 text-xs">
                 <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Sort Options:</span>
@@ -1372,7 +1623,33 @@ function PlannerContent() {
             </div>
           </div>
 
-          {trainFilter && (
+          {isolateRoute ? (
+            <div className="mx-4 mt-3 -mb-1 flex items-center justify-between bg-emerald-50 border border-emerald-300 px-3 py-2 rounded-xl text-xs font-bold text-emerald-950 shadow-xs">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                <div>
+                  <span className="block font-black text-emerald-950">Alternate Reservation Route: Train #{trainFilter || initialTrain}</span>
+                  <span className="text-[10px] text-emerald-800 font-semibold">Showing this route only ({fromLocation} → {toLocation})</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsolateRoute(false);
+                  setTrainFilter('');
+                  const params = new URLSearchParams(window.location.search);
+                  params.delete('train');
+                  params.delete('isolate');
+                  params.delete('isolate_route');
+                  router.replace(`${window.location.pathname}?${params.toString()}`);
+                  fetchResults(fromLocation, toLocation, travelDate, travelClass, '', seniorCitizenMode, requireBus, false);
+                }}
+                className="text-[10px] bg-white border border-emerald-300 hover:bg-emerald-100 text-emerald-900 px-2.5 py-1 rounded-lg font-black transition-colors cursor-pointer shrink-0"
+              >
+                Show All Routes
+              </button>
+            </div>
+          ) : trainFilter && (
             <div className="mx-4 mt-3 -mb-1 flex items-center justify-between bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-900 shadow-xs">
               <span className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -1819,12 +2096,37 @@ function PlannerContent() {
         </div>
 
         {/* Right Panel: Map */}
-        <div className="flex-1 bg-zinc-200 relative z-10">
+        <div className="flex-1 relative z-10 bg-[#eef2f6]">
           <div id="map" ref={mapRef} className="w-full h-full absolute inset-0 z-0"></div>
-          {/* Subtle overlay logo on map */}
-          <div className="absolute bottom-6 left-6 z-[400] pointer-events-none opacity-80 bg-white/90 backdrop-blur px-3 py-1.5 rounded-xl shadow-sm border border-zinc-200 flex flex-col gap-0.5">
-            <span className="text-xs font-black text-brand-forest">Powered by McRAPTOR</span>
-            <span className="text-[9px] font-bold text-zinc-500">OptiTransit Prototype Test Suite</span>
+
+          {/* Top-Right Basemap Mode Switcher: Step 3 Hybrid Setup */}
+          <div className="absolute top-4 right-4 z-[400] flex items-center bg-white/95 backdrop-blur-md p-1 rounded-2xl shadow-md border border-slate-200">
+            <button
+              type="button"
+              onClick={() => switchMapMode('OFFLINE')}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                mapMode === 'OFFLINE'
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${mapMode === 'OFFLINE' ? 'bg-white' : 'bg-slate-400'}`}></span>
+              <span>Offline India Map</span>
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-black/10 border border-black/5 uppercase">Offline</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => switchMapMode('ONLINE')}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                mapMode === 'ONLINE'
+                  ? 'bg-sky-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${mapMode === 'ONLINE' ? 'bg-white' : 'bg-slate-400'}`}></span>
+              <span>Online OSM</span>
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-black/10 border border-black/5 uppercase">Live Web</span>
+            </button>
           </div>
         </div>
 
@@ -1835,6 +2137,17 @@ function PlannerContent() {
         const { leg, unlock, opt } = modalUnlockData;
         const trainNo = unlock.train_number || leg.service_number || '';
         const trainTitle = unlock.train_name || leg.service_name || '';
+
+        const bookFromCity = unlock.book_from?.name || unlock.book_from?.code || '';
+        const bookToCity = unlock.book_to?.name || unlock.book_to?.code || '';
+        const actualBoardCity = unlock.actual_boarding?.name || unlock.actual_boarding?.code || '';
+        const actualDeboardCity = unlock.actual_deboarding?.name || unlock.actual_deboarding?.code || '';
+
+        // URL 1: Confirmed Reservation Journey (Booking origin to destination - strictly isolated to this single route)
+        const confirmedJourneyUrl = `/planner?from=${encodeURIComponent(bookFromCity)}&to=${encodeURIComponent(bookToCity)}&date=${encodeURIComponent(travelDate)}&class=${encodeURIComponent(travelClass)}&train=${encodeURIComponent(trainNo)}&isolate=true${seniorCitizenMode ? '&senior=true' : ''}`;
+
+        // URL 2: Direct Boarding Segment (Boarding point to destination - strictly isolated to this single route)
+        const boardingSegmentUrl = `/planner?from=${encodeURIComponent(actualBoardCity)}&to=${encodeURIComponent(actualDeboardCity)}&date=${encodeURIComponent(travelDate)}&class=${encodeURIComponent(travelClass)}&train=${encodeURIComponent(trainNo)}&isolate=true${seniorCitizenMode ? '&senior=true' : ''}`;
 
         return (
           <div
@@ -1847,7 +2160,7 @@ function PlannerContent() {
             >
               {/* Modal Header (Fixed Top) */}
               <div className="p-5 sm:p-6 pb-3 border-b border-zinc-100 shrink-0">
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="bg-emerald-700 text-white text-xs font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-xs">
@@ -1858,6 +2171,7 @@ function PlannerContent() {
                         Train {trainNo}
                       </span>
                     )}
+                    <ServiceRatingBadge serviceNumber={trainNo} mode="RAIL" />
                     <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full border border-emerald-300">
                       AVL {unlock.unlocked_seats} Confirmed
                     </span>
@@ -1866,13 +2180,15 @@ function PlannerContent() {
                     {trainTitle} • Fare Difference: <span className="text-emerald-700 font-extrabold">+₹{unlock.extra_fare_inr}</span>
                   </p>
                 </div>
-                <button
-                  onClick={closeModal}
-                  className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-black flex items-center justify-center font-bold text-sm transition-colors shrink-0"
-                  title="Close window"
-                >
-                  &times;
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={closeModal}
+                    className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-black flex items-center justify-center font-bold text-sm transition-colors shrink-0"
+                    title="Close window"
+                  >
+                    &times;
+                  </button>
+                </div>
                 </div>
               </div>
 
@@ -1917,6 +2233,51 @@ function PlannerContent() {
                 </div>
               </div>
 
+              {/* Dedicated Card: Link to Check this Specific Train Journey in New Window */}
+              <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-indigo-50/60 rounded-2xl p-3.5 border border-emerald-300 shadow-2xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="bg-zinc-900 text-white font-mono text-[10px] font-black px-2 py-0.5 rounded">
+                        Train #{trainNo}
+                      </span>
+                      <span className="text-xs font-black text-emerald-950">
+                        {trainTitle}
+                      </span>
+                      <ServiceRatingBadge serviceNumber={trainNo} mode="RAIL" />
+                      <span className="bg-emerald-200 text-emerald-950 text-[10px] font-black px-2 py-0.5 rounded-full">
+                        AVL {unlock.unlocked_seats} Confirmed
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-zinc-600 font-medium mt-1">
+                      Travel Date: <span className="font-bold text-zinc-900">{travelDate}</span> • Class: <span className="font-bold text-zinc-900">{travelClass}</span> • Fare Diff: <span className="font-bold text-emerald-800">+₹{unlock.extra_fare_inr}</span>
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <a
+                      href={confirmedJourneyUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-xs transition-colors"
+                      title="Open confirmed reservation journey in a new window"
+                    >
+                      <span>Check Confirmed Ticket ({unlock.book_from.code} → {unlock.book_to.code}) [AVL {unlock.unlocked_seats}]</span>
+                      <span className="text-[10px] font-mono">↗</span>
+                    </a>
+                    <a
+                      href={boardingSegmentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 text-xs font-bold px-2.5 py-2 rounded-xl transition-colors text-[11px]"
+                      title="Inspect direct boarding segment in a new window to verify waitlisted status"
+                    >
+                      <span>Direct Segment ({unlock.actual_boarding.code} → {unlock.actual_deboarding.code}) [{unlock.direct_status_text || 'Waitlisted'}]</span>
+                      <span className="text-[10px] font-mono">↗</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
               {/* Dedicated Embedded Leaflet Map for Route & Boarding Points */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
@@ -1940,7 +2301,7 @@ function PlannerContent() {
                 </div>
                 <div
                   ref={modalMapRef}
-                  className="h-52 w-full rounded-2xl overflow-hidden border border-zinc-200 shadow-inner bg-zinc-100"
+                  className="h-52 w-full rounded-2xl overflow-hidden border border-slate-200 shadow-inner bg-[#eef2f6]"
                 />
               </div>
 
@@ -2031,7 +2392,17 @@ function PlannerContent() {
                   <span>IRCTC Official Change Boarding Station (CBPS) Facility Authorized</span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <a
+                    href={confirmedJourneyUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black px-4 py-2 rounded-xl shadow-xs transition-colors cursor-pointer"
+                    title="Open this specific train journey in a new window"
+                  >
+                    <span>Check Train {trainNo} in New Window</span>
+                    <span className="text-[10px] font-mono">↗</span>
+                  </a>
                   <button
                     type="button"
                     onClick={() => {

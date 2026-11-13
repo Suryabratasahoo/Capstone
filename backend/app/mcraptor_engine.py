@@ -118,25 +118,14 @@ def get_leg_fare_and_status(
     mode_upper = (mode or "").upper()
 
     if mode_upper == "RAIL":
-        segment_key = (clean_service, travel_date_str, clean_from, clean_to, travel_class)
-        fallback_key = (clean_service, travel_date_str, travel_class)
+        from app.mcraptor_city_engine import get_train_seat_status
+        seat_info = get_train_seat_status(timetable, clean_service, travel_date_str, clean_from, clean_to, travel_class)
 
-        seat_info = None
-        if segment_key in timetable.seat_map:
-            seat_info = timetable.seat_map[segment_key]
-        elif fallback_key in timetable.seat_map:
-            seat_info = timetable.seat_map[fallback_key]
-
-        if seat_info:
-            status = seat_info.get("status", "AVAILABLE")
-            available_seats = seat_info.get("available_seats", 0)
-            wl_number = seat_info.get("wl_number", 0)
-            if status == "WL" and (wl_number is None or wl_number <= 0):
-                wl_number = 1
-        else:
-            status = "AVAILABLE"
-            available_seats = 24
-            wl_number = 0
+        status = seat_info.get("status", "AVAILABLE")
+        available_seats = seat_info.get("available_seats", 0)
+        wl_number = seat_info.get("wl_number", 0)
+        if status == "WL" and (wl_number is None or wl_number <= 0):
+            wl_number = 1
 
         irctc_fare = calculate_irctc_train_fare(
             distance_km=distance_km,
@@ -156,15 +145,27 @@ def get_leg_fare_and_status(
         }
 
     elif mode_upper == "BUS":
-        fare_key = (clean_service, clean_from, clean_to, "NON_AC")
-        seat_info = timetable.bus_fare_map.get(fare_key)
+        fare_key_cls = (clean_service, clean_from, clean_to, travel_class)
+        fare_key_seg = (clean_service, clean_from, clean_to)
+
+        seat_info = None
+        if fare_key_cls in timetable.bus_fare_map:
+            seat_info = timetable.bus_fare_map[fare_key_cls]
+        elif fare_key_seg in timetable.bus_fare_map:
+            seat_info = timetable.bus_fare_map[fare_key_seg]
+        elif clean_service in getattr(timetable, "bus_route_defaults", {}):
+            seat_info = timetable.bus_route_defaults[clean_service]
+
         if seat_info:
             status = seat_info.get("status", "AVAILABLE")
-            available_seats = seat_info.get("available_seats", 30)
+            available_seats = seat_info.get("available_seats", 0)
             wl_number = 0
+            if available_seats <= 0:
+                status = "WL"
+                wl_number = 1
         else:
             status = "AVAILABLE"
-            available_seats = 30
+            available_seats = 0
             wl_number = 0
 
         bus_fare = calculate_bus_fare(

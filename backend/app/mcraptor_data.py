@@ -34,7 +34,9 @@ class McRaptorTimetable:
         # Train Segment Seat Availability: (train_number, travel_date, from_code, to_code, class_code) -> dict
         # Bus Fares: (route_number, from_stop_id, to_stop_id, bus_class) -> dict
         self.seat_map: Dict[Tuple, dict] = {}
+        self.train_quota_segments: Dict[Tuple, List[dict]] = {}
         self.bus_fare_map: Dict[Tuple, dict] = {}
+        self.bus_route_defaults: Dict[str, dict] = {}
         
         # service_number -> string (train name or bus provider name)
         self.service_names: Dict[str, str] = {}
@@ -155,22 +157,27 @@ def build_mcraptor_timetable(db_path: str = "app/final.db") -> McRaptorTimetable
     """)
     for row in cursor.fetchall():
         t_num, date_str, from_stn, to_stn, cls, status, seats, wl, price = row
-        segment_key = (str(t_num), date_str, from_stn, to_stn, cls)
-        timetable.seat_map[segment_key] = {
+        t_num_str = str(t_num)
+        segment_key = (t_num_str, date_str, from_stn, to_stn, cls)
+        seat_dict = {
+            "from_station": from_stn,
+            "to_station": to_stn,
             "status": status,
             "available_seats": seats,
             "wl_number": wl,
             "price_inr": price
         }
+        timetable.seat_map[segment_key] = seat_dict
+
+        # Collect all quota segments for this train, date, class
+        quota_group_key = (t_num_str, date_str, cls)
+        if quota_group_key not in timetable.train_quota_segments:
+            timetable.train_quota_segments[quota_group_key] = []
+        timetable.train_quota_segments[quota_group_key].append(seat_dict)
+
         # Fallback key without segment
-        fallback_key = (str(t_num), date_str, cls)
-        if fallback_key not in timetable.seat_map:
-            timetable.seat_map[fallback_key] = {
-                "status": status,
-                "available_seats": seats,
-                "wl_number": wl,
-                "price_inr": price
-            }
+        if quota_group_key not in timetable.seat_map:
+            timetable.seat_map[quota_group_key] = seat_dict
 
     # 6. Load Bus Fares into RAM
     cursor.execute("""
@@ -179,13 +186,24 @@ def build_mcraptor_timetable(db_path: str = "app/final.db") -> McRaptorTimetable
     """)
     for row in cursor.fetchall():
         r_num, f_stop, t_stop, b_cls, price, seats = row
-        fare_key = (r_num, f_stop, t_stop, b_cls)
-        timetable.bus_fare_map[fare_key] = {
+        r_num_str = str(r_num)
+        fare_data = {
             "status": "AVAILABLE" if seats > 0 else "WL",
             "available_seats": seats,
             "wl_number": 0,
             "price_inr": price
         }
+        fare_key = (r_num_str, f_stop, t_stop, b_cls)
+        timetable.bus_fare_map[fare_key] = fare_data
+
+        # Fallback without bus class
+        seg_key = (r_num_str, f_stop, t_stop)
+        if seg_key not in timetable.bus_fare_map:
+            timetable.bus_fare_map[seg_key] = fare_data
+
+        # Fallback at route level
+        if r_num_str not in timetable.bus_route_defaults:
+            timetable.bus_route_defaults[r_num_str] = fare_data
 
     # 7. Load Train Names and Types
     cursor.execute("SELECT train_number, train_name, train_type FROM trains")

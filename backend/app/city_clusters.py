@@ -10,49 +10,49 @@ import re
 METRO_CLUSTERS: Dict[str, dict] = {
     "visakhapatnam": {
         "canonical_name": "Visakhapatnam",
-        "aliases": ["visakhapatnam", "vizag", "waltair", "etapalem", "duvvada", "visakhapatnam rural", "old gajuwaka", "pendurthi", "vskp", "dvd", "scm"],
+        "aliases": ["visakhapatnam", "vizag", "waltair", "visakhapatnam rural", "old gajuwaka", "pendurthi"],
         "included_db_cities": ["visakhapatnam", "etapalem", "visakhapatnam rural", "old gajuwaka", "pendurthi"],
         "key_rail_codes": ["VSKP", "DVD", "SCM", "MIPM"],
         "summary": "VSKP, DVD, SCM • Dwaraka, Gajuwaka Bus Stands"
     },
     "bengaluru": {
         "canonical_name": "Bengaluru",
-        "aliases": ["bengaluru", "bangalore", "blr", "bangalore south", "anekal", "sbc", "ypr", "smvb", "bnc", "kjm"],
+        "aliases": ["bengaluru", "bangalore", "blr", "bangalore south", "anekal"],
         "included_db_cities": ["bengaluru", "bangalore", "bangalore south", "anekal"],
         "key_rail_codes": ["SBC", "YPR", "SMVB", "BNC", "KJM", "YNK"],
         "summary": "SBC, YPR, SMVB, BNC • Majestic Bus Stand"
     },
     "hyderabad": {
         "canonical_name": "Hyderabad",
-        "aliases": ["hyderabad", "secunderabad", "hyd", "cyberabad", "alwal mandal", "balapur mandal", "keesara mandal", "medipally mandal", "sc", "hyb", "kcg", "chz", "lpi"],
+        "aliases": ["hyderabad", "secunderabad", "hyd", "cyberabad", "alwal mandal", "balapur mandal", "keesara mandal", "medipally mandal"],
         "included_db_cities": ["hyderabad", "secunderabad", "alwal mandal", "balapur mandal", "keesara mandal", "medipally mandal"],
         "key_rail_codes": ["SC", "HYB", "KCG", "CHZ", "LPI"],
         "summary": "SC, HYB, KCG, CHZ • MGBS, JBS Bus Stands"
     },
     "secunderabad": {
         "canonical_name": "Secunderabad",
-        "aliases": ["secunderabad", "hyderabad", "sc", "hyb"],
+        "aliases": ["secunderabad", "hyderabad"],
         "included_db_cities": ["secunderabad", "hyderabad"],
         "key_rail_codes": ["SC", "HYB", "KCG", "CHZ"],
         "summary": "SC, HYB, KCG • JBS, MGBS Bus Stands"
     },
     "kolkata": {
         "canonical_name": "Kolkata",
-        "aliases": ["kolkata", "haora", "howrah", "calcutta", "sankrail", "howrah/kolkata", "baranagar", "bally", "hwh", "sdah", "src", "shm"],
+        "aliases": ["kolkata", "haora", "howrah", "calcutta", "sankrail", "howrah/kolkata", "baranagar", "bally"],
         "included_db_cities": ["kolkata", "haora", "sankrail", "howrah/kolkata", "howrah", "calcutta", "baranagar", "bally"],
         "key_rail_codes": ["HWH", "SDAH", "SRC", "SHM"],
         "summary": "HWH, SDAH, SRC, SHM • Esplanade Bus Stand"
     },
     "howrah": {
         "canonical_name": "Howrah",
-        "aliases": ["howrah", "haora", "kolkata", "calcutta", "sankrail", "howrah/kolkata", "hwh", "sdah", "src"],
+        "aliases": ["howrah", "haora", "kolkata", "calcutta", "sankrail", "howrah/kolkata"],
         "included_db_cities": ["haora", "kolkata", "sankrail", "howrah/kolkata", "howrah"],
         "key_rail_codes": ["HWH", "SRC", "SDAH", "SHM"],
         "summary": "HWH, SRC, SDAH • Esplanade, Howrah Bus Stands"
     },
     "vijayawada": {
         "canonical_name": "Vijayawada",
-        "aliases": ["vijayawada", "bza", "amaravati", "amaravathi", "rayanapad station", "penamaluru", "ryp"],
+        "aliases": ["vijayawada", "amaravati", "amaravathi", "rayanapad station", "penamaluru"],
         "included_db_cities": ["vijayawada", "rayanapad station", "amaravati", "amaravathi", "penamaluru"],
         "key_rail_codes": ["BZA", "RYP"],
         "summary": "BZA, RYP • PNBS (Pandit Nehru Bus Station)"

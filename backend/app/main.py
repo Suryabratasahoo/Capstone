@@ -192,7 +192,8 @@ def search_mcraptor_city_routes(
     top_k: int = Query(15, ge=1, le=150, description="Max Pareto routes to return"),
     require_bus: bool = Query(False, description="If true, only returns routes that contain at least one bus leg"),
     senior_citizen_mode: bool = Query(False, description="Prioritize lower berths & senior citizen quota"),
-    target_train: Optional[str] = Query(None, description="Optional target train number to isolate")
+    target_train: Optional[str] = Query(None, description="Optional target train number to isolate"),
+    isolate_route: bool = Query(False, description="If true, strictly isolates the single target direct route")
 ):
     if not mcraptor_timetable:
         raise HTTPException(status_code=503, detail="Timetable index not initialized.")
@@ -207,7 +208,8 @@ def search_mcraptor_city_routes(
         top_k=top_k,
         require_bus=require_bus,
         senior_citizen_mode=senior_citizen_mode,
-        target_train=target_train
+        target_train=target_train,
+        isolate_route=isolate_route
     )
     
     elapsed_ms = round((time.time() - start_t) * 1000, 2)
@@ -233,7 +235,8 @@ def search_test_mcraptor_city_routes(
     top_k: int = Query(15, ge=1, le=150, description="Max Pareto routes to return"),
     require_bus: bool = Query(False, description="If true, only returns routes that contain at least one bus leg"),
     senior_citizen_mode: bool = Query(False, description="Prioritize lower berths & senior citizen quota"),
-    target_train: Optional[str] = Query(None, description="Optional target train number to isolate")
+    target_train: Optional[str] = Query(None, description="Optional target train number to isolate"),
+    isolate_route: bool = Query(False, description="If true, strictly isolates the single target direct route")
 ):
     if not mcraptor_timetable:
         raise HTTPException(status_code=503, detail="Timetable index not initialized.")
@@ -250,7 +253,8 @@ def search_test_mcraptor_city_routes(
         top_k=top_k,
         require_bus=require_bus,
         senior_citizen_mode=senior_citizen_mode,
-        target_train=target_train
+        target_train=target_train,
+        isolate_route=isolate_route
     )
 
     elapsed_ms = round((time.time() - start_t) * 1000, 2)
