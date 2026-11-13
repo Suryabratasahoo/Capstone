@@ -25,6 +25,22 @@ const createIcon = (color: string) => {
   });
 };
 
+// Pulsing origin/destination terminal icon with subtle radar ping
+const createPulsingTerminalIcon = (color: string) => {
+  if (!L) return null;
+  return L.divIcon({
+    className: 'custom-terminal-marker',
+    html: `
+      <div style="position: relative; width: 18px; height: 18px;">
+        <div class="terminal-pulse-ring" style="background-color: ${color};"></div>
+        <div style="position: absolute; inset: 2px; background-color: ${color}; border-radius: 50%; border: 2.5px solid white; box-shadow: 0 1px 6px rgba(0,0,0,0.35);"></div>
+      </div>
+    `,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9]
+  });
+};
+
 // Cache for offline India vector basemap GeoJSON
 let cachedIndiaBasemapGeoJSON: any = null;
 
@@ -52,8 +68,8 @@ const createOfflineBasemapLayer = (LInstance: any, geoJsonData: any) => {
       const type = feature?.properties?.layer_type;
       if (type === 'national_border') {
         return {
-          color: '#334155', // clean dark slate sovereign perimeter
-          weight: 2.2,
+          color: '#87CEEB', // clean dark slate sovereign perimeter
+          weight: 1.5,
           opacity: 0.95,
         };
       }
@@ -95,10 +111,34 @@ const createOfflineBasemapLayer = (LInstance: any, geoJsonData: any) => {
       return marker;
     },
     onEachFeature: (feature: any, layer: any) => {
-      if (feature?.properties?.layer_type === 'state_boundary' && feature?.properties?.name) {
-        layer.bindTooltip(feature.properties.name, {
-          sticky: true,
-          className: 'state-name-tooltip',
+      if (feature?.properties?.layer_type === 'state_boundary') {
+        if (feature?.properties?.name) {
+          layer.bindTooltip(feature.properties.name, {
+            sticky: true,
+            className: 'state-name-tooltip',
+          });
+        }
+
+        // Subtle state hover tint animation
+        layer.on({
+          mouseover: (e: any) => {
+            const target = e.target;
+            target.setStyle({
+              fillColor: '#f1f5f9', // ultra-subtle slate-100 tint
+              fillOpacity: 1.0,
+              color: '#94a3b8',     // refined slate-400 border
+              weight: 1.4,
+            });
+          },
+          mouseout: (e: any) => {
+            const target = e.target;
+            target.setStyle({
+              fillColor: '#ffffff', // revert to crisp white
+              fillOpacity: 1.0,
+              color: '#cbd5e1',     // revert to soft slate-300
+              weight: 1.1,
+            });
+          },
         });
       }
     },
@@ -474,39 +514,39 @@ function TransitCopilotWidgetInner({
       // Sanitize the active selected route to exclude huge GPS polyline arrays before passing to LLM
       const sanitizedRoute = activeRoute
         ? {
-            journey_type: activeRoute.journey_type,
-            transfers: activeRoute.transfers,
-            travel_class: activeRoute.travel_class,
-            overall_status: activeRoute.overall_status,
-            available_seats: activeRoute.available_seats,
-            wl_number: activeRoute.wl_number,
-            total_price_inr: activeRoute.total_price_inr,
-            total_duration: activeRoute.total_duration,
-            total_duration_mins: activeRoute.total_duration_mins,
-            total_distance_km: activeRoute.total_distance_km,
-            interchange_station: activeRoute.interchange_station,
-            senior_friendly: activeRoute.senior_friendly,
-            smart_quota_unlock: activeRoute.smart_quota_unlock,
-            legs: (activeRoute.legs || []).map((l: any) => ({
-              leg_number: l.leg_number,
-              mode: l.mode,
-              service_number: l.service_number,
-              service_name: l.service_name,
-              from_stop: { name: l.from_stop?.name, code: l.from_stop?.id || l.from_stop?.code },
-              to_stop: { name: l.to_stop?.name, code: l.to_stop?.id || l.to_stop?.code },
-              departure_time: l.departure_time,
-              arrival_time: l.arrival_time,
-              distance_km: l.distance_km,
-              travel_class: l.travel_class,
-              seat_status: l.seat_status,
-              wl_number: l.wl_number,
-              available_seats: l.available_seats,
-              price_inr: l.price_inr,
-              fare_breakdown: l.fare_breakdown?.breakdown_text,
-              seat_breakdown: l.seat_breakdown,
-              smart_quota_unlock: l.smart_quota_unlock,
-            })),
-          }
+          journey_type: activeRoute.journey_type,
+          transfers: activeRoute.transfers,
+          travel_class: activeRoute.travel_class,
+          overall_status: activeRoute.overall_status,
+          available_seats: activeRoute.available_seats,
+          wl_number: activeRoute.wl_number,
+          total_price_inr: activeRoute.total_price_inr,
+          total_duration: activeRoute.total_duration,
+          total_duration_mins: activeRoute.total_duration_mins,
+          total_distance_km: activeRoute.total_distance_km,
+          interchange_station: activeRoute.interchange_station,
+          senior_friendly: activeRoute.senior_friendly,
+          smart_quota_unlock: activeRoute.smart_quota_unlock,
+          legs: (activeRoute.legs || []).map((l: any) => ({
+            leg_number: l.leg_number,
+            mode: l.mode,
+            service_number: l.service_number,
+            service_name: l.service_name,
+            from_stop: { name: l.from_stop?.name, code: l.from_stop?.id || l.from_stop?.code },
+            to_stop: { name: l.to_stop?.name, code: l.to_stop?.id || l.to_stop?.code },
+            departure_time: l.departure_time,
+            arrival_time: l.arrival_time,
+            distance_km: l.distance_km,
+            travel_class: l.travel_class,
+            seat_status: l.seat_status,
+            wl_number: l.wl_number,
+            available_seats: l.available_seats,
+            price_inr: l.price_inr,
+            fare_breakdown: l.fare_breakdown?.breakdown_text,
+            seat_breakdown: l.seat_breakdown,
+            smart_quota_unlock: l.smart_quota_unlock,
+          })),
+        }
         : null;
 
       // Connect to live Groq LLM API route with selected route context
@@ -563,7 +603,7 @@ function TransitCopilotWidgetInner({
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-3 w-3 bg-brand-lime"></span>
           </span>
-          
+
           <div className="text-left">
             <div className="text-xs font-black tracking-wide flex items-center gap-1.5">
               <span>AI Transit Copilot</span>
@@ -651,11 +691,10 @@ function TransitCopilotWidgetInner({
                 className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}
               >
                 <div
-                  className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 text-xs shadow-xs leading-relaxed ${
-                    m.sender === 'user'
+                  className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 text-xs shadow-xs leading-relaxed ${m.sender === 'user'
                       ? 'bg-brand-forest text-white rounded-br-xs font-semibold whitespace-pre-wrap'
                       : 'bg-white text-zinc-800 border border-zinc-200/90 rounded-bl-xs'
-                  }`}
+                    }`}
                 >
                   {m.sender === 'user' ? (
                     m.text
@@ -712,8 +751,8 @@ function TransitCopilotWidgetInner({
                 selectedLang === 'te'
                   ? "మీ ప్రయాణం లేదా వృద్ధుల సహాయం గురించి అడగండి..."
                   : selectedLang === 'hi'
-                  ? "अपनी यात्रा या बुजुर्गों की सुविधा के बारे में पूछें..."
-                  : "Ask about layovers, meal breaks, or elder travel..."
+                    ? "अपनी यात्रा या बुजुर्गों की सुविधा के बारे में पूछें..."
+                    : "Ask about layovers, meal breaks, or elder travel..."
               }
               className="flex-1 bg-zinc-100 border border-zinc-200 rounded-full px-3.5 py-2 text-xs font-semibold text-zinc-800 focus:outline-none focus:border-brand-forest"
             />
@@ -740,7 +779,7 @@ function PlannerContent() {
 
   const initialFrom = searchParams.get('from') || 'Vijayawada';
   const initialTo = searchParams.get('to') || 'Sambalpur';
-  
+
   // IRCTC 60-day advance reservation date range helper
   const getTodayStr = () => new Date().toISOString().split('T')[0];
   const getMaxDateStr = () => {
@@ -911,7 +950,7 @@ function PlannerContent() {
       if (mapInst) {
         try {
           mapInst.remove();
-        } catch (e) {}
+        } catch (e) { }
         modalMapInstance.current = null;
         modalPolylineGroup.current = null;
       }
@@ -1112,6 +1151,17 @@ function PlannerContent() {
 
         bounds.extend(polyline.getBounds());
 
+        // Directional transit flow pulse animation
+        if (!isWalk && coords.length >= 2) {
+          L.polyline(coords, {
+            color: '#ffffff',
+            weight: 2,
+            opacity: 0.6,
+            dashArray: '6, 12',
+            className: 'flowing-transit-pulse',
+          }).addTo(polylineGroup.current);
+        }
+
         if (coordsWithData.length > 2) {
           coordsWithData.slice(1, -1).forEach((pt: any) => {
             const dot = L.circleMarker([pt.latitude, pt.longitude], {
@@ -1137,22 +1187,22 @@ function PlannerContent() {
         const startPt = coords[0];
         const endPt = coords[coords.length - 1];
 
-        L.marker(startPt, { icon: createIcon(isWalk ? '#d946ef' : '#059669') })
+        L.marker(startPt, { icon: isWalk ? createIcon('#d946ef') : createPulsingTerminalIcon('#059669') })
           .bindPopup(`<b>${leg.from_stop.name}</b><br>${isWalk ? 'Transfer Start' : 'Dep: ' + leg.departure_time}`)
           .bindTooltip(`<b>${leg.from_stop.name}</b>${isWalk ? ' (Transfer)' : ' (Dep: ' + leg.departure_time + ')'}`, {
             permanent: true,
             direction: 'bottom',
-            offset: [0, 8],
+            offset: [0, 10],
             className: 'route-terminal-label origin',
           })
           .addTo(polylineGroup.current);
 
-        L.marker(endPt, { icon: createIcon(isWalk ? '#d946ef' : '#dc2626') })
+        L.marker(endPt, { icon: isWalk ? createIcon('#d946ef') : createPulsingTerminalIcon('#dc2626') })
           .bindPopup(`<b>${leg.to_stop.name}</b><br>${isWalk ? 'Transfer End' : 'Arr: ' + leg.arrival_time}`)
           .bindTooltip(`<b>${leg.to_stop.name}</b>${isWalk ? ' (Transfer)' : ' (Arr: ' + leg.arrival_time + ')'}`, {
             permanent: true,
             direction: 'top',
-            offset: [0, -8],
+            offset: [0, -10],
             className: 'route-terminal-label dest',
           })
           .addTo(polylineGroup.current);
@@ -1160,7 +1210,11 @@ function PlannerContent() {
     });
 
     if (bounds.isValid()) {
-      mapInstance.current.fitBounds(bounds, { padding: [50, 50] });
+      mapInstance.current.flyToBounds(bounds, {
+        padding: [60, 60],
+        duration: 0.9,
+        easeLinearity: 0.25,
+      });
     }
   };
 
@@ -1246,6 +1300,15 @@ function PlannerContent() {
         }).addTo(targetGroup);
         bounds.extend(rideLine.getBounds());
 
+        // Flowing pulse on traveled journey
+        L.polyline(rideCoords, {
+          color: '#ffffff',
+          weight: 2,
+          opacity: 0.65,
+          dashArray: '6, 12',
+          className: 'flowing-transit-pulse',
+        }).addTo(targetGroup);
+
         const midRide = rideCoords[Math.floor(rideCoords.length / 2)];
         L.marker(midRide, {
           icon: L.divIcon({
@@ -1303,15 +1366,10 @@ function PlannerContent() {
       if (actualBoardIdx >= 0 && actualBoardIdx < pathPoints.length) {
         const pt = pathPoints[actualBoardIdx];
         L.marker([pt.latitude, pt.longitude], {
-          icon: L.divIcon({
-            className: '',
-            html: `<div style="background:#059669;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 0 8px rgba(5,150,105,0.7);"></div>`,
-            iconSize: [16, 16],
-            iconAnchor: [8, 8],
-          }),
+          icon: createPulsingTerminalIcon('#059669'),
         })
           .bindPopup(`<b>Your Boarding Station</b><br/>${unlock.actual_boarding.name} (${unlock.actual_boarding.code})<br/><span style="color:#059669;font-weight:700;font-size:10px;">Official Boarding Point — you board here</span>`)
-          .bindTooltip(`Boarding: ${unlock.actual_boarding.name} (${unlock.actual_boarding.code})`, { permanent: true, className: 'route-terminal-label origin', direction: 'bottom', offset: [0, 8] })
+          .bindTooltip(`Boarding: ${unlock.actual_boarding.name} (${unlock.actual_boarding.code})`, { permanent: true, className: 'route-terminal-label origin', direction: 'bottom', offset: [0, 10] })
           .addTo(targetGroup);
       }
 
@@ -1319,15 +1377,10 @@ function PlannerContent() {
       if (actualDeboardIdx >= 0 && actualDeboardIdx < pathPoints.length) {
         const pt = pathPoints[actualDeboardIdx];
         L.marker([pt.latitude, pt.longitude], {
-          icon: L.divIcon({
-            className: '',
-            html: `<div style="background:#dc2626;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 0 8px rgba(220,38,38,0.7);"></div>`,
-            iconSize: [16, 16],
-            iconAnchor: [8, 8],
-          }),
+          icon: createPulsingTerminalIcon('#dc2626'),
         })
           .bindPopup(`<b>Your Deboarding Station</b><br/>${unlock.actual_deboarding.name} (${unlock.actual_deboarding.code})<br/><span style="color:#dc2626;font-weight:700;font-size:10px;">Your exit point — you deboard here</span>`)
-          .bindTooltip(`Deboarding: ${unlock.actual_deboarding.name} (${unlock.actual_deboarding.code})`, { permanent: true, className: 'route-terminal-label dest', direction: 'top', offset: [0, -8] })
+          .bindTooltip(`Deboarding: ${unlock.actual_deboarding.name} (${unlock.actual_deboarding.code})`, { permanent: true, className: 'route-terminal-label dest', direction: 'top', offset: [0, -10] })
           .addTo(targetGroup);
       }
 
@@ -1387,7 +1440,11 @@ function PlannerContent() {
     }
 
     if (bounds.isValid()) {
-      targetMap.fitBounds(bounds, { padding: [45, 45] });
+      targetMap.flyToBounds(bounds, {
+        padding: [45, 45],
+        duration: 0.8,
+        easeLinearity: 0.25,
+      });
     }
   };
 
@@ -1699,9 +1756,8 @@ function PlannerContent() {
                       setSelectedRouteIndex(idx);
                       setExpandedIndex(isExpanded ? null : idx);
                     }}
-                    className={`group cursor-pointer rounded-2xl border p-4 shadow-sm transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/40 focus-visible:ring-offset-2 hover:-translate-y-0.5 hover:border-brand-forest/40 hover:shadow-lg hover:shadow-brand-forest/5 ${
-                      isSelected ? 'ring-2 ring-emerald-500/80 shadow-md shadow-emerald-500/10' : ''
-                    } ${isExpanded
+                    className={`group cursor-pointer rounded-2xl border p-4 shadow-sm transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/40 focus-visible:ring-offset-2 hover:-translate-y-0.5 hover:border-brand-forest/40 hover:shadow-lg hover:shadow-brand-forest/5 ${isSelected ? 'ring-2 ring-emerald-500/80 shadow-md shadow-emerald-500/10' : ''
+                      } ${isExpanded
                         ? 'border-brand-forest/40 bg-brand-cream/20 shadow-md shadow-brand-forest/5'
                         : 'border-zinc-200/80 bg-white hover:bg-brand-cream/5'
                       }`}
@@ -2104,11 +2160,10 @@ function PlannerContent() {
             <button
               type="button"
               onClick={() => switchMapMode('OFFLINE')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                mapMode === 'OFFLINE'
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${mapMode === 'OFFLINE'
                   ? 'bg-emerald-700 text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
+                }`}
             >
               <span className={`w-2 h-2 rounded-full ${mapMode === 'OFFLINE' ? 'bg-white' : 'bg-slate-400'}`}></span>
               <span>Offline India Map</span>
@@ -2117,11 +2172,10 @@ function PlannerContent() {
             <button
               type="button"
               onClick={() => switchMapMode('ONLINE')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                mapMode === 'ONLINE'
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${mapMode === 'ONLINE'
                   ? 'bg-sky-600 text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
+                }`}
             >
               <span className={`w-2 h-2 rounded-full ${mapMode === 'ONLINE' ? 'bg-white' : 'bg-slate-400'}`}></span>
               <span>Online OSM</span>
@@ -2161,227 +2215,227 @@ function PlannerContent() {
               {/* Modal Header (Fixed Top) */}
               <div className="p-5 sm:p-6 pb-3 border-b border-zinc-100 shrink-0">
                 <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="bg-emerald-700 text-white text-xs font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-xs">
-                      Confirmed Berth Assurance
-                    </span>
-                    {trainNo && (
-                      <span className="bg-zinc-800 text-white font-mono text-xs font-bold px-2 py-0.5 rounded">
-                        Train {trainNo}
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="bg-emerald-700 text-white text-xs font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-xs">
+                        Confirmed Berth Assurance
                       </span>
-                    )}
-                    <ServiceRatingBadge serviceNumber={trainNo} mode="RAIL" />
-                    <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full border border-emerald-300">
-                      AVL {unlock.unlocked_seats} Confirmed
-                    </span>
+                      {trainNo && (
+                        <span className="bg-zinc-800 text-white font-mono text-xs font-bold px-2 py-0.5 rounded">
+                          Train {trainNo}
+                        </span>
+                      )}
+                      <ServiceRatingBadge serviceNumber={trainNo} mode="RAIL" />
+                      <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full border border-emerald-300">
+                        AVL {unlock.unlocked_seats} Confirmed
+                      </span>
+                    </div>
+                    <p className="text-xs font-bold text-zinc-600 mt-1.5">
+                      {trainTitle} • Fare Difference: <span className="text-emerald-700 font-extrabold">+₹{unlock.extra_fare_inr}</span>
+                    </p>
                   </div>
-                  <p className="text-xs font-bold text-zinc-600 mt-1.5">
-                    {trainTitle} • Fare Difference: <span className="text-emerald-700 font-extrabold">+₹{unlock.extra_fare_inr}</span>
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={closeModal}
-                    className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-black flex items-center justify-center font-bold text-sm transition-colors shrink-0"
-                    title="Close window"
-                  >
-                    &times;
-                  </button>
-                </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={closeModal}
+                      className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-black flex items-center justify-center font-bold text-sm transition-colors shrink-0"
+                      title="Close window"
+                    >
+                      &times;
+                    </button>
+                  </div>
                 </div>
               </div>
 
               {/* Modal Scrollable Body Content */}
               <div className="flex-1 overflow-y-auto p-5 sm:p-6 pt-3 space-y-4">
 
-              {/* Connected Station Journey Stepper Track */}
-              <div className="bg-zinc-50 rounded-2xl p-3.5 border border-zinc-200/90 shadow-2xs">
-                <div className="text-[10px] font-black text-zinc-400 uppercase tracking-wider mb-2">
-                  Official Reservation Path & Your Boarding Segment
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  <div className="bg-white p-2.5 rounded-xl border border-zinc-200/80 shadow-2xs relative">
-                    <span className="text-[9px] font-extrabold text-indigo-700 block uppercase tracking-wider">1. Ticket Origin</span>
-                    <span className="font-bold text-zinc-900 block truncate text-xs mt-0.5">{unlock.book_from.name}</span>
-                    <span className="text-[10px] font-mono text-indigo-600 font-bold">{unlock.book_from.code}</span>
+                {/* Connected Station Journey Stepper Track */}
+                <div className="bg-zinc-50 rounded-2xl p-3.5 border border-zinc-200/90 shadow-2xs">
+                  <div className="text-[10px] font-black text-zinc-400 uppercase tracking-wider mb-2">
+                    Official Reservation Path & Your Boarding Segment
                   </div>
-
-                  <div className="bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-300 shadow-2xs relative ring-1 ring-emerald-400/30">
-                    <div className="flex items-center gap-1 text-[9px] font-black text-emerald-800 uppercase tracking-wider">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                      <span>2. You Board Here</span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div className="bg-white p-2.5 rounded-xl border border-zinc-200/80 shadow-2xs relative">
+                      <span className="text-[9px] font-extrabold text-indigo-700 block uppercase tracking-wider">1. Ticket Origin</span>
+                      <span className="font-bold text-zinc-900 block truncate text-xs mt-0.5">{unlock.book_from.name}</span>
+                      <span className="text-[10px] font-mono text-indigo-600 font-bold">{unlock.book_from.code}</span>
                     </div>
-                    <span className="font-black text-emerald-950 block truncate text-xs mt-0.5">{unlock.actual_boarding.name}</span>
-                    <span className="text-[10px] font-mono text-emerald-700 font-black">{unlock.actual_boarding.code}</span>
-                  </div>
 
-                  <div className="bg-rose-50/80 p-2.5 rounded-xl border border-rose-300 shadow-2xs relative ring-1 ring-rose-400/30">
-                    <div className="flex items-center gap-1 text-[9px] font-black text-rose-800 uppercase tracking-wider">
-                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                      <span>3. You Deboard Here</span>
+                    <div className="bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-300 shadow-2xs relative ring-1 ring-emerald-400/30">
+                      <div className="flex items-center gap-1 text-[9px] font-black text-emerald-800 uppercase tracking-wider">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                        <span>2. You Board Here</span>
+                      </div>
+                      <span className="font-black text-emerald-950 block truncate text-xs mt-0.5">{unlock.actual_boarding.name}</span>
+                      <span className="text-[10px] font-mono text-emerald-700 font-black">{unlock.actual_boarding.code}</span>
                     </div>
-                    <span className="font-black text-rose-950 block truncate text-xs mt-0.5">{unlock.actual_deboarding.name}</span>
-                    <span className="text-[10px] font-mono text-rose-700 font-black">{unlock.actual_deboarding.code}</span>
-                  </div>
 
-                  <div className="bg-white p-2.5 rounded-xl border border-zinc-200/80 shadow-2xs relative">
-                    <span className="text-[9px] font-extrabold text-indigo-700 block uppercase tracking-wider">4. Ticket Destination</span>
-                    <span className="font-bold text-zinc-900 block truncate text-xs mt-0.5">{unlock.book_to.name}</span>
-                    <span className="text-[10px] font-mono text-indigo-600 font-bold">{unlock.book_to.code}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Dedicated Card: Link to Check this Specific Train Journey in New Window */}
-              <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-indigo-50/60 rounded-2xl p-3.5 border border-emerald-300 shadow-2xs">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="bg-zinc-900 text-white font-mono text-[10px] font-black px-2 py-0.5 rounded">
-                        Train #{trainNo}
-                      </span>
-                      <span className="text-xs font-black text-emerald-950">
-                        {trainTitle}
-                      </span>
-                      <ServiceRatingBadge serviceNumber={trainNo} mode="RAIL" />
-                      <span className="bg-emerald-200 text-emerald-950 text-[10px] font-black px-2 py-0.5 rounded-full">
-                        AVL {unlock.unlocked_seats} Confirmed
-                      </span>
+                    <div className="bg-rose-50/80 p-2.5 rounded-xl border border-rose-300 shadow-2xs relative ring-1 ring-rose-400/30">
+                      <div className="flex items-center gap-1 text-[9px] font-black text-rose-800 uppercase tracking-wider">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                        <span>3. You Deboard Here</span>
+                      </div>
+                      <span className="font-black text-rose-950 block truncate text-xs mt-0.5">{unlock.actual_deboarding.name}</span>
+                      <span className="text-[10px] font-mono text-rose-700 font-black">{unlock.actual_deboarding.code}</span>
                     </div>
-                    <p className="text-[11px] text-zinc-600 font-medium mt-1">
-                      Travel Date: <span className="font-bold text-zinc-900">{travelDate}</span> • Class: <span className="font-bold text-zinc-900">{travelClass}</span> • Fare Diff: <span className="font-bold text-emerald-800">+₹{unlock.extra_fare_inr}</span>
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <a
-                      href={confirmedJourneyUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-xs transition-colors"
-                      title="Open confirmed reservation journey in a new window"
-                    >
-                      <span>Check Confirmed Ticket ({unlock.book_from.code} → {unlock.book_to.code}) [AVL {unlock.unlocked_seats}]</span>
-                      <span className="text-[10px] font-mono">↗</span>
-                    </a>
-                    <a
-                      href={boardingSegmentUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 text-xs font-bold px-2.5 py-2 rounded-xl transition-colors text-[11px]"
-                      title="Inspect direct boarding segment in a new window to verify waitlisted status"
-                    >
-                      <span>Direct Segment ({unlock.actual_boarding.code} → {unlock.actual_deboarding.code}) [{unlock.direct_status_text || 'Waitlisted'}]</span>
-                      <span className="text-[10px] font-mono">↗</span>
-                    </a>
+
+                    <div className="bg-white p-2.5 rounded-xl border border-zinc-200/80 shadow-2xs relative">
+                      <span className="text-[9px] font-extrabold text-indigo-700 block uppercase tracking-wider">4. Ticket Destination</span>
+                      <span className="font-bold text-zinc-900 block truncate text-xs mt-0.5">{unlock.book_to.name}</span>
+                      <span className="text-[10px] font-mono text-indigo-600 font-bold">{unlock.book_to.code}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Dedicated Embedded Leaflet Map for Route & Boarding Points */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-extrabold text-zinc-800">
-                    Route & Station Reservation Map
-                  </span>
-                  <div className="flex items-center gap-3 text-[10px] font-bold flex-wrap">
-                    <span className="inline-flex items-center gap-1.5 text-emerald-700">
-                      <span className="w-3.5 h-1 bg-emerald-600 rounded-full inline-block"></span>
-                      Your Traveled Journey
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 text-indigo-700">
-                      <span className="w-3.5 h-0.5 bg-indigo-500 inline-block" style={{ borderTop: '2px dashed #6366f1' }}></span>
-                      Extended Reservation
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 text-zinc-500">
-                      <span className="w-3.5 h-0.5 bg-zinc-400 inline-block"></span>
-                      Full Route Context
-                    </span>
-                  </div>
-                </div>
-                <div
-                  ref={modalMapRef}
-                  className="h-52 w-full rounded-2xl overflow-hidden border border-slate-200 shadow-inner bg-[#eef2f6]"
-                />
-              </div>
-
-              {/* Side-by-Side Comparison Table */}
-              <div className="overflow-x-auto rounded-xl border border-zinc-200 shadow-xs">
-                <table className="min-w-full text-xs">
-                  <thead className="bg-zinc-100 text-zinc-700 font-black">
-                    <tr>
-                      <th className="px-3 py-2 text-left text-[10px] uppercase">Parameter</th>
-                      <th className="px-3 py-2 text-center text-[10px] uppercase text-rose-700 bg-rose-50 border-l border-zinc-200">
-                        Standard Direct Route
-                      </th>
-                      <th className="px-3 py-2 text-center text-[10px] uppercase text-emerald-800 bg-emerald-50 border-l border-zinc-200">
-                        Confirmed Seat Option
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-100 bg-white text-[11px]">
-                    <tr>
-                      <td className="px-3 py-2 font-bold text-zinc-600">Booking Segment</td>
-                      <td className="px-3 py-2 text-center border-l border-zinc-100 font-semibold text-zinc-700">
-                        {unlock.actual_boarding.code} → {unlock.actual_deboarding.code}
-                      </td>
-                      <td className="px-3 py-2 text-center border-l border-zinc-100 font-bold text-emerald-800">
-                        {unlock.book_from.code} → {unlock.book_to.code}
-                      </td>
-                    </tr>
-                    <tr className="bg-zinc-50/50">
-                      <td className="px-3 py-2 font-bold text-zinc-600">Seat Status</td>
-                      <td className="px-3 py-2 text-center border-l border-zinc-100">
-                        <span className="bg-rose-100 text-rose-700 px-2 py-0.5 rounded font-black text-[10px]">
-                          {unlock.direct_status_text}
+                {/* Dedicated Card: Link to Check this Specific Train Journey in New Window */}
+                <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-indigo-50/60 rounded-2xl p-3.5 border border-emerald-300 shadow-2xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="bg-zinc-900 text-white font-mono text-[10px] font-black px-2 py-0.5 rounded">
+                          Train #{trainNo}
                         </span>
-                      </td>
-                      <td className="px-3 py-2 text-center border-l border-zinc-100">
-                        <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-black text-[10px]">
+                        <span className="text-xs font-black text-emerald-950">
+                          {trainTitle}
+                        </span>
+                        <ServiceRatingBadge serviceNumber={trainNo} mode="RAIL" />
+                        <span className="bg-emerald-200 text-emerald-950 text-[10px] font-black px-2 py-0.5 rounded-full">
                           AVL {unlock.unlocked_seats} Confirmed
                         </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-3 py-2 font-bold text-zinc-600">Total Fare</td>
-                      <td className="px-3 py-2 text-center border-l border-zinc-100 font-bold">₹{leg.price_inr}</td>
-                      <td className="px-3 py-2 text-center border-l border-zinc-100 font-bold text-emerald-800">
-                        ₹{leg.price_inr + unlock.extra_fare_inr} (+₹{unlock.extra_fare_inr})
-                      </td>
-                    </tr>
-                    <tr className="bg-zinc-50/50">
-                      <td className="px-3 py-2 font-bold text-zinc-600">Boarding Point</td>
-                      <td className="px-3 py-2 text-center border-l border-zinc-100 font-semibold">{unlock.actual_boarding.name}</td>
-                      <td className="px-3 py-2 text-center border-l border-zinc-100 font-bold text-emerald-800">
-                        {unlock.actual_boarding.name}
-                        <span className="text-[9px] text-zinc-500 font-medium block">(Designated Official Boarding Point)</span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-3 py-2 font-bold text-zinc-600">Quota Pool</td>
-                      <td className="px-3 py-2 text-center border-l border-zinc-100 text-rose-600 font-bold">Remote Location (RLWL)</td>
-                      <td className="px-3 py-2 text-center border-l border-zinc-100 text-emerald-700 font-bold">General Quota (GNWL)</td>
-                    </tr>
-                    <tr className="bg-emerald-50/40">
-                      <td className="px-3 py-2 font-bold text-zinc-600">Compliance</td>
-                      <td className="px-3 py-2 text-center border-l border-zinc-100">—</td>
-                      <td className="px-3 py-2 text-center border-l border-zinc-100 font-black text-emerald-800">
-                        <span className="bg-emerald-200 text-emerald-950 px-2 py-0.5 rounded text-[10px]">IRCTC Authorized Facility</span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Guidelines Card */}
-              <div className="bg-zinc-50 rounded-2xl p-3.5 border border-zinc-200 text-xs leading-relaxed">
-                <div className="flex items-center gap-1.5 mb-1 text-zinc-900 font-black">
-                  <span className="uppercase tracking-wider text-[11px]">How Confirmed Berth Assurance Works</span>
+                      </div>
+                      <p className="text-[11px] text-zinc-600 font-medium mt-1">
+                        Travel Date: <span className="font-bold text-zinc-900">{travelDate}</span> • Class: <span className="font-bold text-zinc-900">{travelClass}</span> • Fare Diff: <span className="font-bold text-emerald-800">+₹{unlock.extra_fare_inr}</span>
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <a
+                        href={confirmedJourneyUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-xs transition-colors"
+                        title="Open confirmed reservation journey in a new window"
+                      >
+                        <span>Check Confirmed Ticket ({unlock.book_from.code} → {unlock.book_to.code}) [AVL {unlock.unlocked_seats}]</span>
+                        <span className="text-[10px] font-mono">↗</span>
+                      </a>
+                      <a
+                        href={boardingSegmentUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 text-xs font-bold px-2.5 py-2 rounded-xl transition-colors text-[11px]"
+                        title="Inspect direct boarding segment in a new window to verify waitlisted status"
+                      >
+                        <span>Direct Segment ({unlock.actual_boarding.code} → {unlock.actual_deboarding.code}) [{unlock.direct_status_text || 'Waitlisted'}]</span>
+                        <span className="text-[10px] font-mono">↗</span>
+                      </a>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-zinc-600 font-medium">
-                  {unlock.explanation || `Direct ticket from ${unlock.actual_boarding.name} to ${unlock.actual_deboarding.name} is waitlisted because intermediate stations share a smaller quota pool. By reserving from ${unlock.book_from.name} to ${unlock.book_to.name}, you obtain a confirmed berth. You select ${unlock.actual_boarding.name} as your official boarding point on IRCTC, so your berth is legally reserved and waiting for you.`}
-                </p>
-              </div>
+
+                {/* Dedicated Embedded Leaflet Map for Route & Boarding Points */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-extrabold text-zinc-800">
+                      Route & Station Reservation Map
+                    </span>
+                    <div className="flex items-center gap-3 text-[10px] font-bold flex-wrap">
+                      <span className="inline-flex items-center gap-1.5 text-emerald-700">
+                        <span className="w-3.5 h-1 bg-emerald-600 rounded-full inline-block"></span>
+                        Your Traveled Journey
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 text-indigo-700">
+                        <span className="w-3.5 h-0.5 bg-indigo-500 inline-block" style={{ borderTop: '2px dashed #6366f1' }}></span>
+                        Extended Reservation
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 text-zinc-500">
+                        <span className="w-3.5 h-0.5 bg-zinc-400 inline-block"></span>
+                        Full Route Context
+                      </span>
+                    </div>
+                  </div>
+                  <div
+                    ref={modalMapRef}
+                    className="h-52 w-full rounded-2xl overflow-hidden border border-slate-200 shadow-inner bg-[#eef2f6]"
+                  />
+                </div>
+
+                {/* Side-by-Side Comparison Table */}
+                <div className="overflow-x-auto rounded-xl border border-zinc-200 shadow-xs">
+                  <table className="min-w-full text-xs">
+                    <thead className="bg-zinc-100 text-zinc-700 font-black">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-[10px] uppercase">Parameter</th>
+                        <th className="px-3 py-2 text-center text-[10px] uppercase text-rose-700 bg-rose-50 border-l border-zinc-200">
+                          Standard Direct Route
+                        </th>
+                        <th className="px-3 py-2 text-center text-[10px] uppercase text-emerald-800 bg-emerald-50 border-l border-zinc-200">
+                          Confirmed Seat Option
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-100 bg-white text-[11px]">
+                      <tr>
+                        <td className="px-3 py-2 font-bold text-zinc-600">Booking Segment</td>
+                        <td className="px-3 py-2 text-center border-l border-zinc-100 font-semibold text-zinc-700">
+                          {unlock.actual_boarding.code} → {unlock.actual_deboarding.code}
+                        </td>
+                        <td className="px-3 py-2 text-center border-l border-zinc-100 font-bold text-emerald-800">
+                          {unlock.book_from.code} → {unlock.book_to.code}
+                        </td>
+                      </tr>
+                      <tr className="bg-zinc-50/50">
+                        <td className="px-3 py-2 font-bold text-zinc-600">Seat Status</td>
+                        <td className="px-3 py-2 text-center border-l border-zinc-100">
+                          <span className="bg-rose-100 text-rose-700 px-2 py-0.5 rounded font-black text-[10px]">
+                            {unlock.direct_status_text}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 text-center border-l border-zinc-100">
+                          <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-black text-[10px]">
+                            AVL {unlock.unlocked_seats} Confirmed
+                          </span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="px-3 py-2 font-bold text-zinc-600">Total Fare</td>
+                        <td className="px-3 py-2 text-center border-l border-zinc-100 font-bold">₹{leg.price_inr}</td>
+                        <td className="px-3 py-2 text-center border-l border-zinc-100 font-bold text-emerald-800">
+                          ₹{leg.price_inr + unlock.extra_fare_inr} (+₹{unlock.extra_fare_inr})
+                        </td>
+                      </tr>
+                      <tr className="bg-zinc-50/50">
+                        <td className="px-3 py-2 font-bold text-zinc-600">Boarding Point</td>
+                        <td className="px-3 py-2 text-center border-l border-zinc-100 font-semibold">{unlock.actual_boarding.name}</td>
+                        <td className="px-3 py-2 text-center border-l border-zinc-100 font-bold text-emerald-800">
+                          {unlock.actual_boarding.name}
+                          <span className="text-[9px] text-zinc-500 font-medium block">(Designated Official Boarding Point)</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="px-3 py-2 font-bold text-zinc-600">Quota Pool</td>
+                        <td className="px-3 py-2 text-center border-l border-zinc-100 text-rose-600 font-bold">Remote Location (RLWL)</td>
+                        <td className="px-3 py-2 text-center border-l border-zinc-100 text-emerald-700 font-bold">General Quota (GNWL)</td>
+                      </tr>
+                      <tr className="bg-emerald-50/40">
+                        <td className="px-3 py-2 font-bold text-zinc-600">Compliance</td>
+                        <td className="px-3 py-2 text-center border-l border-zinc-100">—</td>
+                        <td className="px-3 py-2 text-center border-l border-zinc-100 font-black text-emerald-800">
+                          <span className="bg-emerald-200 text-emerald-950 px-2 py-0.5 rounded text-[10px]">IRCTC Authorized Facility</span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Guidelines Card */}
+                <div className="bg-zinc-50 rounded-2xl p-3.5 border border-zinc-200 text-xs leading-relaxed">
+                  <div className="flex items-center gap-1.5 mb-1 text-zinc-900 font-black">
+                    <span className="uppercase tracking-wider text-[11px]">How Confirmed Berth Assurance Works</span>
+                  </div>
+                  <p className="text-zinc-600 font-medium">
+                    {unlock.explanation || `Direct ticket from ${unlock.actual_boarding.name} to ${unlock.actual_deboarding.name} is waitlisted because intermediate stations share a smaller quota pool. By reserving from ${unlock.book_from.name} to ${unlock.book_to.name}, you obtain a confirmed berth. You select ${unlock.actual_boarding.name} as your official boarding point on IRCTC, so your berth is legally reserved and waiting for you.`}
+                  </p>
+                </div>
 
               </div>
 

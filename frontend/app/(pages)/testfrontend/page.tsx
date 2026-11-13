@@ -25,6 +25,22 @@ const createIcon = (color: string) => {
   });
 };
 
+// Pulsing origin/destination terminal icon with subtle radar ping
+const createPulsingTerminalIcon = (color: string) => {
+  if (!L) return null;
+  return L.divIcon({
+    className: 'custom-terminal-marker',
+    html: `
+      <div style="position: relative; width: 18px; height: 18px;">
+        <div class="terminal-pulse-ring" style="background-color: ${color};"></div>
+        <div style="position: absolute; inset: 2px; background-color: ${color}; border-radius: 50%; border: 2.5px solid white; box-shadow: 0 1px 6px rgba(0,0,0,0.35);"></div>
+      </div>
+    `,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9]
+  });
+};
+
 // Cache for offline India vector basemap GeoJSON
 let cachedIndiaBasemapGeoJSON: any = null;
 
@@ -95,10 +111,34 @@ const createOfflineBasemapLayer = (LInstance: any, geoJsonData: any) => {
       return marker;
     },
     onEachFeature: (feature: any, layer: any) => {
-      if (feature?.properties?.layer_type === 'state_boundary' && feature?.properties?.name) {
-        layer.bindTooltip(feature.properties.name, {
-          sticky: true,
-          className: 'state-name-tooltip',
+      if (feature?.properties?.layer_type === 'state_boundary') {
+        if (feature?.properties?.name) {
+          layer.bindTooltip(feature.properties.name, {
+            sticky: true,
+            className: 'state-name-tooltip',
+          });
+        }
+
+        // Subtle state hover tint animation
+        layer.on({
+          mouseover: (e: any) => {
+            const target = e.target;
+            target.setStyle({
+              fillColor: '#f1f5f9', // ultra-subtle slate-100 tint
+              fillOpacity: 1.0,
+              color: '#94a3b8',     // refined slate-400 border
+              weight: 1.4,
+            });
+          },
+          mouseout: (e: any) => {
+            const target = e.target;
+            target.setStyle({
+              fillColor: '#ffffff', // revert to crisp white
+              fillOpacity: 1.0,
+              color: '#cbd5e1',     // revert to soft slate-300
+              weight: 1.1,
+            });
+          },
         });
       }
     },
@@ -1088,6 +1128,17 @@ function TestFrontendContent() {
 
         bounds.extend(polyline.getBounds());
 
+        // Directional transit flow pulse animation
+        if (!isWalk && coords.length >= 2) {
+          L.polyline(coords, {
+            color: '#ffffff',
+            weight: 2,
+            opacity: 0.6,
+            dashArray: '6, 12',
+            className: 'flowing-transit-pulse',
+          }).addTo(polylineGroup.current);
+        }
+
         if (coordsWithData.length > 2) {
           coordsWithData.slice(1, -1).forEach((pt: any) => {
             const dot = L.circleMarker([pt.latitude, pt.longitude], {
@@ -1113,22 +1164,22 @@ function TestFrontendContent() {
         const startPt = coords[0];
         const endPt = coords[coords.length - 1];
 
-        L.marker(startPt, { icon: createIcon(isWalk ? '#d946ef' : '#059669') })
+        L.marker(startPt, { icon: isWalk ? createIcon('#d946ef') : createPulsingTerminalIcon('#059669') })
           .bindPopup(`<b>${leg.from_stop.name}</b><br>${isWalk ? 'Transfer Start' : 'Dep: ' + leg.departure_time}`)
           .bindTooltip(`<b>${leg.from_stop.name}</b>${isWalk ? ' (Transfer)' : ' (Dep: ' + leg.departure_time + ')'}`, {
             permanent: true,
             direction: 'bottom',
-            offset: [0, 8],
+            offset: [0, 10],
             className: 'route-terminal-label origin',
           })
           .addTo(polylineGroup.current);
 
-        L.marker(endPt, { icon: createIcon(isWalk ? '#d946ef' : '#dc2626') })
+        L.marker(endPt, { icon: isWalk ? createIcon('#d946ef') : createPulsingTerminalIcon('#dc2626') })
           .bindPopup(`<b>${leg.to_stop.name}</b><br>${isWalk ? 'Transfer End' : 'Arr: ' + leg.arrival_time}`)
           .bindTooltip(`<b>${leg.to_stop.name}</b>${isWalk ? ' (Transfer)' : ' (Arr: ' + leg.arrival_time + ')'}`, {
             permanent: true,
             direction: 'top',
-            offset: [0, -8],
+            offset: [0, -10],
             className: 'route-terminal-label dest',
           })
           .addTo(polylineGroup.current);
@@ -1136,7 +1187,11 @@ function TestFrontendContent() {
     });
 
     if (bounds.isValid()) {
-      mapInstance.current.fitBounds(bounds, { padding: [50, 50] });
+      mapInstance.current.flyToBounds(bounds, {
+        padding: [60, 60],
+        duration: 0.9,
+        easeLinearity: 0.25,
+      });
     }
   };
 
@@ -1222,6 +1277,15 @@ function TestFrontendContent() {
         }).addTo(targetGroup);
         bounds.extend(rideLine.getBounds());
 
+        // Flowing pulse on traveled journey
+        L.polyline(rideCoords, {
+          color: '#ffffff',
+          weight: 2,
+          opacity: 0.65,
+          dashArray: '6, 12',
+          className: 'flowing-transit-pulse',
+        }).addTo(targetGroup);
+
         const midRide = rideCoords[Math.floor(rideCoords.length / 2)];
         L.marker(midRide, {
           icon: L.divIcon({
@@ -1279,15 +1343,10 @@ function TestFrontendContent() {
       if (actualBoardIdx >= 0 && actualBoardIdx < pathPoints.length) {
         const pt = pathPoints[actualBoardIdx];
         L.marker([pt.latitude, pt.longitude], {
-          icon: L.divIcon({
-            className: '',
-            html: `<div style="background:#059669;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 0 8px rgba(5,150,105,0.7);"></div>`,
-            iconSize: [16, 16],
-            iconAnchor: [8, 8],
-          }),
+          icon: createPulsingTerminalIcon('#059669'),
         })
           .bindPopup(`<b>Your Boarding Station</b><br/>${unlock.actual_boarding.name} (${unlock.actual_boarding.code})<br/><span style="color:#059669;font-weight:700;font-size:10px;">Official Boarding Point — you board here</span>`)
-          .bindTooltip(`Boarding: ${unlock.actual_boarding.name} (${unlock.actual_boarding.code})`, { permanent: true, className: 'route-terminal-label origin', direction: 'bottom', offset: [0, 8] })
+          .bindTooltip(`Boarding: ${unlock.actual_boarding.name} (${unlock.actual_boarding.code})`, { permanent: true, className: 'route-terminal-label origin', direction: 'bottom', offset: [0, 10] })
           .addTo(targetGroup);
       }
 
@@ -1295,15 +1354,10 @@ function TestFrontendContent() {
       if (actualDeboardIdx >= 0 && actualDeboardIdx < pathPoints.length) {
         const pt = pathPoints[actualDeboardIdx];
         L.marker([pt.latitude, pt.longitude], {
-          icon: L.divIcon({
-            className: '',
-            html: `<div style="background:#dc2626;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 0 8px rgba(220,38,38,0.7);"></div>`,
-            iconSize: [16, 16],
-            iconAnchor: [8, 8],
-          }),
+          icon: createPulsingTerminalIcon('#dc2626'),
         })
           .bindPopup(`<b>Your Deboarding Station</b><br/>${unlock.actual_deboarding.name} (${unlock.actual_deboarding.code})<br/><span style="color:#dc2626;font-weight:700;font-size:10px;">Your exit point — you deboard here</span>`)
-          .bindTooltip(`Deboarding: ${unlock.actual_deboarding.name} (${unlock.actual_deboarding.code})`, { permanent: true, className: 'route-terminal-label dest', direction: 'top', offset: [0, -8] })
+          .bindTooltip(`Deboarding: ${unlock.actual_deboarding.name} (${unlock.actual_deboarding.code})`, { permanent: true, className: 'route-terminal-label dest', direction: 'top', offset: [0, -10] })
           .addTo(targetGroup);
       }
 
@@ -1363,7 +1417,11 @@ function TestFrontendContent() {
     }
 
     if (bounds.isValid()) {
-      targetMap.fitBounds(bounds, { padding: [45, 45] });
+      targetMap.flyToBounds(bounds, {
+        padding: [45, 45],
+        duration: 0.8,
+        easeLinearity: 0.25,
+      });
     }
   };
 

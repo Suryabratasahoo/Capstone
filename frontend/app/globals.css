@@ -280,3 +280,62 @@ body {
 .state-name-tooltip::before {
   display: none !important;
 }
+
+/* Subtle Transit Route Dash Animation */
+@keyframes transitDashFlow {
+  to {
+    stroke-dashoffset: -36;
+  }
+}
+
+.flowing-transit-pulse {
+  animation: transitDashFlow 1.8s linear infinite !important;
+  pointer-events: none !important;
+}
+
+/* Subtle Pulse Ping for Origin & Destination Stations */
+@keyframes terminalRadarPing {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(2.3);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.3);
+    opacity: 0;
+  }
+}
+
+.terminal-pulse-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  animation: terminalRadarPing 2.4s cubic-bezier(0.1, 0, 0.3, 1) infinite;
+  pointer-events: none;
+}
+
+/* Smooth Label Glide-in Animation */
+@keyframes labelSmoothIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.route-terminal-label,
+.route-intermediate-label,
+.route-stop-label {
+  animation: labelSmoothIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Smooth State Polygon Hover Transition */
+path.leaflet-interactive {
+  transition: fill 0.2s ease, stroke 0.2s ease, stroke-width 0.2s ease;
+}
