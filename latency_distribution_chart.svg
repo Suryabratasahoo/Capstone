@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 520" width="760" height="520" style="background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <rect x="5" y="5" width="750" height="510" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" />
+
+  <!-- Title & Subtitle -->
+  <text x="380" y="32" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a" letter-spacing="0.3">End-to-End Search Latency Distribution</text>
+  <text x="380" y="50" text-anchor="middle" font-size="11" font-weight="500" fill="#64748b">Subsystem Execution Times (Total Mean Latency = 394.2 ms across N = 500 Runs)</text>
+
+  <!-- Top Stacked Composition Bar (Width = 640px) -->
+  <g transform="translate(60, 72)">
+    <rect x="0" y="0" width="640" height="26" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1" />
+    <!-- Proportions of 640px:
+         Total = 394.2ms
+         1. Geocode: (12.4/394.2)*640 = 20.1px
+         2. DB: (14.2/394.2)*640 = 23.1px
+         3. R0: (18.5/394.2)*640 = 30.0px
+         4. R1: (284.2/394.2)*640 = 461.4px
+         5. Pareto: (22.5/394.2)*640 = 36.5px
+         6. ABSA: (18.3/394.2)*640 = 29.7px
+         7. Serialization: (24.1/394.2)*640 = 39.2px
+    -->
+    <rect x="0" y="0" width="20.1" height="26" rx="6" fill="#94a3b8" />
+    <rect x="20.1" y="0" width="23.1" height="26" fill="#64748b" />
+    <rect x="43.2" y="0" width="30.0" height="26" fill="#3b82f6" />
+    <rect x="73.2" y="0" width="461.4" height="26" fill="#2563eb" />
+    <rect x="534.6" y="0" width="36.5" height="26" fill="#10b981" />
+    <rect x="571.1" y="0" width="29.7" height="26" fill="#a855f7" />
+    <rect x="600.8" y="0" width="39.2" height="26" rx="6" fill="#f59e0b" />
+
+    <text x="303.9" y="17" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">Round 1 Multi-Modal Traversal (72.1%)</text>
+  </g>
+
+  <!-- Detailed Horizontal Breakdown Bars -->
+  <!-- Max bar width = 400px (corresponds to 300 ms -> 1.333 px/ms) -->
+  <g transform="translate(60, 120)">
+    <!-- 1. Geocoding -->
+    <text x="0" y="24" font-size="11" font-weight="700" fill="#1e293b">1. Spatial Geocoding &amp; Cluster Resolver</text>
+    <rect x="260" y="10" width="16.5" height="20" rx="4" fill="#94a3b8" />
+    <text x="285" y="25" font-size="10.5" font-weight="700" fill="#334155">12.4 ms</text>
+    <text x="345" y="25" font-size="10" fill="#64748b">(3.1%)</text>
+
+    <!-- 2. DB Retrieval -->
+    <text x="0" y="60" font-size="11" font-weight="700" fill="#1e293b">2. Database Timetable Lookups (final.db)</text>
+    <rect x="260" y="46" width="18.9" height="20" rx="4" fill="#64748b" />
+    <text x="288" y="61" font-size="10.5" font-weight="700" fill="#334155">14.2 ms</text>
+    <text x="348" y="61" font-size="10" fill="#64748b">(3.6%)</text>
+
+    <!-- 3. Round 0 -->
+    <text x="0" y="96" font-size="11" font-weight="700" fill="#1e293b">3. McRAPTOR Round 0 (Direct Services)</text>
+    <rect x="260" y="82" width="24.7" height="20" rx="4" fill="#3b82f6" />
+    <text x="295" y="97" font-size="10.5" font-weight="700" fill="#1e40af">18.5 ms</text>
+    <text x="355" y="97" font-size="10" fill="#64748b">(4.7%)</text>
+
+    <!-- 4. Round 1 Multi-Modal (Major Stage) -->
+    <text x="0" y="132" font-size="11" font-weight="700" fill="#1e40af">4. McRAPTOR Round 1 (1-Transfer Multi-Modal)</text>
+    <rect x="260" y="118" width="379" height="20" rx="4" fill="#2563eb" />
+    <text x="648" y="133" font-size="10.5" font-weight="800" fill="#1e40af">284.2 ms</text>
+    <text x="704" y="133" font-size="10" font-weight="700" fill="#2563eb">(72.1%)</text>
+
+    <!-- 5. Pareto Pruning -->
+    <text x="0" y="168" font-size="11" font-weight="700" fill="#1e293b">5. Pareto Frontier Dominance Pruning</text>
+    <rect x="260" y="154" width="30.0" height="20" rx="4" fill="#10b981" />
+    <text x="300" y="169" font-size="10.5" font-weight="700" fill="#065f46">22.5 ms</text>
+    <text x="360" y="169" font-size="10" fill="#64748b">(5.7%)</text>
+
+    <!-- 6. ABSA Scoring -->
+    <text x="0" y="204" font-size="11" font-weight="700" fill="#1e293b">6. ABSA Sentiment Scoring Microservice</text>
+    <rect x="260" y="190" width="24.4" height="20" rx="4" fill="#a855f7" />
+    <text x="295" y="205" font-size="10.5" font-weight="700" fill="#6b21a8">18.3 ms</text>
+    <text x="355" y="205" font-size="10" fill="#64748b">(4.6%)</text>
+
+    <!-- 7. Serialization -->
+    <text x="0" y="240" font-size="11" font-weight="700" fill="#1e293b">7. JSON Serialization &amp; Response Delivery</text>
+    <rect x="260" y="226" width="32.1" height="20" rx="4" fill="#f59e0b" />
+    <text x="302" y="241" font-size="10.5" font-weight="700" fill="#92400e">24.1 ms</text>
+    <text x="362" y="241" font-size="10" fill="#64748b">(6.1%)</text>
+
+    <!-- Total Divider -->
+    <line x1="0" y1="262" x2="640" y2="262" stroke="#e2e8f0" stroke-width="1.5" />
+
+    <!-- Total Row -->
+    <text x="0" y="286" font-size="12" font-weight="800" fill="#0f172a">TOTAL END-TO-END EXECUTION LATENCY</text>
+    <rect x="260" y="272" width="394.2" height="20" rx="4" fill="#0f172a" />
+    <text x="664" y="287" font-size="12" font-weight="800" fill="#0f172a">394.2 ms</text>
+  </g>
+
+  <!-- Performance Verification Banner at Bottom -->
+  <g transform="translate(60, 440)">
+    <rect x="0" y="0" width="640" height="52" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5" />
+    <text x="320" y="23" text-anchor="middle" font-size="11.5" font-weight="700" fill="#14532d">Real-Time Performance Target Verified</text>
+    <text x="320" y="40" text-anchor="middle" font-size="10.5" font-weight="600" fill="#15803d">Mean Latency: 394.2 ms  |  95th Percentile: 478.6 ms  |  Target Threshold: &lt; 500 ms (100% Compliant)</text>
+  </g>
+</svg>

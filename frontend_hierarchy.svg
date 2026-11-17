@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 400" width="760" height="400" style="background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <marker id="tree-arr" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#475569" />
+    </marker>
+  </defs>
+
+  <rect x="5" y="5" width="750" height="390" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" />
+
+  <text x="380" y="30" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a" letter-spacing="0.3">Frontend Client Component Architecture</text>
+  <text x="380" y="47" text-anchor="middle" font-size="10.5" font-weight="500" fill="#64748b">Next.js 14 App Router Component Hierarchy and Isolated React Portals</text>
+
+  <!-- Level 1: App Router Root -->
+  <g transform="translate(230, 65)">
+    <rect x="0" y="0" width="300" height="38" rx="6" fill="#0f172a" stroke="#0f172a" stroke-width="1.5" />
+    <text x="150" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">Next.js App Router (/planner/page.tsx)</text>
+  </g>
+
+  <!-- Down line to Suspense -->
+  <line x1="380" y1="103" x2="380" y2="128" stroke="#475569" stroke-width="2" marker-end="url(#tree-arr)" />
+
+  <!-- Level 2: Suspense Boundary -->
+  <g transform="translate(250, 130)">
+    <rect x="0" y="0" width="260" height="36" rx="6" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 3" />
+    <text x="130" y="23" text-anchor="middle" font-size="11" font-weight="600" fill="#334155">[Suspense Boundary &amp; Fallback]</text>
+  </g>
+
+  <!-- Down line to PlannerContent -->
+  <line x1="380" y1="166" x2="380" y2="191" stroke="#475569" stroke-width="2" marker-end="url(#tree-arr)" />
+
+  <!-- Level 3: PlannerContent Container -->
+  <g transform="translate(210, 193)">
+    <rect x="0" y="0" width="340" height="42" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="2" />
+    <text x="170" y="26" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1e40af">PlannerContent (Reactive Client Container)</text>
+  </g>
+
+  <!-- Connecting Bus Lines to Level 4 -->
+  <path d="M 380 235 L 380 260 M 80 260 L 680 260" fill="none" stroke="#475569" stroke-width="1.5" />
+  
+  <line x1="80" y1="260" x2="80" y2="280" stroke="#475569" stroke-width="1.5" marker-end="url(#tree-arr)" />
+  <line x1="230" y1="260" x2="230" y2="280" stroke="#475569" stroke-width="1.5" marker-end="url(#tree-arr)" />
+  <line x1="380" y1="260" x2="380" y2="280" stroke="#475569" stroke-width="1.5" marker-end="url(#tree-arr)" />
+  <line x1="530" y1="260" x2="530" y2="280" stroke="#475569" stroke-width="1.5" marker-end="url(#tree-arr)" />
+  <line x1="680" y1="260" x2="680" y2="280" stroke="#475569" stroke-width="1.5" marker-end="url(#tree-arr)" />
+
+  <!-- Level 4: Child Components -->
+  <!-- Search Controls -->
+  <g transform="translate(15, 282)">
+    <rect x="0" y="0" width="130" height="88" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+    <text x="65" y="20" text-anchor="middle" font-size="10" font-weight="700" fill="#0f172a">Search Controls</text>
+    <text x="65" y="38" text-anchor="middle" font-size="9" fill="#475569">Origin &amp; Dest Inputs</text>
+    <text x="65" y="54" text-anchor="middle" font-size="9" fill="#475569">Travel Date Picker</text>
+    <text x="65" y="70" text-anchor="middle" font-size="9" fill="#475569">Senior Citizen Mode</text>
+  </g>
+
+  <!-- Pareto Route List -->
+  <g transform="translate(165, 282)">
+    <rect x="0" y="0" width="130" height="88" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+    <text x="65" y="20" text-anchor="middle" font-size="10" font-weight="700" fill="#0f172a">Pareto Route List</text>
+    <text x="65" y="38" text-anchor="middle" font-size="9" fill="#475569">Duration &amp; Price</text>
+    <text x="65" y="54" text-anchor="middle" font-size="9" fill="#475569">Layover Badges</text>
+    <text x="65" y="70" text-anchor="middle" font-size="9" fill="#475569">Confirmed Filters</text>
+  </g>
+
+  <!-- Leaflet GIS Map -->
+  <g transform="translate(315, 282)">
+    <rect x="0" y="0" width="130" height="88" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+    <text x="65" y="20" text-anchor="middle" font-size="10" font-weight="700" fill="#0f172a">Leaflet GIS Map</text>
+    <text x="65" y="38" text-anchor="middle" font-size="9" fill="#2563eb">Rail Polylines (Blue)</text>
+    <text x="65" y="54" text-anchor="middle" font-size="9" fill="#d97706">Bus Lines (Amber)</text>
+    <text x="65" y="70" text-anchor="middle" font-size="9" fill="#c026d3">Walk Links (Magenta)</text>
+  </g>
+
+  <!-- Review Modal (createPortal) -->
+  <g transform="translate(465, 282)">
+    <rect x="0" y="0" width="130" height="88" rx="6" fill="#fdf4ff" stroke="#c026d3" stroke-width="1.5" />
+    <text x="65" y="20" text-anchor="middle" font-size="10" font-weight="700" fill="#86198f">Review Modal</text>
+    <rect x="10" y="28" width="110" height="18" rx="3" fill="#ffffff" stroke="#d946ef" stroke-width="1" />
+    <text x="65" y="40" text-anchor="middle" font-size="8.5" font-weight="700" fill="#701a75">createPortal</text>
+    <text x="65" y="58" text-anchor="middle" font-size="8.5" fill="#a21caf">Escapes DOM tree</text>
+    <text x="65" y="72" text-anchor="middle" font-size="8.5" fill="#a21caf">Eliminates flicker</text>
+  </g>
+
+  <!-- AI Copilot Panel -->
+  <g transform="translate(615, 282)">
+    <rect x="0" y="0" width="130" height="88" rx="6" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5" />
+    <text x="65" y="20" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">AI Copilot Panel</text>
+    <text x="65" y="38" text-anchor="middle" font-size="9" fill="#15803d">Groq LPU Interface</text>
+    <text x="65" y="54" text-anchor="middle" font-size="9" fill="#15803d">Itinerary Context</text>
+    <text x="65" y="70" text-anchor="middle" font-size="9" fill="#15803d">English, Telugu, Hindi</text>
+  </g>
+</svg>

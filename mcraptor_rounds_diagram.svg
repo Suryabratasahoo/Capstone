@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 380" width="760" height="380" style="background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <!-- Arrowhead Marker -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#334155" />
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#2563eb" />
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#16a34a" />
+    </marker>
+  </defs>
+
+  <!-- Outer Border Frame -->
+  <rect x="5" y="5" width="750" height="370" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="2" />
+
+  <!-- Diagram Title -->
+  <text x="380" y="32" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a" letter-spacing="0.3">McRAPTOR Round Execution Concept</text>
+  <text x="380" y="49" text-anchor="middle" font-size="11" font-weight="500" fill="#64748b">Comparison of Round 0 (Direct Services) and Round 1 (1-Transfer Break-Journeys)</text>
+
+  <!-- ==================== ROUND 0 SECTION ==================== -->
+  <g transform="translate(30, 68)">
+    <!-- Container Box -->
+    <rect x="0" y="0" width="700" height="116" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" />
+    
+    <!-- Section Label -->
+    <rect x="16" y="10" width="220" height="22" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="1" />
+    <text x="24" y="25" font-size="11" font-weight="700" fill="#1e40af">ROUND 0: Direct Journeys (0 Transfers)</text>
+
+    <!-- Origin Hub -->
+    <rect x="30" y="44" width="140" height="52" rx="8" fill="#ffffff" stroke="#64748b" stroke-width="1.5" />
+    <text x="100" y="67" text-anchor="middle" font-size="12" font-weight="700" fill="#1e293b">Origin Hubs</text>
+    <text x="100" y="83" text-anchor="middle" font-size="10" fill="#64748b">P_src (Rail / Bus)</text>
+
+    <!-- Connecting Leg 1 Arrow -->
+    <line x1="170" y1="70" x2="520" y2="70" stroke="#2563eb" stroke-width="2.5" marker-end="url(#arrow-blue)" />
+    
+    <!-- Leg 1 Label Capsule -->
+    <rect x="250" y="52" width="190" height="34" rx="6" fill="#eff6ff" stroke="#93c5fd" stroke-width="1" />
+    <text x="345" y="67" text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">Rail / Bus Leg 1</text>
+    <text x="345" y="80" text-anchor="middle" font-size="9.5" fill="#3b82f6">Direct Scheduled Run (k = 0)</text>
+
+    <!-- Destination Hub -->
+    <rect x="530" y="44" width="140" height="52" rx="8" fill="#ffffff" stroke="#64748b" stroke-width="1.5" />
+    <text x="600" y="67" text-anchor="middle" font-size="12" font-weight="700" fill="#1e293b">Destination Hubs</text>
+    <text x="600" y="83" text-anchor="middle" font-size="10" fill="#64748b">P_dst (Arrival Bag B_0)</text>
+  </g>
+
+  <!-- ==================== ROUND 1 SECTION ==================== -->
+  <g transform="translate(30, 202)">
+    <!-- Container Box -->
+    <rect x="0" y="0" width="700" height="152" rx="10" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5" />
+    
+    <!-- Section Label -->
+    <rect x="16" y="10" width="240" height="22" rx="4" fill="#ecfdf5" stroke="#10b981" stroke-width="1" />
+    <text x="24" y="25" font-size="11" font-weight="700" fill="#065f46">ROUND 1: Break-Journeys (1 Transfer)</text>
+
+    <!-- Origin Hub -->
+    <rect x="30" y="52" width="125" height="54" rx="8" fill="#ffffff" stroke="#64748b" stroke-width="1.5" />
+    <text x="92" y="75" text-anchor="middle" font-size="12" font-weight="700" fill="#1e293b">Origin Hubs</text>
+    <text x="92" y="91" text-anchor="middle" font-size="10" fill="#64748b">P_src</text>
+
+    <!-- Arrow: Origin to Interchange -->
+    <line x1="155" y1="79" x2="265" y2="79" stroke="#16a34a" stroke-width="2.5" marker-end="url(#arrow-green)" />
+    <!-- Capsule Leg 1 -->
+    <rect x="170" y="56" width="80" height="20" rx="4" fill="#ffffff" stroke="#86efac" stroke-width="1" />
+    <text x="210" y="70" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">Leg 1</text>
+
+    <!-- Interchange Hub (Center) -->
+    <rect x="275" y="44" width="150" height="70" rx="8" fill="#ffffff" stroke="#059669" stroke-width="2" />
+    <text x="350" y="67" text-anchor="middle" font-size="12" font-weight="700" fill="#065f46">Interchange Hub</text>
+    <text x="350" y="82" text-anchor="middle" font-size="10" fill="#047857">Rail Junction / Bus Depot</text>
+    <!-- Layover Badge -->
+    <rect x="287" y="89" width="126" height="19" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1" />
+    <text x="350" y="102" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e">Layover: 40 - 180 min</text>
+
+    <!-- Arrow: Interchange to Destination -->
+    <line x1="425" y1="79" x2="535" y2="79" stroke="#16a34a" stroke-width="2.5" marker-end="url(#arrow-green)" />
+    <!-- Capsule Leg 2 -->
+    <rect x="445" y="56" width="80" height="20" rx="4" fill="#ffffff" stroke="#86efac" stroke-width="1" />
+    <text x="485" y="70" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">Leg 2</text>
+
+    <!-- Destination Hub -->
+    <rect x="545" y="52" width="125" height="54" rx="8" fill="#ffffff" stroke="#64748b" stroke-width="1.5" />
+    <text x="607" y="75" text-anchor="middle" font-size="12" font-weight="700" fill="#1e293b">Destination Hubs</text>
+    <text x="607" y="91" text-anchor="middle" font-size="10" fill="#64748b">P_dst (Bag B_1)</text>
+
+    <!-- Footnote on Multi-Modal Modes -->
+    <text x="350" y="136" text-anchor="middle" font-size="10" font-weight="500" fill="#15803d">Leg Modes Supported: Train + Bus | Bus + Train | Train + Train | Bus + Bus</text>
+  </g>
+</svg>

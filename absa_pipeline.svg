@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 500" width="740" height="500" style="background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <marker id="absa-arr" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#475569" />
+    </marker>
+  </defs>
+
+  <rect x="5" y="5" width="730" height="490" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" />
+
+  <text x="370" y="30" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a" letter-spacing="0.3">Aspect-Based Sentiment Analysis (ABSA) Pipeline</text>
+  <text x="370" y="47" text-anchor="middle" font-size="10.5" font-weight="500" fill="#64748b">Deep Transformer Architecture for Passenger Review Quality Extraction</text>
+
+  <!-- Input: Commuter Review Text -->
+  <g transform="translate(195, 65)">
+    <rect x="0" y="0" width="350" height="42" rx="8" fill="#f8fafc" stroke="#64748b" stroke-width="1.5" />
+    <text x="175" y="26" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f172a">Commuter Review Text Corpus</text>
+  </g>
+  <line x1="370" y1="107" x2="370" y2="127" stroke="#475569" stroke-width="2" marker-end="url(#absa-arr)" />
+
+  <!-- Normalization & Tokenization -->
+  <g transform="translate(195, 130)">
+    <rect x="0" y="0" width="350" height="44" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5" />
+    <text x="175" y="22" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e40af">Text Normalization &amp; Tokenization</text>
+    <text x="175" y="37" text-anchor="middle" font-size="10" fill="#2563eb">Byte-Pair Encoding (BPE) Tokenizer</text>
+  </g>
+  <line x1="370" y1="174" x2="370" y2="194" stroke="#475569" stroke-width="2" marker-end="url(#absa-arr)" />
+
+  <!-- RoBERTa Transformer Encoder -->
+  <g transform="translate(160, 197)">
+    <rect x="0" y="0" width="420" height="52" rx="8" fill="#faf5ff" stroke="#9333ea" stroke-width="2" />
+    <text x="210" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#581c87">RoBERTa Transformer Encoder</text>
+    <text x="210" y="42" text-anchor="middle" font-size="10" fill="#7e22ce">12-Layer Bidirectional Multi-Head Self-Attention (d_model = 768)</text>
+  </g>
+  <line x1="370" y1="249" x2="370" y2="274" stroke="#475569" stroke-width="2" marker-end="url(#absa-arr)" />
+
+  <!-- Multi-Head Aspect Heads Grid -->
+  <g transform="translate(30, 277)">
+    <rect x="0" y="0" width="680" height="98" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" />
+    <text x="340" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">Multi-Head Aspect Polarity Classification (APC)</text>
+
+    <!-- Head 1: Cleanliness -->
+    <rect x="15" y="30" width="150" height="56" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1" />
+    <text x="90" y="48" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f172a">Cleanliness Head</text>
+    <text x="90" y="64" text-anchor="middle" font-size="9" fill="#15803d">Pos</text>
+    <text x="90" y="77" text-anchor="middle" font-size="9" fill="#b91c1c">Neg / Neu</text>
+
+    <!-- Head 2: Punctuality -->
+    <rect x="180" y="30" width="150" height="56" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1" />
+    <text x="255" y="48" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f172a">Punctuality Head</text>
+    <text x="255" y="64" text-anchor="middle" font-size="9" fill="#15803d">Pos</text>
+    <text x="255" y="77" text-anchor="middle" font-size="9" fill="#b91c1c">Neg / Neu</text>
+
+    <!-- Head 3: AC Cooling -->
+    <rect x="345" y="30" width="150" height="56" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1" />
+    <text x="420" y="48" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f172a">AC Cooling Head</text>
+    <text x="420" y="64" text-anchor="middle" font-size="9" fill="#15803d">Pos</text>
+    <text x="420" y="77" text-anchor="middle" font-size="9" fill="#b91c1c">Neg / Neu</text>
+
+    <!-- Head 4: Utilities -->
+    <rect x="510" y="30" width="155" height="56" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1" />
+    <text x="587" y="48" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f172a">Utilities Head</text>
+    <text x="587" y="64" text-anchor="middle" font-size="9" fill="#15803d">Pos</text>
+    <text x="587" y="77" text-anchor="middle" font-size="9" fill="#b91c1c">Neg / Neu</text>
+  </g>
+  <line x1="370" y1="375" x2="370" y2="400" stroke="#475569" stroke-width="2" marker-end="url(#absa-arr)" />
+
+  <!-- Output: Aggregation and Normalization -->
+  <g transform="translate(130, 403)">
+    <rect x="0" y="0" width="480" height="70" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5" />
+    <text x="240" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#14532d">Aspect Score Aggregation &amp; Normalization</text>
+    <text x="240" y="42" text-anchor="middle" font-size="10.5" font-weight="600" fill="#15803d">Composite Star Rating in [1.0, 5.0] via Weighted Polarity</text>
+    <text x="240" y="58" text-anchor="middle" font-size="9.5" fill="#166534">Dynamic Aspect Highlight Chips (e.g., Needs Cleanliness, AC Cooling Issues)</text>
+  </g>
+</svg>

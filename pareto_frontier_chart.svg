@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 500" width="740" height="500" style="background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <marker id="axis-arr" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#334155" />
+    </marker>
+  </defs>
+
+  <!-- Outer Canvas Border -->
+  <rect x="5" y="5" width="730" height="490" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" />
+
+  <!-- Title & Subtitle -->
+  <text x="370" y="32" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a" letter-spacing="0.3">Pareto Frontier: Journey Duration vs. Total Fare</text>
+  <text x="370" y="50" text-anchor="middle" font-size="11" font-weight="500" fill="#64748b">Optimal Trade-Off Curve of Non-Dominated Routes vs. Pruned Alternatives</text>
+
+  <!-- Chart Background Grid & Axes -->
+  <g transform="translate(100, 70)">
+    <!-- Grid Lines (Horizontal) -->
+    <line x1="0" y1="320" x2="580" y2="320" stroke="#f1f5f9" stroke-width="1.5" />
+    <line x1="0" y1="240" x2="580" y2="240" stroke="#f1f5f9" stroke-width="1.5" />
+    <line x1="0" y1="160" x2="580" y2="160" stroke="#f1f5f9" stroke-width="1.5" />
+    <line x1="0" y1="80" x2="580" y2="80" stroke="#f1f5f9" stroke-width="1.5" />
+    <line x1="0" y1="0" x2="580" y2="0" stroke="#f1f5f9" stroke-width="1.5" />
+
+    <!-- Grid Lines (Vertical) -->
+    <line x1="82" y1="0" x2="82" y2="320" stroke="#f1f5f9" stroke-width="1.5" />
+    <line x1="165" y1="0" x2="165" y2="320" stroke="#f1f5f9" stroke-width="1.5" />
+    <line x1="248" y1="0" x2="248" y2="320" stroke="#f1f5f9" stroke-width="1.5" />
+    <line x1="331" y1="0" x2="331" y2="320" stroke="#f1f5f9" stroke-width="1.5" />
+    <line x1="414" y1="0" x2="414" y2="320" stroke="#f1f5f9" stroke-width="1.5" />
+    <line x1="497" y1="0" x2="497" y2="320" stroke="#f1f5f9" stroke-width="1.5" />
+    <line x1="580" y1="0" x2="580" y2="320" stroke="#f1f5f9" stroke-width="1.5" />
+
+    <!-- Y-Axis (Fare in INR) -->
+    <line x1="0" y1="320" x2="0" y2="-15" stroke="#334155" stroke-width="2" marker-end="url(#axis-arr)" />
+    <text x="-15" y="-18" text-anchor="middle" font-size="11" font-weight="700" fill="#0f172a">Fare (₹)</text>
+    <text x="-12" y="324" text-anchor="end" font-size="10" fill="#64748b">₹1,000</text>
+    <text x="-12" y="244" text-anchor="end" font-size="10" fill="#64748b">₹1,100</text>
+    <text x="-12" y="164" text-anchor="end" font-size="10" fill="#64748b">₹1,200</text>
+    <text x="-12" y="84" text-anchor="end" font-size="10" fill="#64748b">₹1,300</text>
+    <text x="-12" y="4" text-anchor="end" font-size="10" fill="#64748b">₹1,400</text>
+
+    <!-- X-Axis (Duration in Minutes) -->
+    <line x1="0" y1="320" x2="600" y2="320" stroke="#334155" stroke-width="2" marker-end="url(#axis-arr)" />
+    <text x="610" y="324" text-anchor="start" font-size="11" font-weight="700" fill="#0f172a">Duration (min)</text>
+    <text x="0" y="338" text-anchor="middle" font-size="10" fill="#64748b">750</text>
+    <text x="82" y="338" text-anchor="middle" font-size="10" fill="#64748b">800</text>
+    <text x="165" y="338" text-anchor="middle" font-size="10" fill="#64748b">850</text>
+    <text x="248" y="338" text-anchor="middle" font-size="10" fill="#64748b">900</text>
+    <text x="331" y="338" text-anchor="middle" font-size="10" fill="#64748b">950</text>
+    <text x="414" y="338" text-anchor="middle" font-size="10" fill="#64748b">1000</text>
+    <text x="497" y="338" text-anchor="middle" font-size="10" fill="#64748b">1050</text>
+    <text x="580" y="338" text-anchor="middle" font-size="10" fill="#64748b">1100</text>
+
+    <!-- Shaded Dominated Region under Path D -->
+    <path d="M 218 128 L 273 216 L 420 196 Z" fill="#fee2e2" fill-opacity="0.35" />
+
+    <!-- Pareto Frontier Curve connecting Non-Dominated Points -->
+    <!-- Point Coordinates:
+         Path A (Fastest): 815m, ₹1240 -> x = ((815-750)/350)*580 = 107.7; y = 320 - ((1240-1000)/400)*320 = 128.0
+         Path B (Cheapest): 882m, ₹1030 -> x = ((882-750)/350)*580 = 218.7; y = 320 - ((1030-1000)/400)*320 = 296.0
+         Path C (Balanced): 915m, ₹1120 -> x = ((915-750)/350)*580 = 273.4; y = 320 - ((1120-1000)/400)*320 = 224.0
+         Path E (Alt Dep): 1004m, ₹1155 -> x = ((1004-750)/350)*580 = 420.9; y = 320 - ((1155-1000)/400)*320 = 196.0
+         Path D (Dominated): 940m, ₹1280 -> x = ((940-750)/350)*580 = 314.8; y = 320 - ((1280-1000)/400)*320 = 96.0
+    -->
+    <polyline points="107.7,128.0 218.7,296.0 273.4,224.0 420.9,196.0" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="5 4" />
+
+    <!-- Point A: Fastest (815m, ₹1240) -->
+    <circle cx="107.7" cy="128.0" r="7" fill="#16a34a" stroke="#ffffff" stroke-width="2" />
+    <rect x="18" y="96" width="135" height="26" rx="4" fill="#f0fdf4" stroke="#16a34a" stroke-width="1" />
+    <text x="85" y="113" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">Path A (Fastest: 13h 35m)</text>
+    <text x="107.7" y="146" text-anchor="middle" font-size="9.5" font-weight="600" fill="#166534">₹1,240</text>
+
+    <!-- Point B: Cheapest (882m, ₹1030) -->
+    <circle cx="218.7" cy="296.0" r="7" fill="#16a34a" stroke="#ffffff" stroke-width="2" />
+    <rect x="140" y="298" width="145" height="26" rx="4" fill="#f0fdf4" stroke="#16a34a" stroke-width="1" />
+    <text x="212" y="315" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">Path B (Cheapest: ₹1,030)</text>
+    <text x="218.7" y="286" text-anchor="middle" font-size="9.5" font-weight="600" fill="#166534">14h 42m</text>
+
+    <!-- Point C: Balanced (915m, ₹1120) -->
+    <circle cx="273.4" cy="224.0" r="7" fill="#16a34a" stroke="#ffffff" stroke-width="2" />
+    <rect x="282" y="210" width="130" height="26" rx="4" fill="#f0fdf4" stroke="#16a34a" stroke-width="1" />
+    <text x="347" y="227" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">Path C (Balanced: ₹1,120)</text>
+    <text x="273.4" y="242" text-anchor="middle" font-size="9.5" font-weight="600" fill="#166534">15h 15m</text>
+
+    <!-- Point E: Alt Departure (1004m, ₹1155) -->
+    <circle cx="420.9" cy="196.0" r="7" fill="#16a34a" stroke="#ffffff" stroke-width="2" />
+    <rect x="430" y="182" width="138" height="26" rx="4" fill="#f0fdf4" stroke="#16a34a" stroke-width="1" />
+    <text x="499" y="199" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">Path E (Alt Dep: ₹1,155)</text>
+    <text x="420.9" y="214" text-anchor="middle" font-size="9.5" font-weight="600" fill="#166534">16h 44m</text>
+
+    <!-- Point D: Strictly Dominated (940m, ₹1280) -->
+    <circle cx="314.8" cy="96.0" r="7" fill="#dc2626" stroke="#ffffff" stroke-width="2" />
+    <rect x="250" y="52" width="190" height="34" rx="5" fill="#fef2f2" stroke="#dc2626" stroke-width="1.5" />
+    <text x="345" y="68" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">Path D: STRICTLY DOMINATED</text>
+    <text x="345" y="80" text-anchor="middle" font-size="9" fill="#b91c1c">(940m, ₹1280) • Dominated by Path B</text>
+
+    <!-- Red Dashed Dominance Pointer from B to D -->
+    <line x1="218.7" y1="296.0" x2="314.8" y2="96.0" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="3 3" />
+    <rect x="270" y="165" width="68" height="18" rx="3" fill="#fee2e2" stroke="#ef4444" stroke-width="1" />
+    <text x="304" y="177" text-anchor="middle" font-size="8.5" font-weight="700" fill="#991b1b">Dominated</text>
+  </g>
+
+  <!-- Legend at Bottom -->
+  <g transform="translate(130, 448)">
+    <rect x="0" y="0" width="480" height="34" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1" />
+    <circle cx="30" cy="17" r="6" fill="#16a34a" />
+    <text x="45" y="21" font-size="10.5" font-weight="600" fill="#1e293b">Non-Dominated Pareto Points (Delivered)</text>
+
+    <line x1="240" y1="17" x2="270" y2="17" stroke="#2563eb" stroke-width="2" stroke-dasharray="4 3" />
+    <text x="278" y="21" font-size="10.5" font-weight="600" fill="#1e293b">Pareto Frontier</text>
+
+    <circle cx="385" cy="17" r="6" fill="#dc2626" />
+    <text x="400" y="21" font-size="10.5" font-weight="600" fill="#991b1b">Pruned Dominated Route</text>
+  </g>
+</svg>

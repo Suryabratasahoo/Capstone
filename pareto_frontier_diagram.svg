@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 480" width="740" height="480" style="background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <!-- Arrowhead Marker -->
+    <marker id="axis-arr" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#334155" />
+    </marker>
+    <marker id="dom-arr" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#dc2626" />
+    </marker>
+    <!-- Subtle Gradient for Non-dominated Fill -->
+    <linearGradient id="p-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#eff6ff" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Canvas Frame -->
+  <rect x="5" y="5" width="730" height="470" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" />
+
+  <!-- Diagram Header -->
+  <text x="370" y="32" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a" letter-spacing="0.3">Pareto Frontier Visualization (Duration vs. Fare)</text>
+  <text x="370" y="50" text-anchor="middle" font-size="11" font-weight="500" fill="#64748b">Optimal Trade-Off Frontier vs. Dominated Candidate Routes</text>
+
+  <!-- Chart Grid Area: X: 110 to 650, Y: 90 to 380 -->
+  <!-- Horizontal Grid Lines -->
+  <line x1="110" y1="344" x2="650" y2="344" stroke="#f1f5f9" stroke-width="1.5" />
+  <line x1="110" y1="308" x2="650" y2="308" stroke="#f1f5f9" stroke-width="1.5" />
+  <line x1="110" y1="271" x2="650" y2="271" stroke="#f1f5f9" stroke-width="1.5" />
+  <line x1="110" y1="235" x2="650" y2="235" stroke="#f1f5f9" stroke-width="1.5" />
+  <line x1="110" y1="199" x2="650" y2="199" stroke="#f1f5f9" stroke-width="1.5" />
+  <line x1="110" y1="163" x2="650" y2="163" stroke="#f1f5f9" stroke-width="1.5" />
+  <line x1="110" y1="126" x2="650" y2="126" stroke="#f1f5f9" stroke-width="1.5" />
+
+  <!-- Vertical Grid Lines -->
+  <line x1="187" y1="90" x2="187" y2="380" stroke="#f1f5f9" stroke-width="1.5" />
+  <line x1="264" y1="90" x2="264" y2="380" stroke="#f1f5f9" stroke-width="1.5" />
+  <line x1="341" y1="90" x2="341" y2="380" stroke="#f1f5f9" stroke-width="1.5" />
+  <line x1="419" y1="90" x2="419" y2="380" stroke="#f1f5f9" stroke-width="1.5" />
+  <line x1="496" y1="90" x2="496" y2="380" stroke="#f1f5f9" stroke-width="1.5" />
+  <line x1="573" y1="90" x2="573" y2="380" stroke="#f1f5f9" stroke-width="1.5" />
+
+  <!-- Axes -->
+  <!-- Y Axis (Fare INR) -->
+  <line x1="110" y1="380" x2="110" y2="80" stroke="#334155" stroke-width="2" marker-end="url(#axis-arr)" />
+  <text x="100" y="75" text-anchor="end" font-size="11" font-weight="700" fill="#1e293b">Fare (INR)</text>
+
+  <!-- Y Axis Ticks & Labels -->
+  <text x="100" y="384" text-anchor="end" font-size="10" fill="#64748b">₹950</text>
+  <text x="100" y="348" text-anchor="end" font-size="10" fill="#64748b">₹1,000</text>
+  <text x="100" y="275" text-anchor="end" font-size="10" fill="#64748b">₹1,100</text>
+  <text x="100" y="203" text-anchor="end" font-size="10" fill="#64748b">₹1,200</text>
+  <text x="100" y="130" text-anchor="end" font-size="10" fill="#64748b">₹1,300</text>
+
+  <!-- X Axis (Duration min) -->
+  <line x1="110" y1="380" x2="660" y2="380" stroke="#334155" stroke-width="2" marker-end="url(#axis-arr)" />
+  <text x="660" y="402" text-anchor="end" font-size="11" font-weight="700" fill="#1e293b">Total Duration (minutes)</text>
+
+  <!-- X Axis Ticks & Labels -->
+  <text x="110" y="398" text-anchor="middle" font-size="10" fill="#64748b">750</text>
+  <text x="187" y="398" text-anchor="middle" font-size="10" fill="#64748b">800</text>
+  <text x="264" y="398" text-anchor="middle" font-size="10" fill="#64748b">850</text>
+  <text x="341" y="398" text-anchor="middle" font-size="10" fill="#64748b">900</text>
+  <text x="419" y="398" text-anchor="middle" font-size="10" fill="#64748b">950</text>
+  <text x="496" y="398" text-anchor="middle" font-size="10" fill="#64748b">1000</text>
+  <text x="573" y="398" text-anchor="middle" font-size="10" fill="#64748b">1050</text>
+  <text x="650" y="398" text-anchor="middle" font-size="10" fill="#64748b">1100</text>
+
+  <!-- Pareto Frontier Shading -->
+  <polygon points="210,170 314,322 365,257 502,231 502,380 210,380" fill="url(#p-grad)" />
+
+  <!-- Pareto Curve (Stepped/Connecting Non-dominated Frontier) -->
+  <polyline points="210,170 314,322 365,257 502,231" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="6 4" />
+
+  <!-- Domination Vector Arrow from B to D -->
+  <line x1="320" y1="315" x2="397" y2="148" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#dom-arr)" />
+  <rect x="330" y="210" width="130" height="20" rx="4" fill="#fef2f2" stroke="#fca5a5" stroke-width="1" />
+  <text x="395" y="224" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">Dominated: Slower &amp; Costlier</text>
+
+  <!-- Non-dominated Points -->
+  <!-- Path A -->
+  <circle cx="210" cy="170" r="7" fill="#16a34a" stroke="#ffffff" stroke-width="2" />
+  <rect x="120" y="125" width="125" height="36" rx="5" fill="#f0fdf4" stroke="#86efac" stroke-width="1" />
+  <text x="182" y="140" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">Path A (Fastest)</text>
+  <text x="182" y="153" text-anchor="middle" font-size="9.5" fill="#15803d">815 min • ₹1,240</text>
+
+  <!-- Path B -->
+  <circle cx="314" cy="322" r="7" fill="#16a34a" stroke="#ffffff" stroke-width="2" />
+  <rect x="250" y="335" width="130" height="36" rx="5" fill="#f0fdf4" stroke="#86efac" stroke-width="1" />
+  <text x="315" y="350" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">Path B (Cheapest)</text>
+  <text x="315" y="363" text-anchor="middle" font-size="9.5" fill="#15803d">882 min • ₹1,030</text>
+
+  <!-- Path C -->
+  <circle cx="365" cy="257" r="7" fill="#16a34a" stroke="#ffffff" stroke-width="2" />
+  <rect x="375" y="250" width="125" height="36" rx="5" fill="#f0fdf4" stroke="#86efac" stroke-width="1" />
+  <text x="437" y="265" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">Path C (Balanced)</text>
+  <text x="437" y="278" text-anchor="middle" font-size="9.5" fill="#15803d">915 min • ₹1,120</text>
+
+  <!-- Path E -->
+  <circle cx="502" cy="231" r="7" fill="#16a34a" stroke="#ffffff" stroke-width="2" />
+  <rect x="512" y="215" width="125" height="36" rx="5" fill="#f0fdf4" stroke="#86efac" stroke-width="1" />
+  <text x="574" y="230" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">Path E (Alt Dep)</text>
+  <text x="574" y="243" text-anchor="middle" font-size="9.5" fill="#15803d">1004 min • ₹1,155</text>
+
+  <!-- Dominated Point: Path D -->
+  <circle cx="403" cy="141" r="7" fill="#ef4444" stroke="#ffffff" stroke-width="2" />
+  <!-- 'X' mark inside Path D -->
+  <line x1="399" y1="137" x2="407" y2="145" stroke="#ffffff" stroke-width="2" />
+  <line x1="407" y1="137" x2="399" y2="145" stroke="#ffffff" stroke-width="2" />
+  
+  <rect x="415" y="115" width="160" height="38" rx="5" fill="#fef2f2" stroke="#fca5a5" stroke-width="1" />
+  <text x="495" y="130" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">Path D [Pruned by B]</text>
+  <text x="495" y="144" text-anchor="middle" font-size="9.5" fill="#b91c1c">940 min • ₹1,280 (Dominated)</text>
+
+  <!-- Legend Box -->
+  <g transform="translate(130, 428)">
+    <rect x="0" y="0" width="500" height="34" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1" />
+    
+    <circle cx="20" cy="17" r="5" fill="#16a34a" />
+    <text x="32" y="21" font-size="10" font-weight="600" fill="#1e293b">Pareto Optimal (Delivered)</text>
+
+    <line x1="185" y1="17" x2="210" y2="17" stroke="#2563eb" stroke-width="2" stroke-dasharray="4 2" />
+    <text x="218" y="21" font-size="10" font-weight="600" fill="#1e293b">Pareto Trade-off Frontier</text>
+
+    <circle cx="365" cy="17" r="5" fill="#ef4444" />
+    <text x="377" y="21" font-size="10" font-weight="600" fill="#1e293b">Dominated (Pruned)</text>
+  </g>
+</svg>

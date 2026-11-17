@@ -1,0 +1,236 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1200" width="800" height="1200" style="background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <!-- Arrowhead markers -->
+    <marker id="post-arr" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#334155" />
+    </marker>
+    <marker id="post-arr-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#2563eb" />
+    </marker>
+    <marker id="post-arr-green" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#16a34a" />
+    </marker>
+  </defs>
+
+  <!-- Outer Poster Border Frame -->
+  <rect x="10" y="10" width="780" height="1180" rx="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" />
+
+  <!-- ==================== HEADER SECTION ==================== -->
+  <g transform="translate(40, 35)">
+    <!-- Brand Pill -->
+    <rect x="0" y="0" width="180" height="26" rx="13" fill="#eff6ff" stroke="#93c5fd" stroke-width="1" />
+    <text x="90" y="17" text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">CAPSTONE PROJECT 2026</text>
+
+    <!-- Poster Main Title -->
+    <text x="360" y="38" text-anchor="middle" font-size="32" font-weight="900" fill="#0f172a" letter-spacing="-0.5">OptiTransit</text>
+    <text x="360" y="62" text-anchor="middle" font-size="14" font-weight="700" fill="#2563eb">Multi-Modal Public Transit Routing &amp; Quota Optimization Engine</text>
+    <text x="360" y="80" text-anchor="middle" font-size="12" font-weight="500" fill="#64748b">End-to-End Operational Workflow: From Saturated Waitlists to Guaranteed Confirmed Travel</text>
+  </g>
+
+  <!-- Divider Line -->
+  <line x1="40" y1="130" x2="760" y2="130" stroke="#e2e8f0" stroke-width="1.5" />
+
+  <!-- ==================== STEP 1: THE PROBLEM ==================== -->
+  <g transform="translate(40, 145)">
+    <!-- Section Box -->
+    <rect x="0" y="0" width="720" height="84" rx="10" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.5" />
+    <!-- Step Badge -->
+    <rect x="16" y="12" width="220" height="24" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1" />
+    <text x="24" y="28" font-size="11" font-weight="800" fill="#991b1b">STAGE 1: THE COMMUTER PROBLEM</text>
+    <text x="250" y="28" font-size="12" font-weight="800" fill="#b91c1c">The Railway Waitlist Trap (Single-Mode Failure)</text>
+
+    <text x="24" y="54" font-size="11" fill="#7f1d1d">• Commuter attempts point-to-point booking: Direct trains show <tspan font-weight="700">WL 82 / RAC</tspan> under General Quota.</text>
+    <text x="24" y="70" font-size="11" fill="#7f1d1d">• Commercial platforms offer no viable alternatives, leaving emergency travelers stranded with 0% travel guarantee.</text>
+  </g>
+
+  <!-- Flow Arrow: Stage 1 to Stage 2 -->
+  <line x1="400" y1="229" x2="400" y2="252" stroke="#334155" stroke-width="2" marker-end="url(#post-arr)" />
+
+  <!-- ==================== STEP 2: USER INPUT & PREFERENCES ==================== -->
+  <g transform="translate(40, 255)">
+    <!-- Section Box -->
+    <rect x="0" y="0" width="720" height="96" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" />
+    <!-- Step Badge -->
+    <rect x="16" y="12" width="240" height="24" rx="6" fill="#e2e8f0" stroke="#64748b" stroke-width="1" />
+    <text x="24" y="28" font-size="11" font-weight="800" fill="#0f172a">STAGE 2: COMMUTER QUERY INPUT</text>
+
+    <!-- 4 Sub-Blocks -->
+    <rect x="20" y="44" width="160" height="42" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1" />
+    <text x="100" y="60" text-anchor="middle" font-size="10" font-weight="700" fill="#1e293b">Origin &amp; Destination</text>
+    <text x="100" y="76" text-anchor="middle" font-size="9" fill="#64748b">Vijayawada -> Bangalore</text>
+
+    <rect x="195" y="44" width="160" height="42" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1" />
+    <text x="275" y="60" text-anchor="middle" font-size="10" font-weight="700" fill="#1e40af">Date &amp; Travel Class</text>
+    <text x="275" y="76" text-anchor="middle" font-size="9" fill="#2563eb">16-11-2026 | Class: 3A</text>
+
+    <rect x="370" y="44" width="160" height="42" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1" />
+    <text x="450" y="60" text-anchor="middle" font-size="10" font-weight="700" fill="#d97706">Multi-Modal Toggle</text>
+    <text x="450" y="76" text-anchor="middle" font-size="9" fill="#b45309">[x] Include Highway Buses</text>
+
+    <rect x="545" y="44" width="155" height="42" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1" />
+    <text x="622" y="60" text-anchor="middle" font-size="10" font-weight="700" fill="#15803d">Accessibility Toggle</text>
+    <text x="622" y="76" text-anchor="middle" font-size="9" fill="#166534">[x] Senior Citizen Mode</text>
+  </g>
+
+  <!-- Flow Arrow: Stage 2 to Stage 3 -->
+  <line x1="400" y1="351" x2="400" y2="374" stroke="#2563eb" stroke-width="2" marker-end="url(#post-arr-blue)" />
+
+  <!-- ==================== STEP 3: COMPUTATIONAL ROUTING CORE ==================== -->
+  <g transform="translate(40, 377)">
+    <!-- Container Box -->
+    <rect x="0" y="0" width="720" height="236" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="2" />
+    
+    <!-- Step Badge -->
+    <rect x="16" y="12" width="310" height="24" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1" />
+    <text x="24" y="28" font-size="11" font-weight="800" fill="#1e40af">STAGE 3: INTELLIGENT COMPUTATIONAL CORE</text>
+    <text x="340" y="28" font-size="12" font-weight="700" fill="#1d4ed8">FastAPI Backend (394ms Search Execution)</text>
+
+    <!-- Sub-Process 3A: Spatial Geocoder -->
+    <g transform="translate(20, 46)">
+      <rect x="0" y="0" width="325" height="82" rx="8" fill="#ffffff" stroke="#93c5fd" stroke-width="1.5" />
+      <text x="14" y="20" font-size="11" font-weight="700" fill="#1e40af">3A. Spatial Urban Cluster Expansion</text>
+      <text x="14" y="38" font-size="9.5" fill="#334155">• Resolves city names into all regional transit nodes</text>
+      <text x="14" y="52" font-size="9.5" fill="#334155">• Origin: BZA Junction, PNBS Bus Stand, RYP Depot</text>
+      <text x="14" y="66" font-size="9.5" fill="#334155">• Dest: SBC Majestic, YPR, KJM, Jayanagar TTMC</text>
+    </g>
+
+    <!-- Sub-Process 3B: McRAPTOR Engine -->
+    <g transform="translate(370, 46)">
+      <rect x="0" y="0" width="330" height="82" rx="8" fill="#ffffff" stroke="#93c5fd" stroke-width="1.5" />
+      <text x="14" y="20" font-size="11" font-weight="700" fill="#1e40af">3B. McRAPTOR Timetable Traversal</text>
+      <text x="14" y="38" font-size="9.5" fill="#334155">• Operates round-by-round without graph expansion</text>
+      <text x="14" y="52" font-size="9.5" fill="#334155">• Round 0: Direct Scheduled Runs (0 Transfers)</text>
+      <text x="14" y="66" font-size="9.5" fill="#334155">• Round 1: 1-Transfer Multi-Modal Break Journeys</text>
+    </g>
+
+    <!-- Sub-Process 3C: Interchange & Quota Sync -->
+    <g transform="translate(20, 138)">
+      <rect x="0" y="0" width="325" height="86" rx="8" fill="#ffffff" stroke="#93c5fd" stroke-width="1.5" />
+      <text x="14" y="20" font-size="11" font-weight="700" fill="#1e40af">3C. Transfer Layover Synchronization</text>
+      <text x="14" y="38" font-size="9.5" fill="#334155">• Geodesic Haversine walk buffer: d &lt;= 5.0 km</text>
+      <text x="14" y="52" font-size="9.5" fill="#334155">• Enforces safe layovers: 40 min &lt;= Layover &lt;= 180 min</text>
+      <text x="14" y="68" font-size="9.5" font-weight="700" fill="#059669">• Rejects risky connections (&lt; 40 min) to avoid missed legs</text>
+    </g>
+
+    <!-- Sub-Process 3D: Quota Decoupling Engine -->
+    <g transform="translate(370, 138)">
+      <rect x="0" y="0" width="330" height="86" rx="8" fill="#ffffff" stroke="#93c5fd" stroke-width="1.5" />
+      <text x="14" y="20" font-size="11" font-weight="700" fill="#1e40af">3D. Alternate Boarding Quota Decoupling</text>
+      <text x="14" y="38" font-size="9.5" fill="#334155">• Traverses 1-2 stops upstream on waitlisted train runs</text>
+      <text x="14" y="52" font-size="9.5" fill="#334155">• Unlocks Remote Location Quota (RLGN) confirmed berths</text>
+      <text x="14" y="68" font-size="9.5" font-weight="700" fill="#059669">• Fare delta &lt;= 15% • 100% Legal via IRCTC Rule 62/2018</text>
+    </g>
+  </g>
+
+  <!-- Flow Arrow: Stage 3 to Stage 4 -->
+  <line x1="400" y1="613" x2="400" y2="636" stroke="#2563eb" stroke-width="2" marker-end="url(#post-arr-blue)" />
+
+  <!-- ==================== STEP 4: PASSENGER ASSISTANCE & ABSA ==================== -->
+  <g transform="translate(40, 639)">
+    <!-- Container Box -->
+    <rect x="0" y="0" width="720" height="152" rx="10" fill="#faf5ff" stroke="#a855f7" stroke-width="2" />
+    
+    <!-- Step Badge -->
+    <rect x="16" y="12" width="320" height="24" rx="6" fill="#f3e8ff" stroke="#9333ea" stroke-width="1" />
+    <text x="24" y="28" font-size="11" font-weight="800" fill="#581c87">STAGE 4: QUALITY, ACCESSIBILITY &amp; SENTIMENT</text>
+
+    <!-- Sub-Block 4A: ABSA Pipeline -->
+    <g transform="translate(20, 46)">
+      <rect x="0" y="0" width="325" height="92" rx="8" fill="#ffffff" stroke="#d8b4fe" stroke-width="1" />
+      <text x="14" y="20" font-size="11" font-weight="700" fill="#6b21a8">Aspect-Based Sentiment Analysis (RoBERTa)</text>
+      <text x="14" y="38" font-size="9.5" fill="#334155">• Mines passenger feedback across 4 operational aspects</text>
+      <text x="14" y="52" font-size="9.5" fill="#334155">• Evaluates Cleanliness, Punctuality, AC, &amp; Water</text>
+      <text x="14" y="68" font-size="9.5" font-weight="700" fill="#7e22ce">• 89.9% Model Accuracy • Generates visual warning chips</text>
+    </g>
+
+    <!-- Sub-Block 4B: Senior Citizen Care -->
+    <g transform="translate(370, 46)">
+      <rect x="0" y="0" width="330" height="92" rx="8" fill="#ffffff" stroke="#d8b4fe" stroke-width="1" />
+      <text x="14" y="20" font-size="11" font-weight="700" fill="#6b21a8">Senior Citizen Accessibility Adaptation</text>
+      <text x="14" y="38" font-size="9.5" fill="#334155">• Prioritizes guaranteed Lower Berths (LB) on trains</text>
+      <text x="14" y="52" font-size="9.5" fill="#334155">• Selects Lower Deck (Deck L) on multi-axle sleeper buses</text>
+      <text x="14" y="68" font-size="9.5" font-weight="700" fill="#7e22ce">• Extends transfer buffer to &gt;= 60 min for relaxed walking</text>
+    </g>
+  </g>
+
+  <!-- Flow Arrow: Stage 4 to Stage 5 -->
+  <line x1="400" y1="791" x2="400" y2="814" stroke="#16a34a" stroke-width="2.5" marker-end="url(#post-arr-green)" />
+
+  <!-- ==================== STEP 5: FINAL DELIVERED ITINERARY ==================== -->
+  <g transform="translate(40, 817)">
+    <!-- Container Box -->
+    <rect x="0" y="0" width="720" height="258" rx="10" fill="#f0fdf4" stroke="#16a34a" stroke-width="2" />
+    
+    <!-- Step Badge -->
+    <rect x="16" y="12" width="320" height="24" rx="6" fill="#dcfce7" stroke="#15803d" stroke-width="1" />
+    <text x="24" y="28" font-size="11" font-weight="800" fill="#14532d">STAGE 5: DELIVERED CONFIRMED ITINERARY</text>
+    <text x="350" y="28" font-size="12" font-weight="800" fill="#15803d">100% Guaranteed Confirmed Seat Delivered</text>
+
+    <!-- Visual Journey Breakdown Card -->
+    <g transform="translate(20, 46)">
+      <rect x="0" y="0" width="680" height="114" rx="8" fill="#ffffff" stroke="#86efac" stroke-width="1.5" />
+      
+      <!-- Leg 1 -->
+      <rect x="15" y="12" width="200" height="90" rx="6" fill="#eff6ff" stroke="#93c5fd" stroke-width="1" />
+      <text x="25" y="28" font-size="10.5" font-weight="800" fill="#1e40af">LEG 1: HIGHWAY BUS (TSRTC)</text>
+      <text x="25" y="44" font-size="9.5" fill="#334155">Dep: 07:15 from Vijayawada PNBS</text>
+      <text x="25" y="58" font-size="9.5" fill="#334155">Arr: 17:20 at Vellore Old Bus Stand</text>
+      <text x="25" y="74" font-size="9.5" font-weight="700" fill="#16a34a">Seat: Confirmed AVL (28 Seats)</text>
+      <text x="25" y="90" font-size="9" fill="#2563eb">Deck L Lower Berth Allocated</text>
+
+      <!-- Transfer Hub -->
+      <g transform="translate(225, 12)">
+        <rect x="0" y="0" width="220" height="90" rx="6" fill="#fffbeb" stroke="#fcd34d" stroke-width="1" />
+        <text x="110" y="26" text-anchor="middle" font-size="10.5" font-weight="800" fill="#92400e">INTERCHANGE HUB: VELLORE</text>
+        <text x="110" y="42" text-anchor="middle" font-size="9.5" font-weight="700" fill="#b45309">Scheduled Layover: 0h 40m</text>
+        <text x="110" y="56" text-anchor="middle" font-size="9" fill="#78350f">Adjacent Bay Platform Transition</text>
+        <text x="110" y="72" text-anchor="middle" font-size="9" fill="#78350f">Luggage &amp; Refreshment Buffer</text>
+        <text x="110" y="88" text-anchor="middle" font-size="9" font-weight="700" fill="#15803d">Safe Algorithmic Window Verified</text>
+      </g>
+
+      <!-- Leg 2 -->
+      <g transform="translate(455, 12)">
+        <rect x="0" y="0" width="210" height="90" rx="6" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1" />
+        <text x="20" y="28" font-size="10.5" font-weight="800" fill="#065f46">LEG 2: CONNECTING BUS (APSRTC)</text>
+        <text x="20" y="44" font-size="9.5" fill="#334155">Dep: 18:00 from Vellore Stand</text>
+        <text x="20" y="58" font-size="9.5" fill="#334155">Arr: 21:57 at Bangalore Jayanagar</text>
+        <text x="20" y="74" font-size="9.5" font-weight="700" fill="#16a34a">Seat: Confirmed AVL (31 Seats)</text>
+        <text x="20" y="90" font-size="9" fill="#047857">Total Route Fare: INR 1,030</text>
+      </g>
+    </g>
+
+    <!-- Bottom Features: Interactive Map & Copilot -->
+    <g transform="translate(20, 170)">
+      <rect x="0" y="0" width="325" height="74" rx="6" fill="#ffffff" stroke="#86efac" stroke-width="1" />
+      <text x="14" y="20" font-size="10.5" font-weight="700" fill="#14532d">Interactive Leaflet GIS Mapping</text>
+      <text x="14" y="36" font-size="9" fill="#334155">• Solid Blue Polylines: Railway Track Geometry</text>
+      <text x="14" y="50" font-size="9" fill="#334155">• Solid Amber Polylines: State Highway Bus Paths</text>
+      <text x="14" y="64" font-size="9" fill="#334155">• Magenta Dashed Vectors: Walking Station Links</text>
+    </g>
+
+    <g transform="translate(370, 170)">
+      <rect x="0" y="0" width="330" height="74" rx="6" fill="#ffffff" stroke="#86efac" stroke-width="1" />
+      <text x="14" y="20" font-size="10.5" font-weight="700" fill="#14532d">Multilingual AI Copilot (Groq LPU)</text>
+      <text x="14" y="36" font-size="9" fill="#334155">• Natural language assistance: English, Telugu, Hindi</text>
+      <text x="14" y="50" font-size="9" fill="#334155">• Live transfer warnings &amp; platform change alerts</text>
+      <text x="14" y="64" font-size="9" font-weight="700" fill="#15803d">• High-speed inference @ &gt;300 tokens/sec</text>
+    </g>
+  </g>
+
+  <!-- ==================== FOOTER METRICS ==================== -->
+  <g transform="translate(40, 1090)">
+    <rect x="0" y="0" width="720" height="54" rx="8" fill="#0f172a" stroke="#0f172a" stroke-width="1.5" />
+    <text x="120" y="24" text-anchor="middle" font-size="11" font-weight="800" fill="#38bdf8">394.2 ms Latency</text>
+    <text x="120" y="40" text-anchor="middle" font-size="9" fill="#94a3b8">Sub-Second McRAPTOR</text>
+
+    <line x1="240" y1="10" x2="240" y2="44" stroke="#334155" stroke-width="1" />
+
+    <text x="360" y="24" text-anchor="middle" font-size="11" font-weight="800" fill="#4ade80">100% Confirmation</text>
+    <text x="360" y="40" text-anchor="middle" font-size="9" fill="#94a3b8">Zero Waitlist Vulnerability</text>
+
+    <line x1="480" y1="10" x2="480" y2="44" stroke="#334155" stroke-width="1" />
+
+    <text x="600" y="24" text-anchor="middle" font-size="11" font-weight="800" fill="#c084fc">89.9% ABSA Accuracy</text>
+    <text x="600" y="40" text-anchor="middle" font-size="9" fill="#94a3b8">RoBERTa Grievance Mining</text>
+  </g>
+</svg>

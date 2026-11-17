@@ -615,7 +615,7 @@ export default function DashboardPage() {
             Multi-Modal Transit Optimizer
           </span>
           <h1 className="text-white font-black tracking-tight text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-[1.05] select-none">
-            Get to Your Destination Somehow.
+            Get to Your Destination.
           </h1>
           <p className="text-white/80 font-medium text-sm sm:text-base max-w-xl leading-relaxed">
             When direct trains are full or unavailable, OptiTransit combines Trains, Buses, and Transfers so you never get stranded.

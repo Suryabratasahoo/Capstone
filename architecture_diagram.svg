@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" style="background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <!-- Arrowhead definition -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#475569" />
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#059669" />
+    </marker>
+  </defs>
+
+  <!-- Outer Canvas Border for 1:1 Frame -->
+  <rect x="5" y="5" width="590" height="590" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="2" />
+
+  <!-- Title Header -->
+  <text x="300" y="38" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a" letter-spacing="0.3">OptiTransit System Architecture</text>
+  <text x="300" y="56" text-anchor="middle" font-size="11" font-weight="500" fill="#64748b">High-Level Multi-Modal Travel Routing Flow</text>
+
+  <!-- Layer 1: Commuter Input -->
+  <g transform="translate(60, 75)">
+    <rect x="0" y="0" width="480" height="54" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5" />
+    <text x="240" y="24" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">1. Commuter Travel Request</text>
+    <text x="240" y="42" text-anchor="middle" font-size="11" fill="#475569">Origin City, Destination City, Travel Date &amp; Preferences</text>
+  </g>
+
+  <!-- Arrow: Input to Data Sources -->
+  <line x1="300" y1="129" x2="300" y2="151" stroke="#475569" stroke-width="2" marker-end="url(#arrow)" />
+
+  <!-- Layer 2: Synchronized Transit Data Sources -->
+  <g transform="translate(60, 155)">
+    <!-- Rail Network -->
+    <rect x="0" y="0" width="230" height="64" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5" />
+    <text x="115" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#1e40af">Railway Network</text>
+    <text x="115" y="42" text-anchor="middle" font-size="10.5" fill="#1e3a8a">Train Schedules, Stations,</text>
+    <text x="115" y="56" text-anchor="middle" font-size="10.5" fill="#1e3a8a">&amp; Seat Availability</text>
+
+    <!-- Bus Network -->
+    <rect x="250" y="0" width="230" height="64" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5" />
+    <text x="365" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">Intercity Bus Network</text>
+    <text x="365" y="42" text-anchor="middle" font-size="10.5" fill="#78350f">State RTC &amp; Private Buses,</text>
+    <text x="365" y="56" text-anchor="middle" font-size="10.5" fill="#78350f">Timetables &amp; Local Depots</text>
+  </g>
+
+  <!-- Arrows: Data Sources to Core Engine -->
+  <path d="M 175 219 L 175 244 L 270 244 L 270 256" fill="none" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)" />
+  <path d="M 425 219 L 425 244 L 330 244 L 330 256" fill="none" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)" />
+
+  <!-- Layer 3: Core Multi-Transit Engine -->
+  <g transform="translate(60, 260)">
+    <rect x="0" y="0" width="480" height="116" rx="10" fill="#f0fdf4" stroke="#16a34a" stroke-width="2" />
+    <text x="240" y="25" text-anchor="middle" font-size="14" font-weight="700" fill="#14532d">2. Multi-Transit Routing Engine</text>
+    <text x="240" y="44" text-anchor="middle" font-size="11" font-weight="600" fill="#15803d">(Combines Train and Bus Connections)</text>
+
+    <!-- Sub-features inside Engine -->
+    <rect x="18" y="56" width="138" height="46" rx="6" fill="#ffffff" stroke="#86efac" stroke-width="1" />
+    <text x="87" y="74" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">Direct &amp; Split Routes</text>
+    <text x="87" y="90" text-anchor="middle" font-size="9" fill="#15803d">1-Transfer Connections</text>
+
+    <rect x="171" y="56" width="138" height="46" rx="6" fill="#ffffff" stroke="#86efac" stroke-width="1" />
+    <text x="240" y="74" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">Safe Layovers</text>
+    <text x="240" y="90" text-anchor="middle" font-size="9" fill="#15803d">Guaranteed Transfer Time</text>
+
+    <rect x="324" y="56" width="138" height="46" rx="6" fill="#ffffff" stroke="#86efac" stroke-width="1" />
+    <text x="393" y="74" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">Confirmed Seats Only</text>
+    <text x="393" y="90" text-anchor="middle" font-size="9" fill="#15803d">Bypasses Waitlist Trap</text>
+  </g>
+
+  <!-- Arrow: Engine to Intelligent Add-ons -->
+  <line x1="300" y1="376" x2="300" y2="400" stroke="#475569" stroke-width="2" marker-end="url(#arrow)" />
+
+  <!-- Layer 4: Quality & Passenger Assistance Add-ons -->
+  <g transform="translate(60, 404)">
+    <!-- Passenger Review System -->
+    <rect x="0" y="0" width="230" height="62" rx="8" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5" />
+    <text x="115" y="23" text-anchor="middle" font-size="11.5" font-weight="700" fill="#581c87">Route Quality &amp; Ratings</text>
+    <text x="115" y="41" text-anchor="middle" font-size="10" fill="#6b21a8">Passenger Feedback Analysis</text>
+    <text x="115" y="54" text-anchor="middle" font-size="9.5" fill="#7e22ce">(Cleanliness, Punctuality, AC)</text>
+
+    <!-- Senior & Accessibility -->
+    <rect x="250" y="0" width="230" height="62" rx="8" fill="#fdf2f8" stroke="#ec4899" stroke-width="1.5" />
+    <text x="365" y="23" text-anchor="middle" font-size="11.5" font-weight="700" fill="#831843">Senior Citizen Care</text>
+    <text x="365" y="41" text-anchor="middle" font-size="10" fill="#9d174d">Lower Berths on Trains &amp;</text>
+    <text x="365" y="54" text-anchor="middle" font-size="9.5" fill="#be185d">Reserved Seats on Buses</text>
+  </g>
+
+  <!-- Arrows: Add-ons to Final Output -->
+  <path d="M 175 466 L 175 487 L 270 487 L 270 497" fill="none" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-green)" />
+  <path d="M 425 466 L 425 487 L 330 487 L 330 497" fill="none" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-green)" />
+
+  <!-- Layer 5: Output Itinerary & Map -->
+  <g transform="translate(60, 502)">
+    <rect x="0" y="0" width="480" height="66" rx="10" fill="#0f172a" stroke="#0f172a" stroke-width="1.5" />
+    <text x="240" y="27" text-anchor="middle" font-size="13" font-weight="700" fill="#f8fafc">3. Final Itinerary &amp; Interactive Map</text>
+    <text x="240" y="44" text-anchor="middle" font-size="10.5" fill="#cbd5e1">Confirmed Multi-Modal Routes Ranked by Duration &amp; Cost</text>
+    <text x="240" y="57" text-anchor="middle" font-size="9.5" fill="#94a3b8">Interactive Route Geometry, Interchange Details &amp; Direct Booking</text>
+  </g>
+</svg>

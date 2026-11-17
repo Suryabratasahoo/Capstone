@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 500" width="680" height="500" style="background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <marker id="llm-arr" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#475569" />
+    </marker>
+  </defs>
+
+  <rect x="5" y="5" width="670" height="490" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" />
+
+  <text x="340" y="32" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a" letter-spacing="0.3">OptiTransit AI Copilot Integration Flow</text>
+  <text x="340" y="49" text-anchor="middle" font-size="10.5" font-weight="500" fill="#64748b">Context-Injected LLM Inference Pipeline powered by Groq LPU</text>
+
+  <!-- Level 1: Input Question & Itinerary -->
+  <g transform="translate(140, 70)">
+    <rect x="0" y="0" width="400" height="50" rx="8" fill="#f8fafc" stroke="#64748b" stroke-width="1.5" />
+    <text x="200" y="22" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f172a">Commuter Prompt &amp; Selected Route JSON</text>
+    <text x="200" y="38" text-anchor="middle" font-size="10" fill="#475569">Itinerary legs, interchange layovers, seat availability</text>
+  </g>
+  <line x1="340" y1="120" x2="340" y2="145" stroke="#475569" stroke-width="2" marker-end="url(#llm-arr)" />
+
+  <!-- Level 2: Next.js API Route -->
+  <g transform="translate(170, 147)">
+    <rect x="0" y="0" width="340" height="44" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5" />
+    <text x="170" y="22" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e40af">Next.js API Gateway (/api/copilot/route.ts)</text>
+    <text x="170" y="36" text-anchor="middle" font-size="10" fill="#3b82f6">Sanitizes user input and formats request body</text>
+  </g>
+  <line x1="340" y1="191" x2="340" y2="216" stroke="#475569" stroke-width="2" marker-end="url(#llm-arr)" />
+
+  <!-- Level 3: Context-Injected System Prompt -->
+  <g transform="translate(115, 218)">
+    <rect x="0" y="0" width="450" height="88" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="1.5" />
+    <text x="225" y="22" text-anchor="middle" font-size="11.5" font-weight="700" fill="#92400e">Context-Injected System Prompt Engineering</text>
+    <text x="25" y="44" font-size="10" font-weight="600" fill="#78350f">• Structured Itinerary Context (Legs, Layovers, Fare Breakdown)</text>
+    <text x="25" y="60" font-size="10" font-weight="600" fill="#78350f">• Senior Citizen Mobility &amp; Layover Tightness Constraints</text>
+    <text x="25" y="76" font-size="10" font-weight="600" fill="#78350f">• Language Target Directive: English | Telugu | Hindi</text>
+  </g>
+  <line x1="340" y1="306" x2="340" y2="331" stroke="#475569" stroke-width="2" marker-end="url(#llm-arr)" />
+
+  <!-- Level 4: Groq Cloud LPU API -->
+  <g transform="translate(150, 333)">
+    <rect x="0" y="0" width="380" height="52" rx="8" fill="#faf5ff" stroke="#9333ea" stroke-width="2" />
+    <text x="190" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#581c87">Groq Cloud LPU Inference Engine</text>
+    <text x="190" y="42" text-anchor="middle" font-size="10" font-weight="600" fill="#7e22ce">llama3-70b-8192 Model (@ &gt;300 tokens/sec)</text>
+  </g>
+  <line x1="340" y1="385" x2="340" y2="410" stroke="#475569" stroke-width="2" marker-end="url(#llm-arr)" />
+
+  <!-- Level 5: Streamed Natural Language Output -->
+  <g transform="translate(140, 412)">
+    <rect x="0" y="0" width="400" height="52" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5" />
+    <text x="200" y="24" text-anchor="middle" font-size="11.5" font-weight="700" fill="#14532d">Natural Language Streamed to Copilot UI</text>
+    <text x="200" y="40" text-anchor="middle" font-size="10" fill="#15803d">Instant multi-turn travel guidance, warnings, &amp; translations</text>
+  </g>
+</svg>
