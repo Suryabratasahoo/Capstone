@@ -26,10 +26,12 @@ function getGroqApiKey(): string {
   return '';
 }
 
-function formatRouteForPrompt(route: any, searchContext?: any): string {
+function formatRouteForPrompt(route: any, searchContext?: any, routeNumber?: number): string {
   if (!route) return 'No specific route has been selected yet by the user.';
 
-  let out = `### CURRENTLY HIGHLIGHTED ROUTE ON USER'S SCREEN:\n`;
+  const rNum = routeNumber || 1;
+  let out = `### CURRENTLY HIGHLIGHTED ROUTE ON USER'S SCREEN (Route #${rNum}):\n`;
+  out += `NOTE FOR ASSISTANT: The user is currently viewing Route #${rNum}. Any user prompt mentioning "Route #${rNum}", "this route", "my journey", or "explain" refers directly and exclusively to this route.\n`;
   if (searchContext && (searchContext.fromCity || searchContext.toCity)) {
     out += `- Search Query: ${searchContext.fromCity || ''} ➔ ${searchContext.toCity || ''} on ${searchContext.travelDate || ''}\n`;
   }
@@ -71,7 +73,8 @@ function formatRouteForPrompt(route: any, searchContext?: any): string {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { messages, language = 'en', selectedRoute, searchContext } = body;
+    const { messages, language = 'en', selectedRoute, searchContext, routeNumber, routeIndex } = body;
+    const effectiveRouteNum = routeNumber || (routeIndex !== undefined ? Number(routeIndex) + 1 : 1);
 
     // 1. Guardrail Check: Intercept off-topic, political, or non-transit inquiries immediately
     const latestUserMessage = Array.isArray(messages) && messages.length > 0
@@ -107,9 +110,22 @@ export async function POST(req: NextRequest) {
     const langInstruction =
       languageInstructions[language] || languageInstructions['en'];
 
-    const formattedRouteContext = formatRouteForPrompt(selectedRoute, searchContext);
+    const formattedRouteContext = formatRouteForPrompt(selectedRoute, searchContext, effectiveRouteNum);
 
     const systemPrompt = `You are OptiTransit Copilot, an empathetic, highly knowledgeable AI transit assistant specialized STRICTLY in Indian multi-modal travel (Indian Railways, state/private buses, and inter-station transfers).
+
+======================================================================
+CRITICAL ROUTE CONTEXT IDENTIFICATION (HIGH PRIORITY):
+======================================================================
+- The highlighted itinerary detailed below is designated as "Route #${effectiveRouteNum}".
+- When the user asks "Explain Route #${effectiveRouteNum} in detail", "Explain Route #${effectiveRouteNum}", "Explain this route", "Tell me about Route #${effectiveRouteNum}", or asks questions about the journey, IT REFERS EXCLUSIVELY TO THIS HIGHLIGHTED ROUTE.
+- You HAVE all the data for Route #${effectiveRouteNum} right below. NEVER claim you cannot find Route #${effectiveRouteNum} or ask the user to provide origin/destination/dates when this route is present.
+- Immediately explain the journey: departure time, arrival time, transport service name, travel class, seat confirmation status, layover buffer, and practical travel tips.
+
+======================================================================
+STRICT FORMATTING CONSTRAINT (ZERO EMOJIS):
+======================================================================
+- DO NOT use any emojis anywhere in your response (no train, bus, star, or sparkle emojis). Keep formatting strictly clean, professional, and emoji-free.
 
 ======================================================================
 CRITICAL DOMAIN GUARDRAILS & STRICT REFUSAL POLICY (ZERO TOLERANCE):
@@ -144,12 +160,12 @@ Core Guidelines & Knowledge:
 ${formattedRouteContext}
 
 Instructions for Referencing the Highlighted Route:
-- When the user refers to "this route", "the train", "the transfer", "my journey", "the price", or "why this route", DIRECTLY reference the specific train names, train numbers, station names, layover duration, and fares from the highlighted route context above.
+- When the user refers to "this route", "Route #${effectiveRouteNum}", "the train", "the transfer", "my journey", "the price", or "why this route", DIRECTLY reference the specific train names, train numbers, station names, layover duration, and fares from the highlighted route context above.
 - If there is a layover, evaluate whether the time is enough for eating or walking between stations.
 - If the user asks why McRAPTOR picked this option, cite the specific seat status (e.g. Confirmed vs Waitlist), duration, and transfer buffer.
 - Always be accurate to the exact numbers in the route breakdown.
 
-3. Conversational Discovery: If the user asks to plan a new trip or provides incomplete details, warmly ask clarifying questions.
+3. Conversational Discovery: Only if NO route is selected and the user asks to plan an entirely new trip, warmly ask clarifying questions.
 4. Transit & Transfer Nuances:
    - Understand the difference between same-station platform transfers (takes 10-15 mins) and cross-station transfers (e.g. Railway Station to City Bus Stand, which takes 20-30 mins by auto through traffic plus luggage handling).
    - Understand dining needs: A relaxed meal takes 45-60 mins.

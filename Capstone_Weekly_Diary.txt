@@ -183,17 +183,14 @@ Members Attended
 → Member 1 (Reg No: _______)
 → Member 2 (Reg No: _______)
 Tasks Completed:
-→ Researched and conceptualized the "Smart Quota Decoupled Search" paradigm to overcome IRCTC seat waitlisting (WL/RAC).
+→  The "Alternate Quota Search" paradigm to overcome IRCTC seat waitlisting (WL/RAC).
 → Extended the McRAPTOR backend engine (mcraptor_city_engine.py) to search upstream and downstream stations along the same train route when a direct segment is waitlisted.
-→ Formulated a 3-4 station proximity window constraint before origin and after destination to prevent distant terminal unlocking and minimize passenger fare overhead.
-→ Enforced a strict real-world data constraint: only stations with genuine, verified confirmed seat availability (AVL) in the database are returned as unlocks.
 Tasks Planned Next Week:
 → Model dynamic bus seating tiers (Sleeper, Semi-Sleeper, Seater) with differential pricing formulas.
 → Implement senior citizen quota priority logic for accessible transit.
-→ Build route isolation parameters to verify alternate boarding legs independently in new tabs.
+
 Comments / Suggestion by the Guide:
-→ Exploiting IRCTC's intermediate quota allocation algorithmically is a standout research contribution. Ensure the station proximity window strictly guards against excessive detour costs and fare penalties.
-Signature of the Guide: _____________________
+
 
 =======================================================
 
@@ -206,10 +203,9 @@ Members Attended
 → Member 1 (Reg No: _______)
 → Member 2 (Reg No: _______)
 Tasks Completed:
-→ Engineered a dynamic bus fleet inventory model that allocates raw capacity into Sleeper, Semi-Sleeper, and Regular Seater tiers while strictly preserving the mathematical invariant (sleeper + semi_sleeper + regular == raw_seats).
-→ Added tiered differential fare multipliers (Sleeper 1.45x, Semi-Sleeper 1.20x, Regular Seater 1.0x).
+
 → Implemented Senior Citizen Priority routing: scoped lower berth and accessible priority seats strictly to bus transit to reflect authentic Indian transit regulations (excluding pure rail routes from mislabeling).
-→ Introduced the Route Isolation URL parameter (isolate_route=true, isolate=true) allowing users to inspect confirmed booking segments in a dedicated single-route window.
+
 Tasks Planned Next Week:
 → Develop a dedicated modal dialog for Confirmed Berth Assurance with side-by-side journey comparisons.
 → Address offline demonstration constraints by designing an embedded vector basemap for India.
@@ -228,17 +224,12 @@ Members Attended
 → Member 1 (Reg No: _______)
 → Member 2 (Reg No: _______)
 Tasks Completed:
-→ Built the dedicated Confirmed Berth Assurance & Strategy modal dialog featuring side-by-side comparison tables (Standard Waitlist vs. Smart Quota Confirmed).
+\
 → Developed a standalone, lightweight offline vector basemap for India (india_basemap.json, ~288 KB) using simplified GeoJSON polygons (36 States & UTs, 250 rail corridors, 45 major city hubs).
-→ Integrated the official Survey of India sovereign territorial boundary covering the entirety of Jammu & Kashmir and Ladakh.
-→ Implemented a hybrid map mode switcher (Offline India Map vs Online OSM) with automatic fallback to offline mode if tile servers are unreachable during offline evaluation.
+
 Tasks Planned Next Week:
-→ Transition the map styling to a clean white theme with permanent stop names and subtle UI animations.
-→ Conduct comprehensive end-to-end testing across diverse route pairs.
-→ Prepare final presentation materials and project defense documentation.
+→ LLM Integration for OptiTransit Copilot
 Comments / Suggestion by the Guide:
-→ Embedding a fully offline vector basemap of India ensures the demonstration will never fail due to classroom or auditorium network drops. The official Survey of India boundary integration is essential for project defense.
-Signature of the Guide: _____________________
 
 =======================================================
 
@@ -251,9 +242,7 @@ Members Attended
 → Member 1 (Reg No: _______)
 → Member 2 (Reg No: _______)
 Tasks Completed:
-→ Polished the map into a clean white aesthetic with soft slate administrative boundaries, light ambient backdrop, and permanent station badges for departure, arrival, and intermediate stops.
-→ Implemented subtle, GPU-accelerated CSS animations: directional transit dash stream (flowing-transit-pulse), radar pulse rings on terminal markers, smooth camera glide (flyToBounds), and interactive state landmass hover tints.
-→ Conducted end-to-end verification across varied national routes (Delhi-Mumbai, Vijayawada-Sambalpur, Kochi-Chennai) validating sub-50ms offline rendering, multimodal transfer accuracy, and seat assurance integrity.
+-> Implemented OptiTransit ChatBot Using Groq based SDK using Groq Llama 3.1 8B
 → Finalized the comprehensive Project Defense Review Guide, pitch slides, and Capstone documentation for final faculty evaluation.
 Tasks Planned Next Week:
 → Final project submission, poster presentation, and Capstone viva/defense.

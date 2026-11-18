@@ -195,6 +195,16 @@ const getIrctcBookingUrl = (): string => {
   return 'https://www.irctc.co.in/nget/train-search';
 };
 
+// Helper to determine if a leg mode represents railway transit
+const isRailMode = (mode?: string): boolean => mode === 'RAIL' || mode === 'TRAIN';
+
+// Helper to extract clean service/train number (digits preferred for train, raw for bus)
+const getCleanServiceNumber = (num?: string): string => {
+  if (!num) return '';
+  const digits = num.replace(/\D/g, '');
+  return digits || num;
+};
+
 // Interface for ABSA Passenger Reviews & Sentiment Chips
 interface ReviewComment {
   author: string;
@@ -913,6 +923,8 @@ function TransitCopilotWidgetInner({
           messages: updatedMessages.filter((m) => m.id !== 'welcome'),
           language: selectedLang,
           selectedRoute: sanitizedRoute,
+          routeNumber: currentRouteNum,
+          routeIndex: selectedRouteIndex,
           searchContext: { fromCity, toCity, travelDate },
         }),
       });
@@ -1031,6 +1043,15 @@ function TransitCopilotWidgetInner({
                 <span className="bg-brand-forest text-white px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
                   Route #{currentRouteNum}
                 </span>
+                {activeRoute.legs?.filter((l: any) => isRailMode(l.mode) || l.mode === 'BUS').map((l: any, i: number) => {
+                  const isRail = isRailMode(l.mode);
+                  const num = isRail ? getCleanServiceNumber(l.service_number) : l.service_number;
+                  return (
+                    <span key={i} className={`font-mono text-[9px] font-black px-1.5 py-0.5 rounded ${isRail ? 'bg-zinc-900 text-white' : 'bg-amber-800 text-white'}`}>
+                      {isRail ? `Train #${num}` : `Bus #${l.service_number}`}
+                    </span>
+                  );
+                })}
                 <span>{activeRoute.legs?.length || 1} Legs • {activeRoute.total_duration} • ₹{activeRoute.total_price_inr}</span>
               </span>
               <span className="text-emerald-800 uppercase font-mono text-[9px] font-extrabold">
@@ -1829,8 +1850,6 @@ function PlannerContent() {
     }
   };
 
-  const isRailMode = (mode: string) => mode === 'RAIL' || mode === 'TRAIN';
-
   return (
     <div className="flex flex-col h-screen bg-brand-cream overflow-hidden text-brand-charcoal">
       {/* Modern Top Header & Capsule Search Dock */}
@@ -2135,49 +2154,68 @@ function PlannerContent() {
                     {/* Card Header: Duration & Price */}
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <span className="text-lg font-black text-brand-forest">{opt.total_duration}</span>
-                        <span className="text-[10px] text-zinc-400 font-bold ml-2 uppercase tracking-wider">{opt.transfers} Transfers</span>
-                        {isFastest && (
-                          <span className="bg-sky-100 text-sky-900 border border-sky-300 text-[9px] font-black px-2 py-0.5 rounded-full ml-1.5 shadow-xs uppercase tracking-wider inline-flex items-center gap-1">
-                            Fastest Option
-                          </span>
-                        )}
-                        {isCheapest && (
-                          <span className="bg-emerald-100 text-emerald-950 border border-emerald-300 text-[9px] font-black px-2 py-0.5 rounded-full ml-1.5 shadow-xs uppercase tracking-wider inline-flex items-center gap-1">
-                            Best Value
-                          </span>
-                        )}
-                        {isSelected && (
-                          <span className="bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full ml-1.5 shadow-xs uppercase tracking-wider inline-flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                            AI Focus
-                          </span>
-                        )}
-                        {opt.senior_friendly && (
-                          <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-black px-2 py-0.5 rounded-full ml-1.5 shadow-xs uppercase tracking-wider inline-flex items-center gap-1">
-                            Senior Friendly
-                          </span>
-                        )}
-                        {opt.smart_quota_unlock && (
-                          <span className="bg-emerald-100 text-emerald-900 border border-emerald-300 text-[9px] font-black px-2 py-0.5 rounded-full ml-1.5 shadow-xs uppercase tracking-wider inline-flex items-center gap-1">
-                            Confirmed Seat Option
-                          </span>
-                        )}
-                        {/* Show rating for the primary transit leg (train or bus) */}
-                        {(() => {
-                          const primaryLeg = opt.legs.find((l : any) => isRailMode(l.mode) || l.mode === 'BUS') || opt.legs[0];
-                          if (!primaryLeg || (!isRailMode(primaryLeg.mode) && primaryLeg.mode !== 'BUS')) return null;
-                          const legTitle = primaryLeg.mode === 'BUS' 
-                            ? (primaryLeg.bus_operator || primaryLeg.bus_type || 'Highway Bus') 
-                            : (primaryLeg.service_number ? `Train ${primaryLeg.service_number}` : 'Express Rail');
-                          return (
-                            <ServiceRatingBadge 
-                              serviceNumber={primaryLeg.service_number} 
-                              mode={primaryLeg.mode} 
-                              serviceTitle={legTitle}
-                            />
-                          );
-                        })()}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-lg font-black text-brand-forest">{opt.total_duration}</span>
+                          <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">{opt.transfers} Transfers</span>
+                          {opt.legs
+                            .filter((l: any) => isRailMode(l.mode) || l.mode === 'BUS')
+                            .map((l: any, i: number) => {
+                              const isRail = isRailMode(l.mode);
+                              const cleanNum = isRail ? getCleanServiceNumber(l.service_number) : l.service_number;
+                              return (
+                                <span
+                                  key={i}
+                                  className={`text-[10px] font-mono font-black px-2 py-0.5 rounded shadow-xs uppercase tracking-wider inline-flex items-center gap-1 ${
+                                    isRail ? 'bg-zinc-900 text-white' : 'bg-amber-800 text-white'
+                                  }`}
+                                  title={l.service_name}
+                                >
+                                  {isRail ? `Train #${cleanNum}` : `Bus #${l.service_number}`}
+                                </span>
+                              );
+                            })}
+                          {isFastest && (
+                            <span className="bg-sky-100 text-sky-900 border border-sky-300 text-[9px] font-black px-2 py-0.5 rounded-full shadow-xs uppercase tracking-wider inline-flex items-center gap-1">
+                              Fastest Option
+                            </span>
+                          )}
+                          {isCheapest && (
+                            <span className="bg-emerald-100 text-emerald-950 border border-emerald-300 text-[9px] font-black px-2 py-0.5 rounded-full shadow-xs uppercase tracking-wider inline-flex items-center gap-1">
+                              Best Value
+                            </span>
+                          )}
+                          {isSelected && (
+                            <span className="bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-xs uppercase tracking-wider inline-flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                              AI Focus
+                            </span>
+                          )}
+                          {opt.senior_friendly && (
+                            <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-black px-2 py-0.5 rounded-full shadow-xs uppercase tracking-wider inline-flex items-center gap-1">
+                              Senior Friendly
+                            </span>
+                          )}
+                          {opt.smart_quota_unlock && (
+                            <span className="bg-emerald-100 text-emerald-900 border border-emerald-300 text-[9px] font-black px-2 py-0.5 rounded-full shadow-xs uppercase tracking-wider inline-flex items-center gap-1">
+                              Confirmed Seat Option
+                            </span>
+                          )}
+                          {/* Show rating for the primary transit leg (train or bus) */}
+                          {(() => {
+                            const primaryLeg = opt.legs.find((l : any) => isRailMode(l.mode) || l.mode === 'BUS') || opt.legs[0];
+                            if (!primaryLeg || (!isRailMode(primaryLeg.mode) && primaryLeg.mode !== 'BUS')) return null;
+                            const legTitle = primaryLeg.mode === 'BUS' 
+                              ? (primaryLeg.bus_operator || primaryLeg.bus_type || 'Highway Bus') 
+                              : (primaryLeg.service_number ? `Train ${getCleanServiceNumber(primaryLeg.service_number)}` : 'Express Rail');
+                            return (
+                              <ServiceRatingBadge 
+                                serviceNumber={primaryLeg.service_number} 
+                                mode={primaryLeg.mode} 
+                                serviceTitle={legTitle}
+                              />
+                            );
+                          })()}
+                        </div>
                       </div>
                       <div className="text-right">
                         <span className="text-lg font-black text-zinc-800">₹{opt.total_price_inr}</span>
@@ -2229,7 +2267,7 @@ function PlannerContent() {
                           </div>
 
                           {/* Center Progress Line with Duration */}
-                          <div className="flex-1 flex flex-col items-center px-2 max-w-[200px]">
+                          <div className="flex-1 flex flex-col items-center px-2 max-w-[280px]">
                             <span className="text-[10px] font-extrabold text-brand-forest mb-0.5">{opt.total_duration}</span>
                             <div className="w-full flex items-center gap-1">
                               <div className="w-2 h-2 rounded-full border-2 border-brand-forest bg-white shrink-0"></div>
@@ -2240,8 +2278,21 @@ function PlannerContent() {
                               </div>
                               <div className="w-2 h-2 rounded-full border-2 border-zinc-500 bg-white shrink-0"></div>
                             </div>
-                            <span className="text-[9px] font-bold text-zinc-400 mt-0.5 uppercase tracking-wider">
-                              {opt.transfers === 0 ? 'Direct Journey' : `${opt.transfers} Transfer • ${opt.interchange_station ? opt.interchange_station.name : 'via Layover'}`}
+                            <span className="text-[9px] font-bold text-zinc-500 mt-0.5 uppercase tracking-wider text-center truncate max-w-full" title={firstLeg.service_name}>
+                              {opt.transfers === 0 ? (
+                                <span>
+                                  Direct {isRailMode(firstLeg.mode) ? `Train #${getCleanServiceNumber(firstLeg.service_number)}` : 'Highway Bus'}
+                                  {firstLeg.service_name ? ` (${firstLeg.service_name})` : ''}
+                                </span>
+                              ) : (
+                                <span>
+                                  {opt.legs
+                                    .filter((l: any) => isRailMode(l.mode) || l.mode === 'BUS')
+                                    .map((l: any) => isRailMode(l.mode) ? `Train #${getCleanServiceNumber(l.service_number)}` : `Bus #${l.service_number}`)
+                                    .join(' → ')}
+                                  {opt.interchange_station ? ` • via ${opt.interchange_station.name}` : ''}
+                                </span>
+                              )}
                             </span>
                           </div>
 
@@ -2270,7 +2321,9 @@ function PlannerContent() {
                           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
                           <div className="text-left">
                             <span className="text-[11px] font-black text-emerald-950 block leading-tight">
-                              Confirmed Berth via {opt.smart_quota_unlock.book_to.name}
+                              {opt.smart_quota_unlock.book_from.code !== opt.smart_quota_unlock.actual_boarding.code
+                                ? `Confirmed Berth via ${opt.smart_quota_unlock.book_from.name} Quota (Book from ${opt.smart_quota_unlock.book_from.code})`
+                                : `Confirmed Berth via ${opt.smart_quota_unlock.book_to.name} Quota (Book to ${opt.smart_quota_unlock.book_to.code})`}
                             </span>
                             <span className="text-[9px] text-emerald-800 font-semibold">
                               AVL {opt.smart_quota_unlock.unlocked_seats} Confirmed • +₹{opt.smart_quota_unlock.extra_fare_inr} fare difference
@@ -2312,9 +2365,25 @@ function PlannerContent() {
                                   <div className="flex flex-wrap items-center gap-2">
                                     {/* Leg Name or Train Booking Link */}
                                     {legIsRail ? (
-                                      <span className="text-[12px] font-black text-zinc-900 tracking-wide bg-blue-50/80 text-blue-950 px-2 py-0.5 rounded border border-blue-200/60">
-                                        {leg.service_name}
-                                      </span>
+                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                        {leg.service_number && (
+                                          <span className="text-[10px] font-mono font-black bg-zinc-900 text-white px-2 py-0.5 rounded shadow-xs tracking-wider">
+                                            Train #{getCleanServiceNumber(leg.service_number)}
+                                          </span>
+                                        )}
+                                        <span className="text-[12px] font-black text-blue-950 tracking-wide bg-blue-50/80 px-2 py-0.5 rounded border border-blue-200/60">
+                                          {leg.service_name}
+                                        </span>
+                                      </div>
+                                    ) : leg.mode === 'BUS' ? (
+                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                        {leg.service_number && (
+                                          <span className="text-[10px] font-mono font-black bg-amber-800 text-white px-2 py-0.5 rounded shadow-xs tracking-wider">
+                                            Bus #{leg.service_number}
+                                          </span>
+                                        )}
+                                        <p className="text-[11px] font-black text-zinc-800 tracking-wide">{leg.service_name}</p>
+                                      </div>
                                     ) : leg.mode === 'WALK' ? (
                                       <p className="text-[11px] font-black text-fuchsia-800 tracking-wide">
                                         Auto / Cab Transfer ({leg.service_name || 'Travel on your own'})

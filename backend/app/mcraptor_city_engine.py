@@ -561,6 +561,33 @@ def is_dominated(candidate: dict, existing: dict, senior_citizen_mode: bool = Fa
         if cand_matches and not ex_matches:
             return False
 
+    # Mode Diversity Preservation: $O(1)$ fast check via precomputed flags
+    cand_is_multimodal = candidate.get("_is_multi")
+    if cand_is_multimodal is None:
+        cand_modes = {l.get("mode") for l in candidate.get("legs", []) if l.get("mode") not in ("WALK", "AUTO_CAB", "TRANSFER")}
+        cand_is_multimodal = ("BUS" in cand_modes) and bool(cand_modes & {"RAIL", "TRAIN"})
+        candidate["_is_multi"] = cand_is_multimodal
+        candidate["_has_bus"] = "BUS" in cand_modes
+
+    ex_is_multimodal = existing.get("_is_multi")
+    if ex_is_multimodal is None:
+        ex_modes = {l.get("mode") for l in existing.get("legs", []) if l.get("mode") not in ("WALK", "AUTO_CAB", "TRANSFER")}
+        ex_is_multimodal = ("BUS" in ex_modes) and bool(ex_modes & {"RAIL", "TRAIN"})
+        existing["_is_multi"] = ex_is_multimodal
+        existing["_has_bus"] = "BUS" in ex_modes
+
+    # A multi-modal candidate should not be eliminated by a pure single-mode route
+    if cand_is_multimodal and not ex_is_multimodal:
+        return False
+    if ex_is_multimodal and not cand_is_multimodal:
+        return False
+
+    # Also preserve pure-bus alternatives against pure-rail routes
+    cand_has_bus = candidate.get("_has_bus", False)
+    ex_has_bus = existing.get("_has_bus", False)
+    if cand_has_bus != ex_has_bus and not cand_is_multimodal and not ex_is_multimodal:
+        return False
+
     # Preserve distinct destination terminals within the same city (e.g. Visakhapatnam VSKP vs Duvvada DVD)
     cand_dest = candidate.get("legs", [])[-1].get("to_stop", {}).get("id", "")
     ex_dest = existing.get("legs", [])[-1].get("to_stop", {}).get("id", "")
@@ -713,7 +740,24 @@ def run_mcraptor_city_search(
     start_dep_sec = 0
     pareto_results: List[dict] = []
     source_stops = source_stops_list
+    source_stops_set = set(source_stops_list)
     dest_stops = set(dest_stops_list)
+
+    # Gather all cluster city names to prevent intra-city/same-region circular routing
+    source_cluster_cities = {source_city.lower()}
+    dest_cluster_cities = {dest_city.lower()}
+    try:
+        from app.city_clusters import METRO_CLUSTERS
+        for c_key, c_data in METRO_CLUSTERS.items():
+            aliases = [a.lower() for a in c_data.get("aliases", [])]
+            canon = c_data.get("canonical_name", "").lower()
+            if source_city.lower() in aliases or source_city.lower() == canon:
+                source_cluster_cities.update([c.lower() for c in c_data.get("included_db_cities", [])])
+            if dest_city.lower() in aliases or dest_city.lower() == canon:
+                dest_cluster_cities.update([c.lower() for c in c_data.get("included_db_cities", [])])
+    except Exception:
+        pass
+
     reachable_intermediates: Dict[str, List[dict]] = {}
 
     # ==================== ROUND 1: DIRECT ROUTES ====================
@@ -790,6 +834,8 @@ def run_mcraptor_city_search(
                         "total_duration": f"{duration_mins // 60}h {duration_mins % 60}m",
                         "total_distance_km": dist_km,
                         "senior_friendly": is_senior_friendly,
+                        "_is_multi": False,
+                        "_has_bus": (mode == "BUS"),
                         "smart_quota_unlock": smart_unlock,
                         "legs": [
                             {
@@ -815,30 +861,41 @@ def run_mcraptor_city_search(
                         ]
                     }
 
-                    if require_bus:
-                        has_bus = any(leg["mode"] == "BUS" for leg in route_payload["legs"])
-                        if not has_bus:
-                            continue
-
                     if down_stop_id in dest_stops:
+                        if require_bus:
+                            has_bus = any(leg["mode"] == "BUS" for leg in route_payload["legs"])
+                            if not has_bus:
+                                continue
                         merge_into_pareto_set(pareto_results, route_payload, senior_citizen_mode, target_train)
                     else:
+                        # Intra-City & Same-Region Protection:
+                        # 1. An intermediate transfer stop MUST NOT be in the source city / cluster or destination city / cluster
+                        down_city = (timetable.stops[down_stop_id].get("city") or "").lower()
+                        if down_stop_id in source_stops_set or down_city in source_cluster_cities or down_city in dest_cluster_cities:
+                            continue
+
+                        # 2. Intercity Distance Threshold: Buses under 50 km are local intra-city/suburban shuttles, not intercity connectors
+                        if mode == "BUS" and dist_km < 50.0:
+                            continue
+
                         if down_stop_id not in reachable_intermediates:
                             reachable_intermediates[down_stop_id] = []
 
-                        path_coords = get_path_coordinates(timetable, route_stops, src_idx, down_idx)
-                        reachable_intermediates[down_stop_id].append({
-                            "mode": mode,
-                            "service_number": service_number,
-                            "service_name": service_name,
-                            "arr_sec": down_stop_data["arrival_sec"],
-                            "dep_sec": src_stop_data["departure_sec"],
-                            "duration_mins": duration_mins,
-                            "distance_km": dist_km,
-                            "fare_info": fare_info,
-                            "smart_unlock": smart_unlock,
-                            "path": path_coords
-                        })
+                        if len(reachable_intermediates[down_stop_id]) < 4:
+                            path_coords = get_path_coordinates(timetable, route_stops, src_idx, down_idx)
+                            reachable_intermediates[down_stop_id].append({
+                                "mode": mode,
+                                "service_number": service_number,
+                                "service_name": service_name,
+                                "arr_sec": down_stop_data["arrival_sec"],
+                                "dep_sec": src_stop_data["departure_sec"],
+                                "duration_mins": duration_mins,
+                                "distance_km": dist_km,
+                                "fare_info": fare_info,
+                                "smart_unlock": smart_unlock,
+                                "from_stop": {"id": source_stop_id, "name": timetable.stops[source_stop_id]["name"]},
+                                "path": path_coords
+                            })
 
     # ==================== TRANSFER & ROUND 2 ====================
     expanded_intermediates: Dict[str, List[dict]] = {}
@@ -851,10 +908,15 @@ def run_mcraptor_city_search(
                 target_stop_id = xfer["to_stop_id"]
                 xfer_sec = xfer["transfer_time_sec"]
 
+                target_city = (timetable.stops[target_stop_id].get("city") or "").lower()
+                # Do not transfer back into the source city / cluster
+                if target_stop_id in source_stops_set or target_city in source_cluster_cities:
+                    continue
+
                 if target_stop_id not in expanded_intermediates:
                     expanded_intermediates[target_stop_id] = []
 
-                for arr in arrivals:
+                for arr in arrivals[:3]:
                     if target_stop_id in dest_stops:
                         walk_mins = xfer_sec // 60
                         total_mins = arr["duration_mins"] + walk_mins
@@ -871,6 +933,8 @@ def run_mcraptor_city_search(
                             "total_duration": f"{total_mins // 60}h {total_mins % 60}m",
                             "total_distance_km": round(arr["distance_km"] + xfer["walk_distance_km"], 1),
                             "senior_friendly": bool(arr["fare_info"].get("seat_breakdown") and arr["fare_info"]["seat_breakdown"].get("senior_lower_reserved", 0) > 0),
+                            "_is_multi": False,
+                            "_has_bus": (arr["mode"] == "BUS"),
                             "smart_quota_unlock": arr.get("smart_unlock"),
                             "legs": [
                                 {
@@ -878,7 +942,7 @@ def run_mcraptor_city_search(
                                     "mode": arr["mode"],
                                     "service_number": arr["service_number"],
                                     "service_name": arr.get("service_name", ""),
-                                    "from_stop": {"id": arr["path"][0]["id"], "name": arr["path"][0]["name"]} if arr.get("path") else {"id": inter_stop_id, "name": timetable.stops[inter_stop_id]["name"]},
+                                    "from_stop": arr.get("from_stop") or ({"id": arr["path"][0]["id"], "name": arr["path"][0]["name"]} if arr.get("path") else {"id": inter_stop_id, "name": timetable.stops[inter_stop_id]["name"]}),
                                     "to_stop": {"id": inter_stop_id, "name": timetable.stops[inter_stop_id]["name"]},
                                     "departure_time": sec_to_time_str(arr["dep_sec"]),
                                     "arrival_time": sec_to_time_str(arr["arr_sec"]),
@@ -895,19 +959,58 @@ def run_mcraptor_city_search(
                                     "leg_number": 2,
                                     "mode": xfer["transfer_mode"],
                                     "service_number": "TRANSFER",
-                                    "service_name": "Walk",
+                                    "service_name": "Walk Transfer" if xfer["transfer_mode"] == "WALK" else "Auto / Cab Transfer",
                                     "from_stop": {"id": inter_stop_id, "name": timetable.stops[inter_stop_id]["name"]},
                                     "to_stop": {"id": target_stop_id, "name": timetable.stops[target_stop_id]["name"]},
                                     "departure_time": sec_to_time_str(arr["arr_sec"]),
                                     "arrival_time": sec_to_time_str(arr["arr_sec"] + xfer_sec),
                                     "distance_km": xfer["walk_distance_km"],
-                                    "seat_status": "N/A",
+                                    "travel_class": "TRANSFER",
+                                    "seat_status": "AVAILABLE",
                                     "price_inr": 0,
                                     "path": []
                                 }
                             ]
                         }
+                        if require_bus:
+                            has_bus = any(leg["mode"] == "BUS" for leg in route_payload["legs"])
+                            if not has_bus:
+                                continue
                         merge_into_pareto_set(pareto_results, route_payload, senior_citizen_mode, target_train)
+                    else:
+                        # Cross-modal transfer (e.g. RAIL station -> nearby BUS terminal, or BUS stand -> nearby RAIL station)
+                        transfer_leg = {
+                            "leg_number": 2,
+                            "mode": xfer["transfer_mode"],
+                            "service_number": "TRANSFER",
+                            "service_name": "Auto / Cab Transfer" if xfer["transfer_mode"] == "AUTO_CAB" else "Walk Transfer",
+                            "from_stop": {"id": inter_stop_id, "name": timetable.stops[inter_stop_id]["name"]},
+                            "to_stop": {"id": target_stop_id, "name": timetable.stops[target_stop_id]["name"]},
+                            "departure_time": sec_to_time_str(arr["arr_sec"]),
+                            "arrival_time": sec_to_time_str(arr["arr_sec"] + xfer_sec),
+                            "distance_km": xfer["walk_distance_km"],
+                            "travel_class": "TRANSFER",
+                            "seat_status": "AVAILABLE",
+                            "price_inr": 0,
+                            "path": []
+                        }
+
+                        if len(expanded_intermediates[target_stop_id]) < 4:
+                            expanded_intermediates[target_stop_id].append({
+                                "mode": arr["mode"],
+                                "service_number": arr["service_number"],
+                                "service_name": arr.get("service_name", ""),
+                                "arr_sec": arr["arr_sec"] + xfer_sec,
+                                "dep_sec": arr["dep_sec"],
+                                "duration_mins": arr["duration_mins"] + (xfer_sec // 60),
+                                "distance_km": round(arr["distance_km"] + xfer["walk_distance_km"], 1),
+                                "fare_info": arr["fare_info"],
+                                "smart_unlock": arr.get("smart_unlock"),
+                                "from_stop": arr.get("from_stop") or ({"id": arr["path"][0]["id"], "name": arr["path"][0]["name"]} if arr.get("path") else {"id": inter_stop_id, "name": timetable.stops[inter_stop_id]["name"]}),
+                                "inter_hub": {"id": inter_stop_id, "name": timetable.stops[inter_stop_id]["name"]},
+                                "transfer_leg": transfer_leg,
+                                "path": arr.get("path", [])
+                            })
 
     # Round 2 Connecting Trips
     for inter_stop_id, arrivals in expanded_intermediates.items():
@@ -918,31 +1021,40 @@ def run_mcraptor_city_search(
                 continue
 
             inter_idx = route_stops.index(inter_stop_id)
-            for dest_stop_id in dest_stops:
-                if dest_stop_id not in route_stops:
-                    continue
+            dest_indices = [idx for idx, s in enumerate(route_stops) if s in dest_stops and idx > inter_idx]
+            if not dest_indices:
+                continue
 
-                dest_idx = route_stops.index(dest_stop_id)
-                if dest_idx <= inter_idx:
-                    continue
+            # In cities with multiple stops, evaluate the primary destination terminal for this route
+            dest_idx = dest_indices[0]
+            dest_stop_id = route_stops[dest_idx]
 
-                t2_trip_ids = timetable.route_trips[route_id]
-                for leg1 in arrivals:
-                    min_valid_dep = leg1["arr_sec"] + (MIN_LAYOVER_MINS * 60)
-                    max_valid_dep = leg1["arr_sec"] + (MAX_LAYOVER_MINS * 60)
-
+            t2_trip_ids = timetable.route_trips[route_id]
+            for leg1 in arrivals[:3]:
                     best_trip = None
                     for t2_id in t2_trip_ids:
                         t2_stops = timetable.trip_stop_times[t2_id]
                         dep_sec = t2_stops[inter_idx]["departure_sec"]
-                        if min_valid_dep <= dep_sec <= max_valid_dep:
-                            best_trip = (t2_id, t2_stops)
+
+                        t2_meta = timetable.trips[t2_id]
+                        t2_mode = t2_meta["mode"]
+
+                        # Handle daily schedule wrap-around between multi-day train seconds and 24h bus seconds:
+                        raw_diff = dep_sec - leg1["arr_sec"]
+                        if leg1["mode"] != t2_mode:
+                            layover_sec = raw_diff if (MIN_LAYOVER_MINS * 60 <= raw_diff <= MAX_LAYOVER_MINS * 60) else (raw_diff % 86400)
+                        else:
+                            layover_sec = raw_diff
+
+                        layover_mins = int(layover_sec // 60)
+                        if MIN_LAYOVER_MINS <= layover_mins <= MAX_LAYOVER_MINS:
+                            best_trip = (t2_id, t2_stops, layover_mins)
                             break
 
                     if not best_trip:
                         continue
 
-                    t2_id, t2_stops = best_trip
+                    t2_id, t2_stops, layover_mins = best_trip
                     inter_stop_data = t2_stops[inter_idx]
                     dest_stop_data = t2_stops[dest_idx]
 
@@ -951,9 +1063,7 @@ def run_mcraptor_city_search(
                     t2_service = t2_meta["service_number"]
                     t2_name = timetable.service_names.get(t2_service, "")
 
-                    layover_mins = int((inter_stop_data["departure_sec"] - leg1["arr_sec"]) // 60)
-                    
-                    # In senior citizen mode, penalize layovers < 60 mins between trains/buses
+                    # In senior citizen mode, penalize layovers < 45 mins between trains/buses
                     if senior_citizen_mode and layover_mins < 45:
                         continue
 
@@ -990,48 +1100,56 @@ def run_mcraptor_city_search(
                     rank2 = STATUS_RANK.get(leg2_fare_info["status"], 0)
                     overall_status = leg1["fare_info"]["status"] if rank1 <= rank2 else leg2_fare_info["status"]
 
-                    legs = [
-                        {
-                            "leg_number": 1,
-                            "mode": leg1["mode"],
-                            "service_number": leg1["service_number"],
-                            "service_name": leg1.get("service_name", ""),
-                            "from_stop": {"id": leg1["path"][0]["id"], "name": timetable.stops[leg1["path"][0]["id"]]["name"]},
-                            "to_stop": {"id": inter_stop_id, "name": timetable.stops[inter_stop_id]["name"]},
-                            "departure_time": sec_to_time_str(leg1["dep_sec"]),
-                            "arrival_time": sec_to_time_str(leg1["arr_sec"]),
-                            "distance_km": leg1["distance_km"],
-                            "travel_class": travel_class if leg1["mode"] == "RAIL" else "BUS",
-                            "seat_status": leg1["fare_info"]["status"],
-                            "available_seats": leg1["fare_info"]["available_seats"],
-                            "wl_number": leg1["fare_info"]["wl_number"],
-                            "price_inr": leg1["fare_info"]["price_inr"],
-                            "fare_breakdown": leg1["fare_info"].get("fare_breakdown"),
-                            "seat_breakdown": leg1["fare_info"].get("seat_breakdown"),
-                            "smart_quota_unlock": leg1.get("smart_unlock"),
-                            "path": leg1["path"]
-                        },
-                        {
-                            "leg_number": 2,
-                            "mode": t2_mode,
-                            "service_number": t2_service,
-                            "service_name": t2_name,
-                            "from_stop": {"id": inter_stop_id, "name": timetable.stops[inter_stop_id]["name"]},
-                            "to_stop": {"id": dest_stop_id, "name": timetable.stops[dest_stop_id]["name"]},
-                            "departure_time": sec_to_time_str(inter_stop_data["departure_sec"]),
-                            "arrival_time": sec_to_time_str(dest_stop_data["arrival_sec"]),
-                            "distance_km": leg2_dist,
-                            "travel_class": travel_class if t2_mode == "RAIL" else "BUS",
-                            "seat_status": leg2_fare_info["status"],
-                            "available_seats": leg2_fare_info["available_seats"],
-                            "wl_number": leg2_fare_info["wl_number"],
-                            "price_inr": leg2_fare_info["price_inr"],
-                            "fare_breakdown": leg2_fare_info.get("fare_breakdown"),
-                            "seat_breakdown": leg2_fare_info.get("seat_breakdown"),
-                            "smart_quota_unlock": smart_unlock_2,
-                            "path": get_path_coordinates(timetable, route_stops, inter_idx, dest_idx)
-                        }
-                    ]
+                    inter_hub = leg1.get("inter_hub") or {"id": inter_stop_id, "name": timetable.stops[inter_stop_id]["name"]}
+                    leg1_from = leg1.get("from_stop") or ({"id": leg1["path"][0]["id"], "name": timetable.stops[leg1["path"][0]["id"]]["name"]} if leg1.get("path") else {"id": inter_stop_id, "name": timetable.stops[inter_stop_id]["name"]})
+
+                    leg1_obj = {
+                        "leg_number": 1,
+                        "mode": leg1["mode"],
+                        "service_number": leg1["service_number"],
+                        "service_name": leg1.get("service_name", ""),
+                        "from_stop": leg1_from,
+                        "to_stop": inter_hub,
+                        "departure_time": sec_to_time_str(leg1["dep_sec"]),
+                        "arrival_time": sec_to_time_str(leg1["arr_sec"] - int(leg1["transfer_leg"]["distance_km"] / 20 * 3600) if leg1.get("transfer_leg") else leg1["arr_sec"]),
+                        "distance_km": leg1["distance_km"],
+                        "travel_class": travel_class if leg1["mode"] == "RAIL" else "BUS",
+                        "seat_status": leg1["fare_info"]["status"],
+                        "available_seats": leg1["fare_info"]["available_seats"],
+                        "wl_number": leg1["fare_info"]["wl_number"],
+                        "price_inr": leg1["fare_info"]["price_inr"],
+                        "fare_breakdown": leg1["fare_info"].get("fare_breakdown"),
+                        "seat_breakdown": leg1["fare_info"].get("seat_breakdown"),
+                        "smart_quota_unlock": leg1.get("smart_unlock"),
+                        "path": leg1["path"]
+                    }
+
+                    leg2_obj = {
+                        "leg_number": 3 if leg1.get("transfer_leg") else 2,
+                        "mode": t2_mode,
+                        "service_number": t2_service,
+                        "service_name": t2_name,
+                        "from_stop": {"id": inter_stop_id, "name": timetable.stops[inter_stop_id]["name"]},
+                        "to_stop": {"id": dest_stop_id, "name": timetable.stops[dest_stop_id]["name"]},
+                        "departure_time": sec_to_time_str(inter_stop_data["departure_sec"]),
+                        "arrival_time": sec_to_time_str(dest_stop_data["arrival_sec"]),
+                        "distance_km": leg2_dist,
+                        "travel_class": travel_class if t2_mode == "RAIL" else "BUS",
+                        "seat_status": leg2_fare_info["status"],
+                        "available_seats": leg2_fare_info["available_seats"],
+                        "wl_number": leg2_fare_info["wl_number"],
+                        "price_inr": leg2_fare_info["price_inr"],
+                        "fare_breakdown": leg2_fare_info.get("fare_breakdown"),
+                        "seat_breakdown": leg2_fare_info.get("seat_breakdown"),
+                        "smart_quota_unlock": smart_unlock_2,
+                        "path": get_path_coordinates(timetable, route_stops, inter_idx, dest_idx)
+                    }
+
+                    legs = [leg1_obj, leg1["transfer_leg"], leg2_obj] if leg1.get("transfer_leg") else [leg1_obj, leg2_obj]
+
+                    modes = {leg["mode"] for leg in legs if leg.get("mode") not in ("WALK", "AUTO_CAB", "TRANSFER")}
+                    is_multi = ("BUS" in modes) and bool(modes & {"RAIL", "TRAIN"})
+                    has_bus = "BUS" in modes
 
                     route_payload = {
                         "journey_type": "ONE_TRANSFER",
@@ -1041,9 +1159,11 @@ def run_mcraptor_city_search(
                         "available_seats": min(leg1["fare_info"]["available_seats"], leg2_fare_info["available_seats"]),
                         "wl_number": max(leg1["fare_info"]["wl_number"], leg2_fare_info["wl_number"]),
                         "total_price_inr": total_price,
+                        "_is_multi": is_multi,
+                        "_has_bus": has_bus,
                         "interchange_station": {
-                            "code": inter_stop_id,
-                            "name": timetable.stops[inter_stop_id]["name"],
+                            "code": inter_hub["id"],
+                            "name": inter_hub["name"],
                             "layover_time": f"{layover_mins // 60}h {layover_mins % 60}m",
                             "layover_minutes": layover_mins
                         },
@@ -1063,7 +1183,7 @@ def run_mcraptor_city_search(
                         if not has_bus:
                             continue
 
-                    merge_into_pareto_set(pareto_results, route_payload, senior_citizen_mode)
+                    merge_into_pareto_set(pareto_results, route_payload, senior_citizen_mode, target_train)
 
     if target_train:
         clean_target = re.sub(r'\D', '', str(target_train))
@@ -1090,6 +1210,22 @@ def run_mcraptor_city_search(
         x["total_duration_mins"],
         -STATUS_RANK.get(x["overall_status"], 0)
     ))
+
+    if not isolate_route and not target_train and not require_bus:
+        direct_rail = [r for r in pareto_results if r.get("transfers", 0) == 0 and any(l.get("mode") in ("RAIL", "TRAIN") for l in r.get("legs", []))]
+        multimodal = [r for r in pareto_results if any(l.get("mode") == "BUS" for l in r.get("legs", [])) and any(l.get("mode") in ("RAIL", "TRAIN") for l in r.get("legs", []))]
+        other = [r for r in pareto_results if r not in direct_rail and r not in multimodal]
+
+        if multimodal:
+            target_multi = min(len(multimodal), max(4, top_k // 3))
+            target_direct = min(len(direct_rail), top_k - target_multi)
+            interleaved = direct_rail[:target_direct] + multimodal[:target_multi] + other
+            interleaved.sort(key=lambda x: (
+                0 if (senior_citizen_mode and x.get("senior_friendly")) else 1,
+                x["total_duration_mins"],
+                -STATUS_RANK.get(x["overall_status"], 0)
+            ))
+            pareto_results = interleaved
 
     return pareto_results[:top_k]
 
